@@ -27,6 +27,22 @@ and want to help seed further innovations using this technology in schools and i
 that the code needs to be more flexible, accessible to all, and better structured and documented, 
 so I plan to develop via a series of progressive releases an open source python wrapper that others can fork and further innovate with.
 
+Notes
+====
+
+Sharing of SPI/GPIO with this library will be an interesting challenge,
+often it is useful to also use other GPIO's and to use other SPI devices
+with an alternative chip select. The bcm2835 library doesn't seem to be
+provided or wrapped in a way conjucive to sharing. This might be addressed
+in the second pass of coding, it's too much to chew on in the first pass.
+
+I'm hoping to publish a low level C API to the devices that others can code
+to via foreign function interfaces, and possibly a high level API that
+implements basic device classes, with higher level abstractions written
+in the python.
+
+Getting perfect reuse for all on the first pass is going to be impossible.
+
 David Whale
 
 @whaleygeek
