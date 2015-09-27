@@ -58,7 +58,7 @@ Raspberry Pi.
 ```
 unzip pyenergenie-master.zip
 cd pyenergenie-master
-cd assets/src
+cd src
 ```
 
 4. run the monitor test program
