@@ -55,13 +55,13 @@ Raspberry Pi.
 
 3. unzip the software
 
-    unzip pyenergenie-master.zip
-    cd pyenergenie-master
-    cd assets/src
+	unzip pyenergenie-master.zip
+	cd pyenergenie-master
+	cd assets/src
 
 4. run the monitor test program
 
-    sudo python monitor.py
+	sudo python monitor.py
 
 After a few seconds, you should see some packet dumps appearing on the screen.
 The last few bytes will be 0x73 0x01 0x01 or 0x73 0x01 0x00 and these indicate
