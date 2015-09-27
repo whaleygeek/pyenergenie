@@ -1,0 +1,21 @@
+#! /bin/bash
+
+
+# build gpio_test
+gcc gpio_test.c gpio.c
+mv a.out gpio_test
+chmod u+x gpio_test
+
+
+# build spi_test
+gcc spi_test.c spi.c gpio.c
+mv a.out spi_test
+chmod u+x spi_test
+
+
+# build spi .so library on Raspberry Pi
+gcc -Wall -shared -o spi_rpi.so -fPIC spi.c gpio.c
+#nm -D spi.so
+
+
+
