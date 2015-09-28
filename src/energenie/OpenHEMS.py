@@ -45,6 +45,7 @@ PARAM_DOOR_SENSOR     = 0x64
 PARAM_EMERGENCY       = 0x65
 PARAM_FREQUENCY       = 0x66
 PARAM_GAS_FLOW_RATE   = 0x67
+PARAM_RELATIVE_HUMIDITY=0x68
 PARAM_CURRENT         = 0x69
 PARAM_JOIN            = 0x6A
 PARAM_LIGHT_LEVEL     = 0x6C
@@ -61,50 +62,51 @@ PARAM_WATER_PRESSURE  = 0x78
 
 PARAM_TEST            = 0xAA
 
-param_names = {
-	PARAM_ALARM           : "ALARM",
-	PARAM_DEBUG_OUTPUT    : "DEBUG_OUTPUT",
-	PARAM_IDENTIFY        : "IDENTIFY",
-	PARAM_SOURCE_SELECTOR : "SOURCE_SELECTOR",
-	PARAM_WATER_DETECTOR  : "WATER_DETECTOR",
-	PARAM_GLASS_BREAKAGE  : "GLASS_BREAKAGE",
-	PARAM_CLOSURES        : "CLOSURES",
-	PARAM_DOOR_BELL       : "DOOR_BELL",
-	PARAM_ENERGY          : "ENERGY",
-	PARAM_FALL_SENSOR     : "FALL_SENSOR",
-	PARAM_GAS_VOLUME      : "GAS_VOLUME",
-	PARAM_AIR_PRESSURE    : "AIR_PRESSURE",
-	PARAM_ILLUMINANCE     : "ILLUMINANCE",
-	PARAM_LEVEL           : "LEVEL",
-	PARAM_RAINFALL        : "RAINFALL",
-	PARAM_APPARENT_POWER  : "APPARENT_POWER",
-	PARAM_POWER_FACTOR    : "POWER_FACTOR",
-	PARAM_REPORT_PERIOD   : "REPORT_PERIOD",
-	PARAM_SMOKE_DETECTOR  : "SMOKE_DETECTOR",
-	PARAM_TIME_AND_DATE   : "TIME_AND_DATE",
-	PARAM_VIBRATION       : "VIBRATION",
-	PARAM_WATER_VOLUME    : "WATER_VOLUME",
-	PARAM_WIND_SPEED      : "WIND_SPEED",
-	PARAM_GAS_PRESSURE    : "GAS_PRESSURE",
-	PARAM_BATTERY_LEVEL   : "BATTERY_LEVEL",
-	PARAM_CO_DETECTOR     : "CO_DETECTOR",
-	PARAM_DOOR_SENSOR     : "DOOR_SENSOR",
-	PARAM_EMERGENCY       : "EMERGENCY",
-	PARAM_FREQUENCY       : "FREQUENCY",
-	PARAM_GAS_FLOW_RATE   : "GAS_FLOW_RATE",
-	PARAM_CURRENT         : "CURRENT",
-	PARAM_JOIN            : "JOIN",
-	PARAM_LIGHT_LEVEL     : "LIGHT_LEVEL",
-	PARAM_MOTION_DETECTOR : "MOTION_DETECTOR",
-	PARAM_OCCUPANCY       : "OCCUPANCY",
-	PARAM_REAL_POWER      : "REAL_POWER",
-	PARAM_REACTIVE_POWER  : "REACTIVE_POWER",
-	PARAM_ROTATION_SPEED  : "ROTATION_SPEED",
-	PARAM_SWITCH_STATE    : "SWITCH_STATE",
-	PARAM_TEMPERATURE     : "TEMPERATURE",
-	PARAM_VOLTAGE         : "VOLTAGE",
-	PARAM_WATER_FLOW_RATE : "WATER_FLOW_RATE",
-	PARAM_WATER_PRESSURE  : "WATER_PRESSURE"
+param_info = {
+	PARAM_ALARM           : {"n":"ALARM",				"u":""},
+	PARAM_DEBUG_OUTPUT    : {"n":"DEBUG_OUTPUT",		"u":""},
+	PARAM_IDENTIFY        : {"n":"IDENTIFY",			"u":""},
+	PARAM_SOURCE_SELECTOR : {"n":"SOURCE_SELECTOR",		"u":""},
+	PARAM_WATER_DETECTOR  : {"n":"WATER_DETECTOR",		"u":""},
+	PARAM_GLASS_BREAKAGE  : {"n":"GLASS_BREAKAGE",		"u":""},
+	PARAM_CLOSURES        : {"n":"CLOSURES",			"u":""},
+	PARAM_DOOR_BELL       : {"n":"DOOR_BELL",			"u":""},
+	PARAM_ENERGY          : {"n":"ENERGY",				"u":"kWh"},
+	PARAM_FALL_SENSOR     : {"n":"FALL_SENSOR",			"u":""},
+	PARAM_GAS_VOLUME      : {"n":"GAS_VOLUME",			"u":"m3"},
+	PARAM_AIR_PRESSURE    : {"n":"AIR_PRESSURE",		"u":"mbar"},
+	PARAM_ILLUMINANCE     : {"n":"ILLUMINANCE",			"u":"Lux"},
+	PARAM_LEVEL           : {"n":"LEVEL",				"u":""},
+	PARAM_RAINFALL        : {"n":"RAINFALL",			"u":"mm"},
+	PARAM_APPARENT_POWER  : {"n":"APPARENT_POWER",		"u":"VA"},
+	PARAM_POWER_FACTOR    : {"n":"POWER_FACTOR",		"u":""},
+	PARAM_REPORT_PERIOD   : {"n":"REPORT_PERIOD",		"u":"s"},
+	PARAM_SMOKE_DETECTOR  : {"n":"SMOKE_DETECTOR",		"u":""},
+	PARAM_TIME_AND_DATE   : {"n":"TIME_AND_DATE",		"u":"s"},
+	PARAM_VIBRATION       : {"n":"VIBRATION",			"u":""},
+	PARAM_WATER_VOLUME    : {"n":"WATER_VOLUME",		"u":"l"},
+	PARAM_WIND_SPEED      : {"n":"WIND_SPEED",			"u":"m/s"},
+	PARAM_GAS_PRESSURE    : {"n":"GAS_PRESSURE",		"u":"Pa"},
+	PARAM_BATTERY_LEVEL   : {"n":"BATTERY_LEVEL",		"u":"V"},
+	PARAM_CO_DETECTOR     : {"n":"CO_DETECTOR",			"u":""},
+	PARAM_DOOR_SENSOR     : {"n":"DOOR_SENSOR",			"u":""},
+	PARAM_EMERGENCY       : {"n":"EMERGENCY",			"u":""},
+	PARAM_FREQUENCY       : {"n":"FREQUENCY",			"u":"Hz"},
+	PARAM_GAS_FLOW_RATE   : {"n":"GAS_FLOW_RATE",		"u":"m3/hr"},
+	PARAM_RELATIVE_HUMIDITY:{"n":"RELATIVE_HUMIDITY",   "u":"%"},
+	PARAM_CURRENT         : {"n":"CURRENT",				"u":"A"},
+	PARAM_JOIN            : {"n":"JOIN",				"u":""},
+	PARAM_LIGHT_LEVEL     : {"n":"LIGHT_LEVEL",			"u":""},
+	PARAM_MOTION_DETECTOR : {"n":"MOTION_DETECTOR",		"u":""},
+	PARAM_OCCUPANCY       : {"n":"OCCUPANCY",			"u":""},
+	PARAM_REAL_POWER      : {"n":"REAL_POWER",			"u":"W"},
+	PARAM_REACTIVE_POWER  : {"n":"REACTIVE_POWER",		"u":"VAR"},
+	PARAM_ROTATION_SPEED  : {"n":"ROTATION_SPEED",		"u":"RPM"},
+	PARAM_SWITCH_STATE    : {"n":"SWITCH_STATE",		"u":""},
+	PARAM_TEMPERATURE     : {"n":"TEMPERATURE",			"u":"C"},
+	PARAM_VOLTAGE         : {"n":"VOLTAGE",				"u":"V"},
+	PARAM_WATER_FLOW_RATE : {"n":"WATER_FLOW_RATE",		"u":"l/hr"},
+	PARAM_WATER_PRESSURE  : {"n":"WATER_PRESSURE",		"u":"Pa"},
 }
 
 
@@ -185,14 +187,16 @@ def decode(payload, decrypt=True):
 		param = payload[i]
 		wr = ((param & 0x80) == 0x80)
 		paramid = param & 0x7F
-		if param_names.has_key(paramid):
-			paramname = param_names[paramid]
+		if param_info.has_key(paramid):
+			paramname = (param_info[paramid])["n"] # name
+			paramunit = (param_info[paramid])["u"] # unit
 		else:
 			paramname = "UNKNOWN_" + hex(paramid)
+			paramunit = "UNKNOWN_UNIT"
 		i += 1
 
 		# TYPE/LEN
-		typeid = (payload[i] & 0xF0)>>4
+		typeid = payload[i] & 0xF0
 		plen = payload[i] & 0x0F
 		i += 1
 
@@ -203,13 +207,14 @@ def decode(payload, decrypt=True):
 		for x in range(plen):
 			valuebytes.append(payload[i])
 			i += 1
-		value = "TODO" # TODO decode based on type and length
+		value = Value.decode(valuebytes, typeid, plen)
 
 		# store rec
 		recs.append({
 			"wr":         wr,
 			"paramid":    paramid,
 			"paramname":  paramname,
+			"paramunit":  paramunit,
 			"typeid":     typeid,
 			"length":     plen,
 			"valuebytes": valuebytes,
@@ -221,7 +226,6 @@ def decode(payload, decrypt=True):
 		"header":  header,
 		"recs":    recs
 	}
-
 
 
 #----- MESSAGE ENCODER --------------------------------------------------------
@@ -279,8 +283,9 @@ def encode(spec, encrypt=True):
 		payload.append((typeid<<4) | length)
 
 		# VALUE
-		for i in range(length):
-			payload.append(0) # TODO encoding depends on typeid and length
+		valueenc = Value.encode(value, typeid, length)
+		for b in valueenc:
+			payload.append(b)
 
 	# FOOTER
 	payload.append(0) # NUL
@@ -299,6 +304,88 @@ def encode(spec, encrypt=True):
 
 	return payload
 
+
+#---- VALUE CODEC -------------------------------------------------------------
+
+class Value():
+	UINT      = 0x00
+	UINT_BP4  = 0x10
+	UINT_BP8  = 0x20
+	UINT_BP12 = 0x30
+	UINT_BP16 = 0x40
+	UINT_BP20 = 0x50
+	UINT_BP24 = 0x60
+	CHAR      = 0x70
+	SINT      = 0x80
+	SINT_BP8  = 0x90
+	SINT_BP16 = 0xA0
+	SINT_BP24 = 0xB0
+	# C0,D0,E0 RESERVED
+	FLOAT     = 0xF0
+
+	@staticmethod
+	def encode(value, typeid, length):
+		return [int(value) for i in range(length)] # TODO
+
+	@staticmethod
+	def decode(valuebytes, typeid, length):
+		if typeid <= Value.UINT_BP24:
+			result = 0
+			# decode unsigned integer first
+			for i in range(length):
+				result <<= 8
+				result += valuebytes[i]
+			# process any fixed binary points
+			if typeid == Value.UINT:
+				return result # no BP adjustment
+			if typeid == Value.UINT_BP4:
+				return (float(result))/(2**4) # 4 bits
+			if typeid == Value.UINT_BP8:
+				return (float(result))/(2**8) # 8 bits
+			if typeid == Value.UINT_BP12:
+				return (float(result))/(2**12) # 12 bits
+			if typeid == Value.UINT_BP16:
+				return (float(result))/(2**16) # 16 bits
+			if typeid == Value.UINT_BP20:
+				return (float(result))/(2**20) # 20 bits
+			if typeid == Value.UINT_BP24:
+				return (float(result))/(2**24) # 24 bits
+
+		elif typeid == Value.CHAR:
+			result = ""
+			for b in range(length):
+				result += chr(b)
+			return result
+
+		elif typeid >= Value.SINT and typeid <= Value.SINT_BP24:
+			# decode unsigned int first
+			result = 0
+			for i in range(length):
+				result <<= 8
+				result += valuebytes[i]
+
+			# turn to signed int based on high bit of MSB
+			# 2's comp is 1's comp plus 1
+			neg = ((valuebytes[0] & 0x80) == 0x80)
+			if neg:
+				onescomp = (~result) & ((2**(length*8))-1)
+				result = -(onescomp + 1)
+
+			# adjust binary point
+			if typeid == Value.SINT:
+				return result # no BP
+			elif typeid == Value.SINT_BP8:
+				return (float(result))/(2**8) # 8 bits
+			elif typeid == Value.SINT_BP16:
+				return (float(result))/(2**16) # 16 bits
+			elif typeid == Value.SINT_BP24:
+				return (float(result))/(2**24) # 24 bits
+			return result
+
+		elif typeid == Value.FLOAT:
+			return "TODO_FLOAT_IEEE_754-2008" #TODO: IEEE 754-2008
+
+		raise ValueError("Unsupported typeid:%" + hex(typeid))
 
 
 #----- CRC CALCULATION --------------------------------------------------------
@@ -364,15 +451,19 @@ if __name__ == "__main__":
 	import pprint
 	init(242)
 
+	print("RAW PAYLOAD, UNENCRYPTED")
 	printhex(TEST_PAYLOAD)
 
 	spec = decode(TEST_PAYLOAD, decrypt=False)
+	print("DECODED")
 	pprint.pprint(spec)
 
 	payload = encode(spec, encrypt=True)
+	print("ENCODED ENCRYTED")
 	printhex(payload)
 
 	spec2 = decode(payload, decrypt=True)
+	print("DECODED, DECRYPTED")
 	pprint.pprint(spec2)
 
 # END

@@ -45,35 +45,61 @@ MONITOR_MESSAGE = {
         "mfrid":       ENERGENIE.MFRID,
         "productid":   ENERGENIE.PRODUCTID_C1_MONITOR,
         "encryptPIP":  ENERGENIE.CRYPT_PIP,
-        "sensorid":    0xFFFFFF
+        "sensorid":    0xFFFFFF # energenie broadcast
     },
     "recs": [
         {
-            "wr":      True,
+            "wr":      True, # monitor only will ignore this
             "paramid": OpenHEMS.PARAM_SWITCH_STATE,
-            "typeid":  0x00,
-            "length":  0x01,
-            "value":   0x00
+            "typeid":  OpenHEMS.Value.UINT,
+            "length":  1,
+            "value":   0
         }
     ]
 }
 
 
+def showMessage(msg):
+    """Show the message in a friendly format"""
+    #pprint.pprint(msg)
+
+    # HEADER
+    header    = msg["header"]
+    mfrid     = header["mfrid"]
+    productid = header["productid"]
+    sensorid  = header["sensorid"]
+    print("mfrid:%s prodid:%s sensorid:%s" % (hex(mfrid), hex(productid), hex(sensorid)))
+
+    # RECORDS
+    for rec in msg["recs"]:
+        wr        = rec["wr"]
+        if wr == True:
+            write = "write"
+        else:
+            write = "read "
+
+        paramid   = rec["paramid"]
+        paramname = rec["paramname"]
+        paramunit = rec["paramunit"]
+        value     = rec["value"]
+        print("%s %s %s = %s" % (write, paramname, paramunit, str(value)))
+
+
 def monitor():
     """Send monitor poke messages and capture any responses"""
 
-    sendMonitorTimer = Timer(3)
-    pollReceiveTimer = Timer(1)
+    sendMonitorTimer = Timer(9)   # every 9 secs
+    #pollReceiveTimer = Timer(0.1) # 10 times per sec
     radio.receiver()
 
     while True:
         # See if there is a payload, and if there is, process it
-        if pollReceiveTimer.check():
-            if radio.isReceiveWaiting():
-                trace("receiving payload")
-                payload = radio.receive()
-                decoded = OpenHEMS.decode(payload)
-                pprint.pprint(decoded)
+        #if pollReceiveTimer.check():
+        if radio.isReceiveWaiting():
+            trace("receiving payload")
+            payload = radio.receive()
+            decoded = OpenHEMS.decode(payload)
+            showMessage(decoded)
 
         # If it is time to send a monitor message, send it
         if sendMonitorTimer.check():

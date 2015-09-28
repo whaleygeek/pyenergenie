@@ -228,7 +228,7 @@ def HRF_check_payload():
     """Check if there is a payload in the FIFO waiting to be processed"""
     irqflags1 = HRF_readreg(ADDR_IRQFLAGS1)
     irqflags2 = HRF_readreg(ADDR_IRQFLAGS2)
-    print("irq1 %s   irq2 %s" % (hex(irqflags1), hex(irqflags2)))
+    #trace("irq1 %s   irq2 %s" % (hex(irqflags1), hex(irqflags2)))
 
     return (irqflags2 & MASK_PAYLOADRDY) == MASK_PAYLOADRDY
 
@@ -240,7 +240,7 @@ def HRF_receive_payload():
 
 def HRF_send_payload(payload):
     trace("send_payload")
-    dumpPayloadAsHex(payload)
+    #dumpPayloadAsHex(payload)
     HRF_writefifo_burst(payload)
     trace("  waiting for sent...")
     HRF_pollreg(ADDR_IRQFLAGS2, MASK_PACKETSENT, MASK_PACKETSENT)
