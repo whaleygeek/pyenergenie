@@ -4,6 +4,14 @@
 
 import crypto
 
+class OpenHEMSException(Exception):
+	def __init__(self, value):
+		self.value = value
+
+	def __str__(self):
+		return repr(self.value)
+
+
 # report has bit 7 clear
 # command has bit 7 set
 
@@ -53,107 +61,167 @@ PARAM_WATER_PRESSURE  = 0x78
 
 PARAM_TEST            = 0xAA
 
+param_names = {
+	PARAM_ALARM           : "ALARM",
+	PARAM_DEBUG_OUTPUT    : "DEBUG_OUTPUT",
+	PARAM_IDENTIFY        : "IDENTIFY",
+	PARAM_SOURCE_SELECTOR : "SOURCE_SELECTOR",
+	PARAM_WATER_DETECTOR  : "WATER_DETECTOR",
+	PARAM_GLASS_BREAKAGE  : "GLASS_BREAKAGE",
+	PARAM_CLOSURES        : "CLOSURES",
+	PARAM_DOOR_BELL       : "DOOR_BELL",
+	PARAM_ENERGY          : "ENERGY",
+	PARAM_FALL_SENSOR     : "FALL_SENSOR",
+	PARAM_GAS_VOLUME      : "GAS_VOLUME",
+	PARAM_AIR_PRESSURE    : "AIR_PRESSURE",
+	PARAM_ILLUMINANCE     : "ILLUMINANCE",
+	PARAM_LEVEL           : "LEVEL",
+	PARAM_RAINFALL        : "RAINFALL",
+	PARAM_APPARENT_POWER  : "APPARENT_POWER",
+	PARAM_POWER_FACTOR    : "POWER_FACTOR",
+	PARAM_REPORT_PERIOD   : "REPORT_PERIOD",
+	PARAM_SMOKE_DETECTOR  : "SMOKE_DETECTOR",
+	PARAM_TIME_AND_DATE   : "TIME_AND_DATE",
+	PARAM_VIBRATION       : "VIBRATION",
+	PARAM_WATER_VOLUME    : "WATER_VOLUME",
+	PARAM_WIND_SPEED      : "WIND_SPEED",
+	PARAM_GAS_PRESSURE    : "GAS_PRESSURE",
+	PARAM_BATTERY_LEVEL   : "BATTERY_LEVEL",
+	PARAM_CO_DETECTOR     : "CO_DETECTOR",
+	PARAM_DOOR_SENSOR     : "DOOR_SENSOR",
+	PARAM_EMERGENCY       : "EMERGENCY",
+	PARAM_FREQUENCY       : "FREQUENCY",
+	PARAM_GAS_FLOW_RATE   : "GAS_FLOW_RATE",
+	PARAM_CURRENT         : "CURRENT",
+	PARAM_JOIN            : "JOIN",
+	PARAM_LIGHT_LEVEL     : "LIGHT_LEVEL",
+	PARAM_MOTION_DETECTOR : "MOTION_DETECTOR",
+	PARAM_OCCUPANCY       : "OCCUPANCY",
+	PARAM_REAL_POWER      : "REAL_POWER",
+	PARAM_REACTIVE_POWER  : "REACTIVE_POWER",
+	PARAM_ROTATION_SPEED  : "ROTATION_SPEED",
+	PARAM_SWITCH_STATE    : "SWITCH_STATE",
+	PARAM_TEMPERATURE     : "TEMPERATURE",
+	PARAM_VOLTAGE         : "VOLTAGE",
+	PARAM_WATER_FLOW_RATE : "WATER_FLOW_RATE",
+	PARAM_WATER_PRESSURE  : "WATER_PRESSURE"
+}
 
 
 crypt_pid = None
-crypt_pip = None
 
-def init(pid, pip):
-    global crypt_pid, crypt_pip
-    crypt_pid = pid
-    crypt_pip = pip
+def init(pid):
+	global crypt_pid
+	crypt_pid = pid
 
 
 def warning(msg):
-    print("warning:" + str(msg))
+	print("warning:" + str(msg))
 
 
-#TODO decode OpenHEMS message payload structure
-#TODO decrypt OpenHEMS message payload
-#TODO check the CRC is correct
+#----- MESSAGE DECODER --------------------------------------------------------
 
-"""
-		case S_MSGLEN:							// Read message length
-		case S_MANUFACT_ID:						// Read manufacturer identifier
-		case S_PRODUCT_ID:						// Read product identifier
-		case S_ENCRYPTPIP:						// Read encryption pip
-		case S_SENSORID:						// Read sensor ID
-	    /******************* start reading RECORDS  ********************/
-		case S_DATA_PARAMID:					// Read record parameter identifier
-			msgPtr->paramId = msgPtr->value & 0x7F;
-			temp = getIdName(msgPtr->paramId);
-			printf(" %s=", temp);
-			if (msgPtr->paramId == 0)			// Parameter identifier CRC. Go to CRC
-			{
-				msgPtr->state = S_CRC;
-				msgPtr->recordBytesToRead = SIZE_CRC;
-			}
-			else
-			{
-				msgPtr->state = S_DATA_TYPEDESC;
-				msgPtr->recordBytesToRead = SIZE_DATA_TYPEDESC;
-			}
-			if (strcmp(temp, "Unknown") == 0)	// Unknown parameter, finish fetching message
-				msgPtr->state = S_FINISH;
-			break;
-		case S_DATA_TYPEDESC:					// Read record type description
-			if ((msgPtr->value & 0x0F) == 0)	// No more data to read in that record
-			{
-				msgPtr->state = S_DATA_PARAMID;
-				msgPtr->recordBytesToRead = SIZE_DATA_PARAMID;
-			}
-			else
-			{
-				msgPtr->state = S_DATA_VAL;
-				msgPtr->recordBytesToRead = msgPtr->value & 0x0F;
-			}
-			msgPtr->type = msgPtr->value;
-			break;
-		case S_DATA_VAL:						// Read record data
-			temp = getValString(msgPtr->value, msgPtr->type >> 4, msgPtr->recordBytesToRead);
-			printf("%s", temp);
-			msgPtr->state = S_DATA_PARAMID;
-			msgPtr->recordBytesToRead = SIZE_DATA_PARAMID;
-			if (strcmp(temp, "Reserved") == 0)
-				msgPtr->state = S_FINISH;
-			break;
-	    /******************* finish reading RECORDS  ********************/
-		case S_CRC:								// Check CRC
-			msgPtr->state = S_FINISH;
-			if ((int16_t)msgPtr->value == crc(msgPtr->buf + NON_CRC, msgPtr->bufCnt - NON_CRC - SIZE_CRC))
-			{
-				printf("OK\n");
-			}
-			else
-			{
-				printf("FAIL expVal=%04x, pip=%04x, val=%04x\n", (int16_t)msgPtr->value, msgPtr->pip, crc(msgPtr->buf + NON_CRC, msgPtr->bufCnt - NON_CRC - SIZE_CRC));
-			}
-			break;
-"""
+#TODO if silly lengths or silly types seen in decode, this might imply
+#we're trying to process an encrypted packet without decrypting it.
+#the code should be more robust to this (by checking the CRC)
 
-#TODO if can't decode message throw an exception
-def decode(payload):
-    buffer = ""
-    length = payload[0]
-    if length+1 != len(payload):
-        warning("rx payload length mismatch")
+def decode(payload, decrypt=True):
+	"""Decode a raw buffer into an OpenHEMS pydict"""
+	#Note, decrypt must already have run on this for it to work
+	length = payload[0]
 
-    mfrId = payload[1]
-    productId = payload[2]
+	# CHECK LENGTH
+	if length+1 != len(payload) or length < 10:
+		raise OpenHEMSException("bad payload length")
+		#return {
+		#	"type":         "BADLEN",
+		#	"len_actual":   len(payload),
+		#	"len_expected": length,
+		#	"payload":      payload[1:]
+		#}
 
-    buffer += "len:" + str(length) + " "
-    buffer += "mfr:" + hex(mfrId) + " "
-    buffer += "prod:" + hex(productId) + " "
+	# DECODE HEADER
+	mfrId      = payload[1]
+	productId  = payload[2]
+	encryptPIP = (payload[3]<<8) + payload[4]
+	header = {
+		"mfrid"     : mfrId,
+		"productid" : productId,
+		"encryptPIP": encryptPIP
+	}
 
-    pip = (payload[3]<<8) + payload[4]
-    crypto.init(crypt_pid, pip)
-    crypto.cryptPayload(payload, 5, len(payload)-5)
 
-    for n in payload[5:]:
-        buffer += hex(n) + " "
+	if decrypt:
+		# DECRYPT PAYLOAD
+		# [0]len,mfrid,productid,pipH,pipL,[5]
+		crypto.init(crypt_pid, encryptPIP)
+		crypto.cryptPayload(payload, 5, len(payload)-5) # including CRC
 
-    #TODO check CRC matches
-    return buffer
+	# sensorId is in encrypted region
+	sensorId = (payload[5]<<16) + (payload[6]<<8) + payload[7]
+	header["sensorid"] = sensorId
+
+
+	# CHECK CRC
+	crc_actual  = (payload[-2]<<8) + payload[-1]
+	crc_expected = calcCRC(payload, 5, len(payload)-(5+2))
+	#print("crc actual:%s, expected:%s" %(hex(crc_actual), hex(crc_expected)))
+
+	if crc_actual != crc_expected:
+		raise OpenHEMSException("bad CRC")
+		#return {
+		#	"type":         "BADCRC",
+		#	"crc_actual":   crc_actual,
+		#	"crc_expected": crc_expected,
+		#	"payload":      payload[1:],
+		#}
+
+
+	# DECODE RECORDS
+	i = 8
+	recs = []
+	while i < length and payload[i] != 0:
+		# PARAM
+		param = payload[i]
+		wr = ((param & 0x80) == 0x80)
+		paramid = param & 0x7F
+		if param_names.has_key(paramid):
+			paramname = param_names[paramid]
+		else:
+			paramname = "UNKNOWN_" + hex(paramid)
+		i += 1
+
+		# TYPE/LEN
+		typeid = (payload[i] & 0xF0)>>4
+		plen = payload[i] & 0x0F
+		i += 1
+
+		if plen == 0: continue # no more data in this record
+
+		# VALUE
+		valuebytes = []
+		for x in range(plen):
+			valuebytes.append(payload[i])
+			i += 1
+		value = "TODO" # TODO decode based on type and length
+
+		# store rec
+		recs.append({
+			"wr":         wr,
+			"paramid":    paramid,
+			"paramname":  paramname,
+			"typeid":     typeid,
+			"length":     plen,
+			"valuebytes": valuebytes,
+			"value":      value
+		})
+
+	return {
+		"type":    "OK",
+		"header":  header,
+		"recs":    recs
+	}
+
 
 
 #----- MESSAGE ENCODER --------------------------------------------------------
@@ -163,36 +231,74 @@ def decode(payload):
 # R1 message product id 0x02 monitor and control (in switching program?)
 # C1 message product id 0x01 monitor only (in listening program)
 
+def encode(spec, encrypt=True):
+	"""Encode a pydict specification into a OpenHEMS binary payload"""
+	# The message is not encrypted, but the CRC is generated here.
 
-#TODO change this so it returns a pydict
-#write an encoder that turns the pydict into a buffer for the radio
+	payload = []
 
-def make_monitor():
-    payload = [
-        7 + 3 + 3,                  # payload remaining length (header+records+footer)
-        0x04,                       # manufacturer id = Energenie
-        0x01,                       # product id = 0x01=C1(monitor)  0x02=R1(monitor+control)
-        0x01,                       # reserved1 (cryptSeedMSB)
-        0x00,                       # reserved2 (cryptSeedLSB)
-        # from here up until the NUL is crc'd
-        # from here up to and including the CRC is crypted
-        0xFF,                       # sensorIdHigh broadcast
-        0xFF,                       # sensorIdMid broadcast
-        0xFF,                       # sensorIdLow broadcast
-        # RECORDS
-        PARAM_SWITCH_STATE | 0x80,  # set switch state
-        0x01,                       # type/length
-        0x00,                       # value off
-        0x00                        # NUL
-    ]
-    # Calculate and append the CRC bytes
-    crc = calcCRC(payload, 5, len(payload)-5)
-    payload.append((crc >> 8) & 0xFF) # MSB, big-endian
-    payload.append(crc & 0xFF)        # LSB
+	# HEADER
+	payload.append(0) # length, fixup later when known
+	header = spec["header"]
 
-    crypto.init(crypt_pid, crypt_pip)
-    crypto.cryptPayload(payload, 5, len(payload)-5) # including CRC
-    return payload
+	payload.append(header["mfrid"])
+	payload.append(header["productid"])
+
+	if encrypt:
+		if not header.has_key("encryptPIP"):
+			warning("no encryptPIP in header, assuming 0x0100")
+			encryptPIP = 0x0100
+		else:
+			encryptPIP = header["encryptPIP"]
+		payload.append((encryptPIP&0xFF00)>>8) # MSB
+		payload.append((encryptPIP&0xFF))      # LSB
+	else:
+		payload.append(0)
+		payload.append(0)
+
+	sensorId = header["sensorid"]
+	payload.append((sensorId>>16) & 0xFF) # HIGH
+	payload.append((sensorId>>8) & 0xFF)  # MID
+	payload.append((sensorId) & 0XFF)     # LOW
+
+	# RECORDS
+	for rec in spec["recs"]:
+		wr      = rec["wr"]
+		paramid = rec["paramid"]
+		typeid  = rec["typeid"]
+		length  = rec["length"]
+		value   = rec["value"]
+
+		# PARAMID
+		if wr:
+			payload.append(0x80 + paramid) # WRITE
+		else:
+			payload.append(paramid)        # READ
+
+		# TYPE/LENGTH
+		payload.append((typeid<<4) | length)
+
+		# VALUE
+		for i in range(length):
+			payload.append(0) # TODO encoding depends on typeid and length
+
+	# FOOTER
+	payload.append(0) # NUL
+	crc = calcCRC(payload, 5, len(payload)-5)
+	payload.append((crc>>8) & 0xFF) # MSB
+	payload.append(crc&0xFF)        # LSB
+
+	# back-patch the length byte so it is correct
+	payload[0] = len(payload)-1
+
+	if encrypt:
+		# ENCRYPT
+		# [0]len,mfrid,productid,pipH,pipL,[5]
+		crypto.init(crypt_pid, encryptPIP)
+		crypto.cryptPayload(payload, 5, len(payload)-5) # including CRC
+
+	return payload
+
 
 
 #----- CRC CALCULATION --------------------------------------------------------
@@ -214,16 +320,59 @@ def make_monitor():
 #}
 
 def calcCRC(payload, start, length):
-    rem = 0
-    for b in payload[start:start+length]:
-        rem ^= (b<<8)
-        for bit in range(8):
-            if rem & (1<<15) != 0:
-                # bit is set
-                rem = ((rem<<1) ^ 0x1021) & 0xFFFF # always maintain U16
-            else:
-                # bit is clear
-                rem = (rem<<1) & 0xFFFF # always maintain U16
-    return rem
+	rem = 0
+	for b in payload[start:start+length]:
+		rem ^= (b<<8)
+		for bit in range(8):
+			if rem & (1<<15) != 0:
+				# bit is set
+				rem = ((rem<<1) ^ 0x1021) & 0xFFFF # always maintain U16
+			else:
+				# bit is clear
+				rem = (rem<<1) & 0xFFFF # always maintain U16
+	return rem
+
+
+#----- TEST HARNESS -----------------------------------------------------------
+
+def printhex(payload):
+	line = ""
+	for b in payload:
+		line += hex(b) + " "
+
+	print line
+
+
+if __name__ == "__main__":
+	TEST_PAYLOAD = [
+		0x1C, 						#len   16 + 10 + 2  = 0001 1100
+		0x04, 						#mfrid
+		0x02, 						#prodid
+		0x01, 						#pipmsb
+		0x00, 						#piplsb
+		0x00, 0x06, 0x8B,        	#sensorid
+		0x70, 0x82, 0x00, 0x07, 	#power
+		0x71, 0x82, 0xFF, 0xFD,     #reactive_power
+		0x76, 0x01, 0xF0,    		#voltage
+		0x66, 0x22, 0x31, 0xDA,		#freq
+		0x73, 0x01, 0x01,			#switch_state
+		0x00,						#NUL
+		0x97, 0x64					#CRC
+
+	]
+
+	import pprint
+	init(242)
+
+	printhex(TEST_PAYLOAD)
+
+	spec = decode(TEST_PAYLOAD, decrypt=False)
+	pprint.pprint(spec)
+
+	payload = encode(spec, encrypt=True)
+	printhex(payload)
+
+	spec2 = decode(payload, decrypt=True)
+	pprint.pprint(spec2)
 
 # END
