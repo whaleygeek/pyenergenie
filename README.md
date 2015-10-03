@@ -25,7 +25,7 @@ product line.
 Purpose
 ====
 
-This release, as of 27/09/2015, is the beginnings of this work.
+This is an early release, and is the beginnings of this work.
 It is not representative of the final API, but it is a starting point for me to
 start experimenting with ideas and testing out reliability, with a view to using
 these products to integrate into an Internet of Things solution provided by
@@ -68,10 +68,8 @@ sudo python monitor.py
 ```
 
 After a few seconds, you should see some packet dumps appearing on the screen.
-The last few bytes will be 0x73 0x01 0x01 or 0x73 0x01 0x00 and these indicate
-the switch state of the plug. Press the button on the front of the plug to
-turn the switch on and off, and you should see the 0x01 change to 0x00 and
-back again.
+These packets are then decoded and displayed in a dictionary format,
+and for certain messages, also in a more friendly format.
 
 If it crashes, it sometimes leaves the radio in an indeterminite state, remove
 and replace the radio board and it should reset it (but see notes below about this).
@@ -84,28 +82,10 @@ Plans
 state and I have to remove the board to reset the radio. There might be a RESET
 line or a RESET command that can be sent at startup to solve this.
 
-2. Write an OpenHEMS decoder to decode the messages for friendly display. I will
-probably decode the hex buffer into a pydict, and then write a pydict to text
-formatter. This will expose the whole of OpenHEMS in a really nice Python structure
-to improve further innovation within Python.
-
-3. Write an OpenHEMS encoder to encode friendly messages. I will probably
-take a pydict with header and records in it and encode into a buffer that is
-then transmitted via the radio interface. As above, this will expose message
-creation in a really nice Python structure to improve further innovation within
-Python.
-
-4. Construct commands for switch-on and switch-off, and test sending these to a
+2. Construct commands for switch-on and switch-off, and test sending these to a
 specific sensorid.
 
-5. Write a discovery service that sends a monitor command, then collects all
-the receive messages and builds an internal dictionary of devices that respond.
-I will probably at this point build a Python object for each device that responds,
-and this object will be a proxy that can be used to monitor and control that device,
-thus allowing any number of devices to be monitored and controlled in a 'Pythonic'
-way.
-
-6. Push a fair amount of the radio interface and some of OpenHEMS back down into
+3. Push a fair amount of the radio interface and some of OpenHEMS back down into
 a C library that implements the same interface as what we have at this point in the
 Python. Write a ctypes wrapper around this, so that the identical Python internal
 API is presented. The idea being that the first pass of Python coding defines the

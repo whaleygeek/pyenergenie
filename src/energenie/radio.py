@@ -45,6 +45,13 @@ def HRF_writefifo_burst(buf):
     spi.deselect()
 
 
+def ashex(buf):
+    result = []
+    for b in buf:
+        result.append(hex(b))
+    return result
+
+
 def HRF_readfifo_burst():
     """Read bytes from the payload FIFO using burst read"""
     #first byte read is the length in remaining bytes
@@ -61,7 +68,7 @@ def HRF_readfifo_burst():
             count -= 1
         buf.append(data)
     spi.deselect()
-    trace("readfifo:" + str(buf))
+    trace("readfifo:" + str(ashex(buf)))
     return buf
 
 
