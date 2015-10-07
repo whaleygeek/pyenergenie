@@ -88,6 +88,7 @@ def monitor():
     sendSwitchTimer    = Timer(5, 1)   # every 5 seconds offset by initial 1
     switch_state       = 0             # OFF
     radio.receiver()
+    decoded            = None
 
     while True:
         # See if there is a payload, and if there is, process it
@@ -102,6 +103,10 @@ def monitor():
                       
             OpenHEMS.showMessage(decoded)
             updateDirectory(decoded)
+            #TODO: Should remember report time of each device,
+            #and reschedule command messages to avoid their transmit slot
+            #making it less likely to miss an incoming message due to
+            #the radio being in transmit mode
 
             # assume only 1 rec in a join, for now
             if decoded["recs"][0]["paramid"] == OpenHEMS.PARAM_JOIN:
@@ -114,6 +119,16 @@ def monitor():
                 radio.transmitter()
                 radio.transmit(p)
                 radio.receiver()
+
+        if sendSwitchTimer.check() and decoded != None:
+            request = OpenHEMS.alterMessage(SWITCH_MESSAGE,
+                header_sensorid=decoded["header"]["sensorid"],
+                recs_0_value=switch_state)
+            p = OpenHEMS.encode(request)
+            radio.transmitter()
+            radio.transmit(p)
+            radio.receiver()
+            switch_state = (switch_state+1) % 2 # toggle
         
 
 if __name__ == "__main__":

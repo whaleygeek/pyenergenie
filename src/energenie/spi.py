@@ -5,6 +5,7 @@
 LIBNAME = "spi_rpi.so"
 
 import ctypes
+import time
 
 from os import path
 mydir = path.dirname(path.abspath(__file__))
@@ -18,27 +19,69 @@ spi_byte_fn          = libspi["spi_byte"]
 spi_frame_fn         = libspi["spi_frame"]
 spi_finished_fn      = libspi["spi_finished"]
 
+# Might put this in a separate rpi_gpio.so and dynamically link both
+# from rpi_spi and from python, but have to be careful with sharing
+# memmap. For now, we only use this to control the radio RESET,
+# so let's leave this embedded inside the rpi_spi.so until we
+# need any more visibility
+#gpio_init_fn            = libspi["gpio_init"]
+#gpio_setin_fn           = libspi["gpio_setin"]
+gpio_setout_fn          = libspi["gpio_setout"]
+gpio_high_fn            = libspi["gpio_high"]
+gpio_low_fn             = libspi["gpio_low"]
+#gpio_write_fn           = libspi["gpio_write"]
+#gpio_read_fn            = libspi["gpio_read"]
+
+
 def trace(msg):
   pass #print("spi:" + msg)
-  
+
+
+# Note, this is radio specific, not SPI specific. hmm.
+# fine for now to test the theory, but architecturally this is wrong.
+# might have an optional reset line in spi_config, and an spi_reset()
+# in spi.c that excercises it if required, as a more generic way
+# to do this, as most SPI devices have a reset line. If value not
+# defined, nothing happens. If value defined, it must have a
+# polarity too, and spi.c will set it to an output inactive
+# until reset is required. Also need to set up a reset active
+# time and a 'after reset' guard time. That will cover most
+# cases generically without having to surface the whole inner GPIO
+# out to the python.
+
+def reset():
+  trace("reset")
+  RESET = 25 # BCM GPIO number
+  reset = ctypes.c_int(RESET)
+  gpio_setout_fn(reset)
+  gpio_high_fn(reset)
+  time.sleep(0.1)
+  gpio_low_fn(reset)
+  time.sleep(0.1)
+
+
 def init_defaults():
   trace("calling init_defaults")
   spi_init_defaults_fn()
-  
+
+
 def init():
   trace("calling init")
   #TODO build a config structure
   #TODO pass in pointer to config structure
   #spi_init_fn()
-  
+
+
 def select():
   trace("calling select")
   spi_select_fn()
-  
+
+
 def deselect():
   trace("calling deselect")
   spi_deselect_fn()
-  
+
+
 def byte(tx):
   txbyte = ctypes.c_ubyte(tx)
   #trace("calling byte")
@@ -59,8 +102,13 @@ def frame(txlist):
   for i in range(framelen):
     rxlist.append(rxframe[i])
   return rxlist
-  
+
+
 def finished():
   trace("calling finished")
   spi_finished_fn()
+
+
+# END
+
 

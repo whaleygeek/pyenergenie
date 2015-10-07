@@ -279,6 +279,10 @@ mode = None
 
 def init():
     spi.init_defaults()
+    print("######## RESET")
+    spi.reset() # send a hardware reset to ensure radio in clean state
+    print("######## END RESET")
+
     trace("config FSK")
     HRF_config_FSK()
     HRF_clear_fifo()
