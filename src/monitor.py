@@ -7,9 +7,72 @@ import time
 from energenie import OpenHEMS, Devices
 from energenie import radio
 from Timer import Timer
+import os
+
+LOG_FILENAME = "energenie.csv"
 
 def trace(msg):
     print(str(msg))
+
+log_file = None
+
+def logMessage (msg):
+    HEADINGS = 'timestamp,mfrid,prodid,sensorid,flags,switch,voltage,freq,reactive,real'
+
+    global log_file
+    if log_file == None:
+        if not os.path.isfile(LOG_FILENAME):
+            log_file = open(LOG_FILENAME, 'w')
+            log_file.write(HEADINGS + '\n')
+        else:
+            log_file = open(LOG_FILENAME, 'a') # append
+
+    # get the header
+    header    = msg['header']
+    timestamp = time.time()
+    mfrid     = header['mfrid']
+    productid = header['productid']
+    sensorid  = header['sensorid']
+
+    # set defaults for any data that doesn't appear in this message
+    # but build flags so we know which ones this contains
+    flags = [0,0,0,0,0]
+    switch = None
+    voltage = None
+    freq = None
+    reactive = None
+    real = None
+
+    # capture any data that we want
+    for rec in msg['recs']:
+        paramid = rec['paramid']
+        try:
+            value = rec['value']
+        except:
+            value = None
+            
+        if   paramid == OpenHEMS.PARAM_SWITCH_STATE:
+            switch = value
+            flags[0] = 1
+        elif paramid == OpenHEMS.PARAM_VOLTAGE:
+            flags[1] = 1
+            voltage = value
+        elif paramid == OpenHEMS.PARAM_FREQUENCY:
+            flags[2] = 1
+            freq = value
+        elif paramid == OpenHEMS.PARAM_REACTIVE_POWER:
+            flags[3] = 1
+            reactive = value
+        elif paramid == OpenHEMS.PARAM_REAL_POWER:
+            flags[4] = 1
+            real = value
+
+    # generate a line of CSV
+    flags = "".join([str(a) for a in flags])
+    csv = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s" % (timestamp, mfrid, productid, sensorid, flags, switch, voltage, freq, reactive, real)
+    log_file.write(csv + '\n')
+    log_file.flush()
+    print(csv) # testing
 
 
 #----- TEST APPLICATION -------------------------------------------------------
@@ -85,7 +148,7 @@ def monitor():
     """Send discovery and monitor messages, and capture any responses"""
 
     # Define the schedule of message polling
-    sendSwitchTimer    = Timer(5, 1)   # every 5 seconds offset by initial 1
+    sendSwitchTimer    = Timer(60, 1)   # every n seconds offset by initial 1
     switch_state       = 0             # OFF
     radio.receiver()
     decoded            = None
@@ -103,6 +166,8 @@ def monitor():
                       
             OpenHEMS.showMessage(decoded)
             updateDirectory(decoded)
+            logMessage(decoded)
+            
             #TODO: Should remember report time of each device,
             #and reschedule command messages to avoid their transmit slot
             #making it less likely to miss an incoming message due to
