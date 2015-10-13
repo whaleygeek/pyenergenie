@@ -174,7 +174,7 @@ def monitor():
             #the radio being in transmit mode
 
             # assume only 1 rec in a join, for now
-            if decoded["recs"][0]["paramid"] == OpenHEMS.PARAM_JOIN:
+            if len(decoded["recs"])>0 and decoded["recs"][0]["paramid"] == OpenHEMS.PARAM_JOIN:
                 #TODO: write OpenHEMS.getFromMessage("header_mfrid")
                 response = OpenHEMS.alterMessage(JOIN_ACK_MESSAGE,
                     header_mfrid=decoded["header"]["mfrid"],
