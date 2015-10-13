@@ -1,8 +1,6 @@
-'''
-Created on 13 Oct 2015
-
-@author: ed
-'''
+# test_Devices.py  13/10/2015  E.D.Hurst-Frost
+#
+# Devices module tests.
 import unittest
 from energenie import Devices
 
