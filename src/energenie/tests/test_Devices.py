@@ -4,18 +4,8 @@
 import unittest
 from energenie import Devices
 
-class Test(unittest.TestCase):
-
-
-    def setUp(self):
-        pass
-
-
-    def tearDown(self):
-        pass
-
-
-    def testName(self):
+class Test_Devices(unittest.TestCase):
+    def test_getDescription(self):
         self.assertEqual("Manufactuer:Energenie Product:C1 MONITOR", Devices.getDescription(0x04,0x01), "")
         self.assertEqual("Manufactuer:Energenie Product:R1 MONITOR/CONTROL", Devices.getDescription(0x04,0x02), "")
         self.assertEqual("Manufactuer:Energenie Product:eTRV", Devices.getDescription(0x04,0x03), "")

@@ -5,21 +5,10 @@ import unittest
 from energenie import OpenHEMS
 
 
-class Test(unittest.TestCase):
-
-
-    def setUp(self):
-        pass
-
-
-    def tearDown(self):
-        pass
-
-
+class Test_OpenHEMS(unittest.TestCase):
     def test_Decode_eTRV_temperature_report(self):
         eTRVAnnounce = [0xe,0x4,0x3,0x46,0x13,0x0,0x4,0xae,0x74,0x92,0x14,0xb3,0x0,0xcb,0xc7]
         decoded = OpenHEMS.decode(eTRVAnnounce, False)
-        print(decoded)
         self.assertEqual(0x4ae, decoded['header']['sensorid'], "Unexpected sensor ID")
         self.assertEqual('OK', decoded['type'], "Unexpected type")
         self.assertEqual(1, decoded['recs'].__len__(), "Unexpected number of recs")
