@@ -15,7 +15,8 @@ do not support the full radio interface and full product range.
 
 Energenie also have a modified set of C test code based on the HopeRF test harness,
 but this does not support all products, all variants of Raspberry Pi hardware,
-or all versions of the Raspbian OS.
+or all versions of the Raspbian OS, unless you bring in later versions of
+the BCM module to support the new device tree on the BCM2836.
 
 This project aims to develop an open source Python module, providing 
 access to many or all of the features of the OpenHEMS, HopeRF and Energenie 
@@ -75,15 +76,23 @@ If it crashes, it sometimes leaves the radio in an indeterminite state, remove
 and replace the radio board and it should reset it (but see notes below about this).
 
 
+Note that the protocol module (OpenHEMS) is completely generic and will
+pretty much work with any device. Try plugging in an E-TRV and see what
+messages get reported. Construct new template messages as pydict initialisers
+and encode and send those in to make the device do something in response.
+
+
 Plans
 ====
 
-1. Add RESET support - the radio sometimes gets into an unknown and unrecoverable
-state and I have to remove the board to reset the radio. There might be a RESET
-line or a RESET command that can be sent at startup to solve this.
+1. Finish off the message scheduler, so that transmits only occur in safe
+timeslots that are less likely to collide with transmits from devices
+(and thus increase reliability of messaging in a large device installation)
 
-2. Construct commands for switch-on and switch-off, and test sending these to a
-specific sensorid.
+2. Write a Python object interface for devices - i.e. one object per
+physical device on the network, with a method for each feature of that
+device. This will allow very high level object oriented access to a set of
+devices in an installation, in a very expressive and easy to use manner.
 
 3. Push a fair amount of the radio interface and some of OpenHEMS back down into
 a C library that implements the same interface as what we have at this point in the
@@ -98,4 +107,4 @@ David Whale
 
 @whaleygeek
 
-September 2015
+October 2015
