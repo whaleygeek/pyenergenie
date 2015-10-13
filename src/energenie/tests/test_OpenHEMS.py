@@ -22,6 +22,11 @@ class Test_OpenHEMS(unittest.TestCase):
         self.assertEqual('OK', decoded['type'], "Unexpected type")
         self.assertEqual(0, decoded['recs'].__len__(), "Unexpected number of recs")
 
+    def test_index(self):
+        if 2 in [1,2]:
+            self.fail("yes")
+        else:
+            self.fail("no")
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

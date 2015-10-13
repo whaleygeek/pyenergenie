@@ -185,7 +185,7 @@ def monitor():
                 radio.transmit(p)
                 radio.receiver()
 
-        if sendSwitchTimer.check() and decoded != None and [Devices.PRODUCTID_C1_MONITOR, Devices.PRODUCTID_R1_MONITOR_AND_CONTROL].index(decoded["header"]["productid"]):
+        if sendSwitchTimer.check() and decoded != None and decoded["header"]["productid"] in [Devices.PRODUCTID_C1_MONITOR, Devices.PRODUCTID_R1_MONITOR_AND_CONTROL]:
             request = OpenHEMS.alterMessage(SWITCH_MESSAGE,
                 header_sensorid=decoded["header"]["sensorid"],
                 recs_0_value=switch_state)
