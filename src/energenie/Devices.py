@@ -5,6 +5,7 @@
 MFRID                            = 0x04
 PRODUCTID_C1_MONITOR             = 0x01
 PRODUCTID_R1_MONITOR_AND_CONTROL = 0x02
+PRODUCTID_ETRV                   = 0x03
 CRYPT_PID                        = 242
 CRYPT_PIP                        = 0x0100
 
@@ -21,6 +22,8 @@ def getDescription(mfrid, productid):
             product = "C1 MONITOR"
         elif productid == PRODUCTID_R1_MONITOR_AND_CONTROL:
             product = "R1 MONITOR/CONTROL"
+        elif productid == PRODUCTID_ETRV:
+            product = "eTRV"
         else:
             product = "UNKNOWN"
     else:
