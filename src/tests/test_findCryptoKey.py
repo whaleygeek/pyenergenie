@@ -1,4 +1,4 @@
-# OpenHEMS.py  16/10/2015  E.D.Hurst-Frost
+# test_findCryptoKey.py  16/10/2015  E.D.Hurst-Frost
 #
 # Brute force search for crypto key
 
@@ -29,5 +29,4 @@ class FindCryptoKey(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.test_findEncryptId']
     unittest.main()
