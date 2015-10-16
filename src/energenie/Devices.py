@@ -2,7 +2,7 @@
 #
 # Information about specific Energenie devices
 
-MFRID                            = 0x04
+MFRID_ENERGENIE                  = 0x04
 PRODUCTID_C1_MONITOR             = 0x01
 PRODUCTID_R1_MONITOR_AND_CONTROL = 0x02
 PRODUCTID_ETRV                   = 0x03
@@ -16,7 +16,10 @@ BROADCAST_ID                     = 0xFFFFFF # energenie broadcast
 # TODO put additional products in here from the Energenie directory
 
 def getDescription(mfrid, productid):
-    if mfrid == MFRID:
+    mfr     = "UNKNOWN"
+    product = "UNKNOWN"
+
+    if mfrid == MFRID_ENERGENIE:
         mfr = "Energenie"
         if productid == PRODUCTID_C1_MONITOR:
             product = "C1 MONITOR"
@@ -24,11 +27,6 @@ def getDescription(mfrid, productid):
             product = "R1 MONITOR/CONTROL"
         elif productid == PRODUCTID_ETRV:
             product = "eTRV"
-        else:
-            product = "UNKNOWN"
-    else:
-        mfr     = "UNKNOWN"
-        product = "UNKNOWN"
 
     return "Manufactuer:%s Product:%s" % (mfr, product)
 
