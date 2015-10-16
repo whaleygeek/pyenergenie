@@ -152,13 +152,13 @@ def decode(payload, decrypt=True):
 		"encryptPIP": encryptPIP
 	}
 
-
 	if decrypt:
 		# DECRYPT PAYLOAD
 		# [0]len,mfrid,productid,pipH,pipL,[5]
 		crypto.init(crypt_pid, encryptPIP)
 		crypto.cryptPayload(payload, 5, len(payload)-5) # including CRC
-                printhex(payload)
+		printhex(payload)
+		
 	# sensorId is in encrypted region
 	sensorId = (payload[5]<<16) + (payload[6]<<8) + payload[7]
 	header["sensorid"] = sensorId

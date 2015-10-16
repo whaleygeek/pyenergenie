@@ -3,9 +3,13 @@
 # OpenHEMS module tests.
 import unittest
 from energenie import OpenHEMS
-
+from energenie import Devices
 
 class Test_OpenHEMS(unittest.TestCase):
+    def setUp(self):
+        OpenHEMS.init(Devices.CRYPT_PID)
+        pass
+
     def test_Decode_eTRV_temperature_report(self):
         eTRVAnnounce = [0xe,0x4,0x3,0x46,0x13,0x0,0x4,0xae,0x74,0x92,0x14,0xb3,0x0,0xcb,0xc7]
         decoded = OpenHEMS.decode(eTRVAnnounce, False)
@@ -21,12 +25,6 @@ class Test_OpenHEMS(unittest.TestCase):
         self.assertEqual(0x4ae, decoded['header']['sensorid'], "Unexpected sensor ID")
         self.assertEqual('OK', decoded['type'], "Unexpected type")
         self.assertEqual(0, decoded['recs'].__len__(), "Unexpected number of recs")
-
-    def test_index(self):
-        if 2 in [1,2]:
-            self.fail("yes")
-        else:
-            self.fail("no")
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
