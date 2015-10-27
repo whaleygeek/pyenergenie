@@ -9,6 +9,7 @@
 # and then pushed back into C once it is proved working.
 
 import spi
+from tools.tools import toHexListString
 
 def warning(msg):
     print("warning:" + str(msg))
@@ -68,7 +69,7 @@ def HRF_readfifo_burst():
             count -= 1
         buf.append(data)
     spi.deselect()
-    trace("readfifo:" + str(ashex(buf)))
+    trace("readfifo:" + toHexListString(buf))
     return buf
 
 

@@ -8,6 +8,7 @@ from energenie import OpenHEMS, Devices
 from energenie import radio
 from Timer import Timer
 import os
+from messages import MESSAGE_JOIN_ACK, MESSAGE_SWITCH
 
 LOG_FILENAME = "energenie.csv"
 
@@ -106,41 +107,6 @@ def updateDirectory(message):
     #not as a list index, else merging will be hard.
 
 
-SWITCH_MESSAGE = {
-    "header": {
-        "mfrid":       Devices.MFRID,
-        "productid":   Devices.PRODUCTID_R1_MONITOR_AND_CONTROL,
-        "encryptPIP":  Devices.CRYPT_PIP,
-        "sensorid":    0 # FILL IN
-    },
-    "recs": [
-        {
-            "wr":      True,
-            "paramid": OpenHEMS.PARAM_SWITCH_STATE,
-            "typeid":  OpenHEMS.Value.UINT,
-            "length":  1,
-            "value":   0 # FILL IN
-        }
-    ]
-}
-
-
-JOIN_ACK_MESSAGE = {
-    "header": {
-        "mfrid":       0, # FILL IN
-        "productid":   0, # FILL IN
-        "encryptPIP":  Devices.CRYPT_PIP,
-        "sensorid":    0 # FILL IN
-    },
-    "recs": [
-        {
-            "wr":      False,
-            "paramid": OpenHEMS.PARAM_JOIN,
-            "typeid":  OpenHEMS.Value.UINT,
-            "length":  0
-        }
-    ]
-}
 
 
 
@@ -174,9 +140,9 @@ def monitor():
             #the radio being in transmit mode
 
             # assume only 1 rec in a join, for now
-            if decoded["recs"][0]["paramid"] == OpenHEMS.PARAM_JOIN:
+            if len(decoded["recs"])>0 and decoded["recs"][0]["paramid"] == OpenHEMS.PARAM_JOIN:
                 #TODO: write OpenHEMS.getFromMessage("header_mfrid")
-                response = OpenHEMS.alterMessage(JOIN_ACK_MESSAGE,
+                response = OpenHEMS.alterMessage(MESSAGE_JOIN_ACK,
                     header_mfrid=decoded["header"]["mfrid"],
                     header_productid=decoded["header"]["productid"],
                     header_sensorid=decoded["header"]["sensorid"])
@@ -185,8 +151,8 @@ def monitor():
                 radio.transmit(p)
                 radio.receiver()
 
-        if sendSwitchTimer.check() and decoded != None:
-            request = OpenHEMS.alterMessage(SWITCH_MESSAGE,
+        if sendSwitchTimer.check() and decoded != None and decoded["header"]["productid"] in [Devices.PRODUCTID_C1_MONITOR, Devices.PRODUCTID_R1_MONITOR_AND_CONTROL]:
+            request = OpenHEMS.alterMessage(MESSAGE_SWITCH,
                 header_sensorid=decoded["header"]["sensorid"],
                 recs_0_value=switch_state)
             p = OpenHEMS.encode(request)
