@@ -27,7 +27,7 @@ def getDescription(mfrid, productid):
         mfr     = "UNKNOWN"
         product = "UNKNOWN"
 
-    return "Manufactuer:%s Product:%s" % (mfr, product)
+    return "Manufacturer:%s Product:%s" % (mfr, product)
 
 
 # END

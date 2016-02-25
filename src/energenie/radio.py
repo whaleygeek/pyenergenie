@@ -14,7 +14,7 @@ def warning(msg):
     print("warning:" + str(msg))
 
 def trace(msg):
-    print(str(msg))
+    pass #print(str(msg))
 
 
 #----- REGISTER ACCESS --------------------------------------------------------
@@ -279,9 +279,9 @@ mode = None
 
 def init():
     spi.init_defaults()
-    print("######## RESET")
+    trace("######## RESET")
     spi.reset() # send a hardware reset to ensure radio in clean state
-    print("######## END RESET")
+    trace("######## END RESET")
 
     trace("config FSK")
     HRF_config_FSK()

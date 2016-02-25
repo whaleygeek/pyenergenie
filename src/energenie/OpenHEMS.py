@@ -121,6 +121,9 @@ def warning(msg):
 	print("warning:" + str(msg))
 
 
+def trace(msg):
+        print("OpenHEMS:%s" % str(msg))
+
 #----- MESSAGE DECODER --------------------------------------------------------
 
 #TODO if silly lengths or silly types seen in decode, this might imply
@@ -158,7 +161,7 @@ def decode(payload, decrypt=True):
 		# [0]len,mfrid,productid,pipH,pipL,[5]
 		crypto.init(crypt_pid, encryptPIP)
 		crypto.cryptPayload(payload, 5, len(payload)-5) # including CRC
-                printhex(payload)
+                #printhex(payload)
 	# sensorId is in encrypted region
 	sensorId = (payload[5]<<16) + (payload[6]<<8) + payload[7]
 	header["sensorid"] = sensorId
@@ -167,7 +170,7 @@ def decode(payload, decrypt=True):
 	# CHECK CRC
 	crc_actual  = (payload[-2]<<8) + payload[-1]
 	crc_expected = calcCRC(payload, 5, len(payload)-(5+2))
-	#print("crc actual:%s, expected:%s" %(hex(crc_actual), hex(crc_expected)))
+	#trace("crc actual:%s, expected:%s" %(hex(crc_actual), hex(crc_expected)))
 
 	if crc_actual != crc_expected:
 		raise OpenHEMSException("bad CRC")
@@ -351,13 +354,13 @@ class Value():
 		mask = 1<<(maxbits-1)
 		bitno = maxbits-1
 		while mask != 0:
-			#print("compare %s with %s" %(hex(value), hex(mask)))
+			#trace("compare %s with %s" %(hex(value), hex(mask)))
 			if (value & mask) == 0:
-				#print("zero at bit %d" % bitno)
+				#trace("zero at bit %d" % bitno)
 				return bitno
 			mask >>= 1
 			bitno-=1
-		#print("not found")
+		#trace("not found")
 		return None # NOT FOUND
 
 
@@ -369,25 +372,25 @@ class Value():
 
 		if value == -1: # always 0xFF, so always needs exactly 2 bits to represent (sign and value)
 			return 2 # bits required
-		#print("valuebits of:%d" % value)
+		#trace("valuebits of:%d" % value)
 		# Turn into a 2's complement representation
 		MAXBYTES=15
 		MAXBITS = 1<<(MAXBYTES*8)
 		#TODO check for truncation?
 		value = value & MAXBITS-1
-		#print("hex:%s" % hex(value))
+		#trace("hex:%s" % hex(value))
 		highz = Value.highestClearBit(value, MAXBYTES*8)
-		#print("highz at bit:%d" % highz)
+		#trace("highz at bit:%d" % highz)
 		# allow for a sign bit, and bit numbering from zero
 		neededbits = highz+2
 
-		#print("needed bits:%d" % neededbits)
+		#trace("needed bits:%d" % neededbits)
 		return neededbits
 
 
 	@staticmethod
 	def encode(value, typeid, length=None):
-		#print("encoding:" + str(value))
+		#trace("encoding:" + str(value))
 		if typeid == Value.CHAR:
 			if type(value) != str:
 				value = str(value)
@@ -453,13 +456,13 @@ class Value():
 					bits = Value.valuebits(value)
 				else:
 					bits = Value.typebits(typeid)
-				#print("need bits:" + str(bits))
+				#trace("need bits:" + str(bits))
 				# NORMALISE BITS TO BYTES
 				####HERE#### round up to nearest number of 8 bits
 				# if already 8, leave 1,2,3,4,5,6,7,8 = 8   0,1,2,3,4,5,6,7 (((b-1)/8)+1)*8
 				# 9,10,11,12,13,14,15,16=16
 				bits = (((bits-1)/8)+1)*8 # snap to nearest byte boundary
-				#print("snap bits to 8:" + str(bits))
+				#trace("snap bits to 8:" + str(bits))
 
 				value &= ((2**bits)-1)
 				neg = True
@@ -568,7 +571,7 @@ def calcCRC(payload, start, length):
 
 def showMessage(msg):
     """Show the message in a friendly format"""
-    pprint.pprint(msg)
+    #pprint.pprint(msg)
     
     # HEADER
     header    = msg["header"]
@@ -606,14 +609,15 @@ def alterMessage(message, **kwargs):
         m = message
         for p in path[:-1]:
             try:
+
                 p = int(p)
             except:
                 pass
             m = m[p]
-        #print("old value:%s" % m[path[-1]])
+        #trace("old value:%s" % m[path[-1]])
         m[path[-1]] = value
 
-        #print("modified:" + str(message))
+        #trace("modified:" + str(message))
 
     return message
 
@@ -624,7 +628,7 @@ def printhex(payload):
 	for b in payload:
 		line += hex(b) + " "
 
-	print line
+	print(line)
 
 
 TEST_PAYLOAD = [

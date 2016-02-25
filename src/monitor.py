@@ -11,8 +11,10 @@ import os
 
 LOG_FILENAME = "energenie.csv"
 
+def warning(msg):
+    print("warning:%s" % str(msg))
 def trace(msg):
-    print(str(msg))
+    print("monitor:%s" % str(msg))
 
 log_file = None
 
@@ -72,7 +74,7 @@ def logMessage (msg):
     csv = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s" % (timestamp, mfrid, productid, sensorid, flags, switch, voltage, freq, reactive, real)
     log_file.write(csv + '\n')
     log_file.flush()
-    print(csv) # testing
+    trace(csv) # testing
 
 
 #----- TEST APPLICATION -------------------------------------------------------
@@ -99,7 +101,7 @@ def updateDirectory(message):
         desc = Devices.getDescription(header["mfrid"], header["productid"])
         print("ADD device:%s %s" % (hex(sensorId), desc))
         directory[sensorId] = {"header": message["header"]}
-        print(allkeys(directory))
+        #trace(allkeys(directory))
 
     directory[sensorId]["time"] = now
     #TODO would be good to keep recs, but need to iterate through all and key by paramid,
@@ -148,7 +150,7 @@ def monitor():
     """Send discovery and monitor messages, and capture any responses"""
 
     # Define the schedule of message polling
-    sendSwitchTimer    = Timer(60, 1)   # every n seconds offset by initial 1
+    sendSwitchTimer    = Timer(5, 1)   # every n seconds offset by initial 1
     switch_state       = 0             # OFF
     radio.receiver()
     decoded            = None
@@ -156,12 +158,12 @@ def monitor():
     while True:
         # See if there is a payload, and if there is, process it
         if radio.isReceiveWaiting():
-            trace("receiving payload")
+            #trace("receiving payload")
             payload = radio.receive()
             try:
                 decoded = OpenHEMS.decode(payload)
             except OpenHEMS.OpenHEMSException as e:
-                print("Can't decode payload:" + str(e))
+                warning("Can't decode payload:" + str(e))
                 continue
                       
             OpenHEMS.showMessage(decoded)
@@ -197,7 +199,8 @@ def monitor():
         
 
 if __name__ == "__main__":
-
+    
+    trace("starting monitor")
     radio.init()
     OpenHEMS.init(Devices.CRYPT_PID)
 
