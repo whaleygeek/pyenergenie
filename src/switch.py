@@ -43,8 +43,6 @@ def change_switch_state(switch, state):
                 OpenHEMS.showMessage(decoded)
             except OpenHEMS.OpenHEMSException as DecodeError:
                 print("Can't decode payload: " + str(DecodeError))
-        else:
-            print("No message waiting.")
     except UnexpectedError:
         print("Unexpected error: " + str(UnexpectedError))
     finally:
@@ -54,8 +52,8 @@ def change_switch_state(switch, state):
 def main():
     """Switches a plug on or off."""
     parser = argparse.ArgumentParser(description='Switches a plug on or off.')
-    parser.add_argument('--name', nargs=1, required=True,
-                        help='the name of the switch to act upon')
+    parser.add_argument('--device', nargs=1, required=True,
+                        help='the device ID (if hex, prefix with 0x) of the switch to act upon')
     parser.add_argument('--action', nargs=1, required=True,
                         choices=['on', 'off'], help='turns the switch on')
 
@@ -63,10 +61,10 @@ def main():
     state = 0
     if args.action[0] == 'on':
         state = 1
-    name = args.name[0]
-    value = int(name, base=16)
+    deviceidstring = args.device[0]
+    deviceid = int(deviceidstring, 0)
 
-    change_switch_state(value, state)
+    change_switch_state(deviceid, state)
 
 if __name__ == "__main__":
     # execute only if run as a script
