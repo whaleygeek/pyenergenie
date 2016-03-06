@@ -11,8 +11,10 @@ import os
 
 LOG_FILENAME = "energenie.csv"
 
+def warning(msg):
+    print("warning:%s" % str(msg))
 def trace(msg):
-    print(str(msg))
+    print("monitor:%s" % str(msg))
 
 log_file = None
 
@@ -36,14 +38,17 @@ def logMessage (msg):
 
     # set defaults for any data that doesn't appear in this message
     # but build flags so we know which ones this contains
-    flags = [0,0,0,0,0]
+    flags = [0 for i in range(7)]
     switch = None
     voltage = None
     freq = None
     reactive = None
     real = None
+    apparent = None
+    current = None
 
     # capture any data that we want
+    #print(msg)
     for rec in msg['recs']:
         paramid = rec['paramid']
         try:
@@ -66,13 +71,19 @@ def logMessage (msg):
         elif paramid == OpenHEMS.PARAM_REAL_POWER:
             flags[4] = 1
             real = value
+        elif paramid == OpenHEMS.PARAM_APPARENT_POWER:
+            flags[5] = 1
+            apparent = value
+        elif paramid == OpenHEMS.PARAM_CURRENT:
+            flags[6] = 1
+            current = value
 
     # generate a line of CSV
     flags = "".join([str(a) for a in flags])
-    csv = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s" % (timestamp, mfrid, productid, sensorid, flags, switch, voltage, freq, reactive, real)
+    csv = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s" % (timestamp, mfrid, productid, sensorid, flags, switch, voltage, freq, reactive, real, apparent, current)
     log_file.write(csv + '\n')
     log_file.flush()
-    print(csv) # testing
+    trace(csv) # testing
 
 
 #----- TEST APPLICATION -------------------------------------------------------
@@ -99,7 +110,7 @@ def updateDirectory(message):
         desc = Devices.getDescription(header["mfrid"], header["productid"])
         print("ADD device:%s %s" % (hex(sensorId), desc))
         directory[sensorId] = {"header": message["header"]}
-        print(allkeys(directory))
+        #trace(allkeys(directory))
 
     directory[sensorId]["time"] = now
     #TODO would be good to keep recs, but need to iterate through all and key by paramid,
@@ -148,7 +159,7 @@ def monitor():
     """Send discovery and monitor messages, and capture any responses"""
 
     # Define the schedule of message polling
-    sendSwitchTimer    = Timer(60, 1)   # every n seconds offset by initial 1
+    sendSwitchTimer    = Timer(5, 1)   # every n seconds offset by initial 1
     switch_state       = 0             # OFF
     radio.receiver()
     decoded            = None
@@ -156,12 +167,12 @@ def monitor():
     while True:
         # See if there is a payload, and if there is, process it
         if radio.isReceiveWaiting():
-            trace("receiving payload")
+            #trace("receiving payload")
             payload = radio.receive()
             try:
                 decoded = OpenHEMS.decode(payload)
             except OpenHEMS.OpenHEMSException as e:
-                print("Can't decode payload:" + str(e))
+                warning("Can't decode payload:" + str(e))
                 continue
                       
             OpenHEMS.showMessage(decoded)
@@ -173,17 +184,23 @@ def monitor():
             #making it less likely to miss an incoming message due to
             #the radio being in transmit mode
 
-            # assume only 1 rec in a join, for now
-            if decoded["recs"][0]["paramid"] == OpenHEMS.PARAM_JOIN:
-                #TODO: write OpenHEMS.getFromMessage("header_mfrid")
-                response = OpenHEMS.alterMessage(JOIN_ACK_MESSAGE,
-                    header_mfrid=decoded["header"]["mfrid"],
-                    header_productid=decoded["header"]["productid"],
-                    header_sensorid=decoded["header"]["sensorid"])
-                p = OpenHEMS.encode(response)
-                radio.transmitter()
-                radio.transmit(p)
-                radio.receiver()
+            # handle messages with zero recs in them silently
+            #trace(decoded)
+            if len(decoded["recs"]) == 0:
+                print("Empty record:%s" % decoded)
+            else:
+                # assume only 1 rec in a join, for now
+                if decoded["recs"][0]["paramid"] == OpenHEMS.PARAM_JOIN:
+                    #TODO: write OpenHEMS.getFromMessage("header_mfrid")
+                    # send back a JOIN ACK, so that join light stops flashing
+                    response = OpenHEMS.alterMessage(JOIN_ACK_MESSAGE,
+                        header_mfrid=decoded["header"]["mfrid"],
+                        header_productid=decoded["header"]["productid"],
+                        header_sensorid=decoded["header"]["sensorid"])
+                    p = OpenHEMS.encode(response)
+                    radio.transmitter()
+                    radio.transmit(p)
+                    radio.receiver()
 
         if sendSwitchTimer.check() and decoded != None:
             request = OpenHEMS.alterMessage(SWITCH_MESSAGE,
@@ -197,7 +214,8 @@ def monitor():
         
 
 if __name__ == "__main__":
-
+    
+    trace("starting monitor")
     radio.init()
     OpenHEMS.init(Devices.CRYPT_PID)
 
