@@ -1,6 +1,6 @@
 # monitor.py  27/09/2015  D.J.Whale
 #
-# Monitor Energine MiHome plugs
+# Monitor settings of Energine MiHome plugs
 
 import time
 
@@ -117,6 +117,25 @@ def updateDirectory(message):
     #not as a list index, else merging will be hard.
 
 
+SWITCH_MESSAGE = {
+    "header": {
+        "mfrid":       Devices.MFRID,
+        "productid":   Devices.PRODUCTID_R1_MONITOR_AND_CONTROL,
+        "encryptPIP":  Devices.CRYPT_PIP,
+        "sensorid":    0 # FILL IN
+    },
+    "recs": [
+        {
+            "wr":      True,
+            "paramid": OpenHEMS.PARAM_SWITCH_STATE,
+            "typeid":  OpenHEMS.Value.UINT,
+            "length":  1,
+            "value":   0 # FILL IN
+        }
+    ]
+}
+
+
 JOIN_ACK_MESSAGE = {
     "header": {
         "mfrid":       0, # FILL IN
@@ -134,22 +153,16 @@ JOIN_ACK_MESSAGE = {
     ]
 }
 
-def send_join_ack(mfrid, productid, sensorid):
-    # send back a JOIN ACK, so that join light stops flashing
-    response = OpenHEMS.alterMessage(JOIN_ACK_MESSAGE,
-        header_mfrid=mfrid,
-        header_productid=productid,
-        header_sensorid=sensorid)
-    p = OpenHEMS.encode(response)
-    radio.transmitter()
-    radio.transmit(p)
-    radio.receiver()
 
 
 def monitor():
-    """Capture any incoming messages and log to CSV file"""
+    """Send discovery and monitor messages, and capture any responses"""
 
+    # Define the schedule of message polling
+    sendSwitchTimer    = Timer(5, 1)   # every n seconds offset by initial 1
+    switch_state       = 0             # OFF
     radio.receiver()
+    decoded            = None
 
     while True:
         # See if there is a payload, and if there is, process it
@@ -165,22 +178,40 @@ def monitor():
             OpenHEMS.showMessage(decoded)
             updateDirectory(decoded)
             logMessage(decoded)
+            
+            #TODO: Should remember report time of each device,
+            #and reschedule command messages to avoid their transmit slot
+            #making it less likely to miss an incoming message due to
+            #the radio being in transmit mode
 
+            # handle messages with zero recs in them silently
             #trace(decoded)
             if len(decoded["recs"]) == 0:
-                # handle messages with zero recs in them silently
                 print("Empty record:%s" % decoded)
             else:
                 # assume only 1 rec in a join, for now
-                #TODO: write OpenHEMS.getFromMessage("header_mfrid")
                 if decoded["recs"][0]["paramid"] == OpenHEMS.PARAM_JOIN:
-                    header    = decoded["header"]
-                    mfrid     = header["mfrid"]
-                    productid = header["productid"]
-                    sensorid  = header["sensorid"]
-                    send_join_ack(mfrid, productid, sensorid)
+                    #TODO: write OpenHEMS.getFromMessage("header_mfrid")
+                    # send back a JOIN ACK, so that join light stops flashing
+                    response = OpenHEMS.alterMessage(JOIN_ACK_MESSAGE,
+                        header_mfrid=decoded["header"]["mfrid"],
+                        header_productid=decoded["header"]["productid"],
+                        header_sensorid=decoded["header"]["sensorid"])
+                    p = OpenHEMS.encode(response)
+                    radio.transmitter()
+                    radio.transmit(p)
+                    radio.receiver()
 
-
+        if sendSwitchTimer.check() and decoded != None:
+            request = OpenHEMS.alterMessage(SWITCH_MESSAGE,
+                header_sensorid=decoded["header"]["sensorid"],
+                recs_0_value=switch_state)
+            p = OpenHEMS.encode(request)
+            radio.transmitter()
+            radio.transmit(p)
+            radio.receiver()
+            switch_state = (switch_state+1) % 2 # toggle
+        
 
 if __name__ == "__main__":
     

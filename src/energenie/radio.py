@@ -201,6 +201,30 @@ config_FSK = [
     [ADDR_OPMODE, 		    MODE_RECEIVER]			    # Operating mode to Receiver
 ]
 
+config_OOK = [
+    [ADDR_REGDATAMODUL,     VAL_REGDATAMODUL_OOK],	    # modulation scheme OOK
+    [ADDR_FDEVMSB, 		    0], 					    # frequency deviation -> 0kHz
+    [ADDR_FDEVLSB, 		    0], 					    # frequency deviation -> 0kHz
+    [ADDR_FRMSB, 		    VAL_FRMSB433],			    # carrier freq -> 433.92MHz 0x6C7AE1
+    [ADDR_FRMID, 		    VAL_FRMID433],              # carrier freq -> 433.92MHz 0x6C7AE1
+    [ADDR_FRLSB, 		    VAL_FRLSB433],			    # carrier freq -> 433.92MHz 0x6C7AE1
+    [ADDR_RXBW, 		    VAL_RXBW120],			    # channel filter bandwidth 120kHz
+    [ADDR_BITRATEMSB, 	    0x40],					    # 1938b/s
+    [ADDR_BITRATELSB,       0x80],					    # 1938b/s
+    #[ADDR_BITRATEMSB,       0x1A],					    # 4800b/s
+    #[ADDR_BITRATELSB,       0x0B],					    # 4800b/s
+    [ADDR_PREAMBLELSB, 	    0],						    # preamble size LSB 3
+    [ADDR_SYNCCONFIG, 	    VAL_SYNCCONFIG4],		    # Size of the Synch word = 4 (SyncSize + 1)
+    [ADDR_SYNCVALUE1, 	    VAL_SYNCVALUE1OOK],	        # sync value 1
+    [ADDR_SYNCVALUE2, 	    0],						    # sync value 2
+    [ADDR_SYNCVALUE3, 	    0],						    # sync value 3
+    [ADDR_SYNCVALUE4, 	    0],						    # sync value 4
+    [ADDR_PACKETCONFIG1,    VAL_PACKETCONFIG1OOK],	    # Fixed length, no Manchester coding, OOK
+    [ADDR_PAYLOADLEN, 	    VAL_PAYLOADLEN_OOK],	    # Payload Length
+    [ADDR_FIFOTHRESH, 	    VAL_FIFOTHRESH30],		    # Condition to start packet transmission: wait for 30 bytes in FIFO
+    #[ADDR_OPMODE, 		    MODE_TRANSMITER]		    # Transmitter mode
+]
+
 
 def HRF_wait_ready():
     """Wait for HRF to be ready after last command"""
@@ -217,6 +241,13 @@ def HRF_wait_txready():
 def HRF_config_FSK():
     """Configure HRF for FSK modulation"""
     for cmd in config_FSK:
+        HRF_writereg(cmd[0], cmd[1])
+        HRF_wait_ready()
+
+
+def HRF_config_OOK():
+    """Configure HRF for OOK modulation"""
+    for cmd in config_OOK:
         HRF_writereg(cmd[0], cmd[1])
         HRF_wait_ready()
 
@@ -257,6 +288,32 @@ def HRF_send_payload(payload):
     if ((reg & MASK_FIFONOTEMPTY) != 0) or ((reg & MASK_FIFOOVERRUN) != 0):
         warning("Failed to send payload to HRF")
 
+
+def send_payload_repeat(payload, times=0):
+    """Send a payload multiple times"""
+
+    # 32 bits enclosed in sync words
+    HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY|MASK_TXREADY, MASK_MODEREADY|MASK_TXREADY)
+
+    #write first payload without sync preamble
+    HRF_writefifo_burst(payload)
+
+    # preceed all future payloads with a sync-word preamble
+    if times > 0:
+        preamble = [0x00,0x80,0x00,0x00,0x00]
+        preamble_payload = preamble + payload
+        for i in range(times): # Repeat the message a number of times
+            HRF_pollreg(ADDR_IRQFLAGS2, MASK_FIFOLEVEL, 0)
+            HRF_writefifo_burst(preamble_payload)
+
+    HRF_pollreg(ADDR_IRQFLAGS2, MASK_PACKETSENT, MASK_PACKETSENT) # wait for Packet sent
+
+    reg = HRF_readreg(ADDR_IRQFLAGS2)
+    trace("  irqflags2=%s" % hex(reg))
+    if (reg & (MASK_FIFONOTEMPTY) != 0) or ((reg & MASK_FIFOOVERRUN) != 0):
+        warning("Failed to send repeated payload to HRF")
+
+
 def dumpPayloadAsHex(payload):
     length = payload[0]
     print(hex(length))
@@ -267,21 +324,65 @@ def dumpPayloadAsHex(payload):
         print("[%d] = %s" % (i, hex(payload[i])))
 
 
+def build_OOK_relay_msg(relayState=False):
+    """Temporary test code to prove we can turn the relay on or off"""
+    #This code does not live in this module, it lives in an EnergenieLegacy codec module
+    #also there are 4 switches, so should pass in up to 4 relayState values
 
+    # This generates a 20*4 bit address i.e. 10 bytes
+    # The number generated is always the same
+    # Presumably this is the 'Energenie address prefix'
+    # The switch number is encoded in the payload
+    # This code looks screwy, but it is correct compared to the C code.
+    # It's probably doing bit encoding on the fly, manchester or sync bits or something.
+    # Wait until we get the OOK spec from Energenie to better document this.
+
+    # Looks like: 0000 00BA gets encoded as:
+    # 128 64 32 16  8  4  2  1
+    #   1  0  B  B  1  A  A  0
+
+    #payload = []
+    #for i in range(10):
+    #    j = i + 5
+    #    payload.append(8 + (j&1) * 6 + 128 + (j&2) * 48)
+    #dumpPayloadAsHex(payload)
+    #
+    #          5     6     7     8     9     10    11    12    13    14
+    #          1(01) 1(10) 1(11) 0(00) 0(01) 0(10) 0(11) 1(00) 1(01) 1(10)
+    payload = [0x8e, 0xe8, 0xee, 0x88, 0x8e, 0xe8, 0xee, 0x88, 0x8e, 0xe8]
+
+    if relayState: # ON
+        # D0=high, D1=high, D2-high, D3=high (S1 on)
+        # 128 64 32 16  8  4  2  1        128 64 32 16  8  4  2  1
+        #   1  0  B  B  1  A  A  0          1  0  B  B  1  A  A  0
+        #   1  1  1  0  1  1  1  0          1  1  1  0  1  1  1  0   = 10 11 10 11
+        payload += [0xEE, 0xEE]
+    else: # OFF
+        # D0=high, D1=high, D2=high, D3=low (S1 off)
+        # 128 64 32 16  8  4  2  1        128 64 32 16  8  4  2  1
+        #   1  0  B  B  1  A  A  0          1  0  B  B  1  A  A  0
+        #   1  1  1  0  1  1  1  0          1  1  1  0  1  0  0  0   = 10 11 10 00
+        payload += [0xEE, 0xE8]
+
+    return payload
 
 
 #----- USER API ---------------------------------------------------------------
 #
 # This is only a first-pass at a user API.
 # it might change quite a bit in the second pass.
+# The HRF functions are intentionally not used by the caller,
+# this allows mock testing, and also for that part to be rewritten in C
+# for speed later if required.
 
 mode = None
+modulation_fsk = None
 
 def init():
+    """Initialise the module ready for use"""
     spi.init_defaults()
-    trace("######## RESET")
+    trace("RESET")
     spi.reset() # send a hardware reset to ensure radio in clean state
-    trace("######## END RESET")
 
     trace("config FSK")
     HRF_config_FSK()
@@ -289,40 +390,68 @@ def init():
     receiver()
 
 
-def transmitter():
+def modulation(fsk=None, ook=None):
+    """Switch modulation, if needed"""
+    global modulation_fsk
+
+    # Handle sensible module defaults for earlier versions of user code
+    if fsk == None and ook == None:
+        # Force FSK mode
+        fsk = True
+
+    if fsk != None and fsk:
+        if modulation_fsk == None or modulation_fsk == False:
+            trace("switch to FSK")
+            HRF_config_FSK()
+            modulation_fsk = True
+
+    elif ook != None and ook:
+        if modulation_fsk == None or modulation_fsk == True:
+            trace("switch to OOK")
+            HRF_config_OOK()
+            modulation_fsk = False
+
+
+def transmitter(fsk=None, ook=None):
     """Change into transmitter mode"""
     global mode
+
     trace("transmitter mode")
+    modulation(fsk, ook)
     HRF_change_mode(MODE_TRANSMITER)
     mode = "TRANSMITTER"
     HRF_wait_txready()
 
 
 def transmit(payload):
+    """Transmit a single payload using the present modulation scheme"""
     HRF_send_payload(payload)
 
 
-def receiver():
+def receiver(fsk=None, ook=None):
     """Change into receiver mode"""
     global mode
+
     trace("receiver mode")
+    modulation(fsk, ook)
     HRF_change_mode(MODE_RECEIVER)
     HRF_wait_ready()
     mode = "RECEIVER"
 
 
 def isReceiveWaiting():
+    """Check to see if a payload is waiting in the receive buffer"""
     return HRF_check_payload()
 
 
 def receive():
+    """Receive a single payload from the buffer using the present modulation scheme"""
     return HRF_receive_payload()
 
 
 def finished():
     """Close the library down cleanly when finished"""
     spi.finished()
-
 
 
 # END
