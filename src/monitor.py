@@ -2,6 +2,13 @@
 #
 # Monitor Energine MiHome plugs
 
+# Note, this is *only* a test program, to exercise the lower level code.
+# Don't expect this to be a good starting point for an application.
+# Consider waiting for me to finish developing the device object interface first.
+#
+# However, it will log all messages from MiHome monitor, adaptor plus and house monitor
+# to a CSV log file, so could be the basis for a non-controlling energy logging app.
+
 import time
 
 from energenie import OpenHEMS, Devices
@@ -13,6 +20,7 @@ LOG_FILENAME = "energenie.csv"
 
 def warning(msg):
     print("warning:%s" % str(msg))
+
 def trace(msg):
     print("monitor:%s" % str(msg))
 
@@ -146,7 +154,7 @@ def send_join_ack(mfrid, productid, sensorid):
     radio.receiver()
 
 
-def monitor():
+def monitor_loop():
     """Capture any incoming messages and log to CSV file"""
 
     radio.receiver()
@@ -163,10 +171,12 @@ def monitor():
                 continue
                       
             OpenHEMS.showMessage(decoded)
+            # Any device that reports will be added to the non-persistent directory
             updateDirectory(decoded)
+            #trace(decoded)
             logMessage(decoded)
 
-            #trace(decoded)
+            # Process any JOIN messages by sending back a JOIN-ACK to turn the LED off
             if len(decoded["recs"]) == 0:
                 # handle messages with zero recs in them silently
                 print("Empty record:%s" % decoded)
@@ -184,12 +194,12 @@ def monitor():
 
 if __name__ == "__main__":
     
-    trace("starting monitor")
+    trace("starting monitor tester")
     radio.init()
     OpenHEMS.init(Devices.CRYPT_PID)
 
     try:
-        monitor()
+        monitor_loop()
 
     finally:
         radio.finished()

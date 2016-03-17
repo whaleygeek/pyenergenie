@@ -71,4 +71,10 @@ def getDescription(mfrid, productid):
     return "Manufacturer:%s Product:%s" % (mfr, product)
 
 
+def hasSwitch(mfrid, productid):
+    if mfrid != MFRID:                                return False
+    if productid == PRODUCTID_R1_MONITOR_AND_CONTROL: return True
+    return False
+
+
 # END
