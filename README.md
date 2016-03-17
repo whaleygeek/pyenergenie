@@ -2,8 +2,8 @@
 A python interface to the Energenie line of products
 
 
-This is the beginnings of an open source library to access the Energine range of
-power control and monitoring products from within Python.
+This is the beginnings of an open source library to access the Energienie 
+range of power control and monitoring products from within Python.
 
 The Energenie product line uses the HopeRF radio transciever, and the OpenHEMS 
 protocol from Sentec. Energenie have built a RaspberryPi add-on board that 
@@ -28,13 +28,16 @@ Purpose
 
 This is an early release, and is the beginnings of this work.
 It is not representative of the final API, but it is a starting point for me to
-start experimenting with ideas and testing out reliability, with a view to using
-these products to integrate into an Internet of Things solution provided by
-Iotic-Labs Ltd.
+start experimenting with ideas and testing out reliability.
 
 With it, you can receive monitor payloads from an Energenie MiHome Adaptor Plus,
 directly within Python programs. This type of plug can be used for energy monitoring
 and also for relay control of the socket.
+
+You can also turn switches on MiHome Adaptor Plus on and off.
+
+There is some rudimentary initial support for the legacy green-button
+switch devices ENER002.
 
 I've tried to make this a 'zero install' and 'zero configuration' experience.
 In theory (at least) you should be able to download the zip or git-clone,
@@ -72,8 +75,24 @@ After a few seconds, you should see some packet dumps appearing on the screen.
 These packets are then decoded and displayed in a dictionary format,
 and for certain messages, also in a more friendly format.
 
-If it crashes, it sometimes leaves the radio in an indeterminite state, remove
-and replace the radio board and it should reset it (but see notes below about this).
+5. run the switch test program
+
+```
+sudo python switch.py
+```
+
+This will listen for any MiHome adaptor plus devices, and then turn their
+switch on and off every 10 seconds.
+
+6. Try the (provisional) legacy device support
+
+```
+sudo python legacy.py
+```
+
+Follow the on screen instructions to pair up the program with any of your
+green-button legacy devices. Then the switches should turn on and off
+every 10 seconds.
 
 
 Note that the protocol module (OpenHEMS) is completely generic and will
@@ -85,16 +104,18 @@ and encode and send those in to make the device do something in response.
 Plans
 ====
 
-1. Finish off the message scheduler, so that transmits only occur in safe
+1. Finish off support for the legacy green-button devices.
+
+2. Finish off the message scheduler, so that transmits only occur in safe
 timeslots that are less likely to collide with transmits from devices
 (and thus increase reliability of messaging in a large device installation)
 
-2. Write a Python object interface for devices - i.e. one object per
+3. Write a Python object interface for devices - i.e. one object per
 physical device on the network, with a method for each feature of that
 device. This will allow very high level object oriented access to a set of
 devices in an installation, in a very expressive and easy to use manner.
 
-3. Push a fair amount of the radio interface and some of OpenHEMS back down into
+4. Push a fair amount of the radio interface and some of OpenHEMS back down into
 a C library that implements the same interface as what we have at this point in the
 Python. Write a ctypes wrapper around this, so that the identical Python internal
 API is presented. The idea being that the first pass of Python coding defines the
@@ -102,9 +123,11 @@ API we want to use, and the second pass turns this into a single library that
 does everything, exposed to Python via ctypes, but linkable to other applications
 and languages too.
 
+5. Write a javascript version that runs inside NodeRed, to allow NodeRed
+nodes and flows to interact with any Energenie device.
 
 David Whale
 
 @whaleygeek
 
-October 2015
+March 2016
