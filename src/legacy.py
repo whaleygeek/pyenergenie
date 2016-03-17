@@ -58,7 +58,8 @@ def legacy_switch_loop():
         print("sending OFF")
         radio.send_payload_repeat(OFF, 8)
         print("waiting")
-        
+        time.sleep(2)
+
 
 if __name__ == "__main__":
 
