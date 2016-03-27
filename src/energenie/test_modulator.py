@@ -30,11 +30,9 @@ def build_OOK_relay_msg(state, device_address=ALL_SOCKETS, house_address=None):
         # hex    = 6    C    6    C    6
         house_address = 0x6C6C6
 
-    payload = modulate_bytes([
-        (house_address & 0xFF0000)>>16,
-        (house_address & 0x00FF00)>>8,
-        (house_address & 0x0000FF)
-    ])
+    payload  = modulate_bits((house_address & 0x0F0000) >> 16, 4)
+    payload += modulate_bits((house_address & 0x00FF00) >> 8,  8)
+    payload += modulate_bits((house_address & 0x0000FF),       8)
 
     # Turn switch request into a 4 bit switch command, and add to payload
     # D 3210
@@ -71,11 +69,11 @@ def build_OOK_relay_msg(state, device_address=ALL_SOCKETS, house_address=None):
 
 def modulate_bytes(data):
     """Turn a list of bytes into a modulated pattern equivalent"""
-    print("modulate_bytes: %s" % ashex(data))
+    #print("modulate_bytes: %s" % ashex(data))
     payload = []
     for b in data:
         payload += modulate_bits(b, 8)
-    print("  returns: %s" % ashex(payload))
+    #print("  returns: %s" % ashex(payload))
     return payload
 
 
@@ -87,15 +85,16 @@ def modulate_bits(data, number):
     # 128 64 32 16  8  4  2  1
     #   1  B  B  0  1  A  A  0
     # i.e. a 0 is a short pulse, a 1 is a long pulse
-    print("modulate_bits %s (%s)" % (ashex(data), str(number)))
+    #print("modulate_bits %s (%s)" % (ashex(data), str(number)))
 
     shift = number-2
     modulated = []
     for i in range(number/2):
         bits = (data >> shift) & 0x03
+        #print("    shift %d bits %d" % (shift, bits))
         modulated.append(MODULATOR[bits])
-        shift >>= 2
-    print(" returns:%s" % ashex(modulated))
+        shift -= 2
+    #print("  returns:%s" % ashex(modulated))
     return modulated
 
 
@@ -103,14 +102,27 @@ def modulate_bits(data, number):
 
 print("*" * 80)
 
-ALL_ON  = build_OOK_relay_msg(True)
-#ALL_OFF = build_OOK_relay_msg(False)
+ALL_ON   = build_OOK_relay_msg(True)
+ALL_OFF  = build_OOK_relay_msg(False)
 
-print("ALL ON")
-print(ashex(ALL_ON))
+ONE_ON   = build_OOK_relay_msg(True, device_address=1)
+ONE_OFF  = build_OOK_relay_msg(False, device_address=1)
 
-#print("ALL OFF")
-#print(ashex(ALL_OFF))
+TWO_ON   = build_OOK_relay_msg(True, device_address=2)
+TWO_OFF  = build_OOK_relay_msg(False, device_address=2)
+
+THREE_ON   = build_OOK_relay_msg(True, device_address=3)
+THREE_OFF  = build_OOK_relay_msg(False, device_address=3)
+
+FOUR_ON   = build_OOK_relay_msg(True, device_address=4)
+FOUR_OFF  = build_OOK_relay_msg(False, device_address=4)
+
+MYHOUSE_ALL_ON = build_OOK_relay_msg(True, house_address=0x12345)
+
+tests = [ALL_ON, ALL_OFF, ONE_ON, ONE_OFF, TWO_ON, TWO_OFF, THREE_ON, THREE_OFF, FOUR_ON, FOUR_OFF, MYHOUSE_ALL_ON]
+
+for t in tests:
+    print(ashex(t))
 
 # END
 
