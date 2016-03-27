@@ -36,8 +36,9 @@ and also for relay control of the socket.
 
 You can also turn switches on MiHome Adaptor Plus on and off.
 
-There is some rudimentary initial support for the legacy green-button
-switch devices ENER002.
+There is support for the legacy green-button switch devices ENER002,
+but it is not yet fully tested, and not integrated into the main application
+flow yet.
 
 I've tried to make this a 'zero install' and 'zero configuration' experience.
 In theory (at least) you should be able to download the zip or git-clone,
@@ -92,7 +93,7 @@ sudo python legacy.py
 
 Follow the on screen instructions to pair up the program with any of your
 green-button legacy devices. Then the switches should turn on and off
-every 10 seconds.
+every 2 seconds.
 
 
 Note that the protocol module (OpenHEMS) is completely generic and will
@@ -123,8 +124,8 @@ API we want to use, and the second pass turns this into a single library that
 does everything, exposed to Python via ctypes, but linkable to other applications
 and languages too.
 
-5. Write a javascript version that runs inside NodeRed, to allow NodeRed
-nodes and flows to interact with any Energenie device.
+5. Write javascript NodeRed wrappers around the Python (like GPIO nodes do)
+so that you can drop NodeRed nodes for Energenie devices into a flow.
 
 David Whale
 
