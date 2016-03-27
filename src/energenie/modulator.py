@@ -1,6 +1,6 @@
 # modulator.py  27/03/2016  D.J.Whale
 #
-# OOK modulator
+# modulator for use with OOK payloads
 
 ALL_SOCKETS = 0
 

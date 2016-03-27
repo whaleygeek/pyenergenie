@@ -1,78 +1,104 @@
 # legacy.py  17/03/2016  D.J.Whale
 #
-# Placeholder for a legacy plug (OOK) test harness
+# Simple legacy plug test harness.
+# Legacy plugs have a big green button on the front,
+# and usually come in kits with a handheld remote control.
 #
-# This is a temporary piece of code, that will be thrown away once the device object interface
-# is written.
+# Note: This is a temporary piece of code, that will be thrown away
+# once the device object interface is written.
 #
-# Please don't use this as the basis for an application, it is only designed to be used
-# to test the lower level code.
-
-# switch.py  17/03/2016  D.J.Whale
-#
-# Control Energenie switches.
-# Note, at the moment, this only works with MiHome Adaptor Plus devices
-# because the 'sensorid' is discovered via the monitor message.
-# You could probably fake it by preloading the directory with your sensorid
-# if you know what it is.
-
-# Note, this is *only* a test program, to exercise the lower level code.
-# Don't expect this to be a good starting point for an application.
-# Consider waiting for me to finish developing the device object interface first.
+# Please don't use this as the basis for an application,
+# it is only designed to be used to test the lower level code.
 
 import time
 
-from energenie import  Devices, radio
+from energenie import modulator
 from energenie import radio
-from Timer import Timer
-
-TX_RATE = 10 # seconds between each switch change cycle
-
-def warning(msg):
-    print("warning:%s" % str(msg))
-
-def trace(msg):
-    print("monitor:%s" % str(msg))
 
 
 #----- TEST APPLICATION -------------------------------------------------------
 
+# Prebuild all possible message up front, to make switching code faster
+
+HOUSE_ADDRESS = None # default
+
+ALL_ON     = modulator.build_switch_msg(True,                    house_address=HOUSE_ADDRESS)
+ONE_ON     = modulator.build_switch_msg(True,  device_address=1, house_address=HOUSE_ADDRESS)
+TWO_ON     = modulator.build_switch_msg(True,  device_address=2, house_address=HOUSE_ADDRESS)
+THREE_ON   = modulator.build_switch_msg(True,  device_address=3, house_address=HOUSE_ADDRESS)
+FOUR_ON    = modulator.build_switch_msg(True,  device_address=4, house_address=HOUSE_ADDRESS)
+ON_MSGS    = [ALL_ON, ONE_ON, TWO_ON, THREE_ON, FOUR_ON]
+
+ALL_OFF    = modulator.build_switch_msg(False,                   house_address=HOUSE_ADDRESS)
+ONE_OFF    = modulator.build_switch_msg(False, device_address=1, house_address=HOUSE_ADDRESS)
+TWO_OFF    = modulator.build_switch_msg(False, device_address=2, house_address=HOUSE_ADDRESS)
+THREE_OFF  = modulator.build_switch_msg(False, device_address=3, house_address=HOUSE_ADDRESS)
+FOUR_OFF   = modulator.build_switch_msg(False, device_address=4, house_address=HOUSE_ADDRESS)
+OFF_MSGS   = [ALL_OFF, ONE_OFF, TWO_OFF, THREE_OFF, FOUR_OFF]
+
+
+def get_yes_no():
+    """Get a simple yes or no answer"""
+    answer = raw_input() # python2
+    if answer.upper() in ['Y', 'YES']:
+        return True
+    return False
+
+
+def legacy_learn_mode():
+    """Give the user a chance to learn any switches"""
+    print("Do you want to program any switches?")
+    y = get_yes_no()
+    if not y:
+        return
+
+    for switch_no in range(1,5):
+        print("Learn switch %d?" % switch_no)
+        y = get_yes_no()
+        if y:
+            print("Press the LEARN button on any switch %d for 5 secs until LED flashes" % switch_no)
+            raw_input("press ENTER when LED is flashing")
+
+            radio.transmit(OFF_MSGS[switch_no])
+
+            print("Device should now be programmed")
+            
+            print("Testing....")
+            for i in range(4):
+                time.sleep(1)
+                radio.transmit(ON_MSGS[switch_no])
+                time.sleep(1)
+                radio.transmit(OFF_MSGS[switch_no])
+            print("Test completed")
+
+
 def legacy_switch_loop():
-    """Listen to sensor messages, and turn switches on and off every few seconds"""
-
-    radio.transmitter(ook=True)
-
-    # Transmit a code multiple times and program it into the switch
-    print("Press the LEARN button on the switch for 5 secs until LED flashes")
-    raw_input("press ENTER when LED is flashing")
-
-    ON = radio.build_OOK_relay_msg(True)
-    OFF = radio.build_OOK_relay_msg(False)
+    """Turn all switches on or off every few seconds"""
 
     while True:
-        print("sending ON")
-        radio.send_payload_repeat(ON, 8)
+        print("sending ALL ON")
+        radio.transmit(ALL_ON)
         print("waiting")
         time.sleep(2)
 
-        print("sending OFF")
-        radio.send_payload_repeat(OFF, 8)
+        print("sending ALL OFF")
+        radio.transmit(ALL_OFF)
         print("waiting")
         time.sleep(2)
 
 
 if __name__ == "__main__":
 
-    trace("starting legacy switch tester")
+    print("starting legacy switch tester")
     radio.init()
+    radio.transmitter(ook=True)
 
     try:
+        legacy_learn_mode()
         legacy_switch_loop()
 
     finally:
         radio.finished()
-
-# END
 
 
 # END
