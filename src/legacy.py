@@ -91,17 +91,21 @@ def legacy_switch_loop():
         print("waiting")
         time.sleep(2)
 
+
 def legacy_test():
-    ON = encoder.build_relay_msg(True)
-    OFF = encoder.build_relay_msg(False)
+    #TODO: This testing shows that the C code and the specs are out of step
+    #ONE_ON = encoder.build_relay_msg(True)
+    #ONE_OFF = encoder.build_relay_msg(False)
+    ONE_ON  = encoder.build_switch_msg(True, device_address=1)
+    ONE_OFF = encoder.build_switch_msg(False, device_address=1)
 
     while True:
         print("ON")
-        radio.transmit(ON)
+        radio.transmit(ONE_ON)
         time.sleep(1)
     
         print("OFF")
-        radio.transmit(OFF)
+        radio.transmit(ONE_OFF)
         time.sleep(1)
 
 

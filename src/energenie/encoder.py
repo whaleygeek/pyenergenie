@@ -66,6 +66,8 @@ def build_switch_msg(state, device_address=ALL_SOCKETS, house_address=None):
 
     #TODO: D3210 are the other way round in the message??
     #This is correct as presented by the PDF from Energenie though.
+    #the relay test code above proves that bit position 0 is the on/off command
+    #so the next 3 bits are just like extra address bits
     # Turn switch request into a 4 bit switch command, and add to payload
     # D 3210
     #   0000 UNUSED
@@ -77,24 +79,48 @@ def build_switch_msg(state, device_address=ALL_SOCKETS, house_address=None):
     #   0110 socket 2 off (6)
     #   0111 socket 1 off (7)
     #   1000 UNUSED
-    #   1101 UNUSED
-    #   1110 UNUSED
+    #   1001 UNUSED
+    #   1010 UNUSED
     #   1011 All on       (3)
     #   1100 socket 4 on  (4)
     #   1101 socket 3 on  (5)
     #   1110 socket 2 on  (6)
     #   1111 socket 1 on  (7)
 
+    # Coded as per the (working) C code would be:
+    # b 3210
+    #   0000 UNUSED         0
+    #   0001 UNUSED         1
+    #   0010 socket 4 off   2
+    #   0011 socket 4 on    3
+    #   0100 UNUSED         4
+    #   0101 UNUSED         5
+    #   0110 socket 2 off   6
+    #   0111 socket 2 on    7
+    #   1000 UNUSED         8
+    #   1001 UNUSED         9
+    #   1010 socket 3 off   A
+    #   1100 all off        C
+    #   1101 all on         D
+    #   1110 socket 1 off   E
+    #   1111 socket 1 on    F
+
     if not state: # OFF
         bits = 0x00
     else: # ON
-        bits = 0x08
+        bits = 0x01
 
     if device_address == ALL_SOCKETS:
-        bits |= 0x03 # ALL
-    else:
-        bits += 7-((device_address-1) & 0x03)
-
+        bits |= 0x0C # ALL
+    elif device_address == 1:
+        bits |= 0x0E
+    elif device_address == 2:
+        bits |= 0x06
+    elif device_address == 3:
+        bits |= 0x0A
+    elif device_address == 4:
+        bits |= 0x02
+        
     payload += encode_bits(bits, 4)
     return payload
 
