@@ -4,6 +4,13 @@
 
 ALL_SOCKETS = 0
 
+def ashex(payload):
+    line = ""
+    for b in payload:
+        line += str(hex(b)) + " "
+    return line
+
+
 def build_relay_msg(relayState=False):
     """Temporary test code to prove we can turn the relay on or off"""
 
@@ -42,6 +49,14 @@ def build_relay_msg(relayState=False):
         #   1  1  1  0  1  1  1  0          1  1  1  0  1  0  0  0
         payload += [0xEE, 0xE8] # 1110
 
+    return payload
+
+
+def build_test_message(pattern):
+    payload = [0x8E, 0xE8, 0xEE, 0x88, 0x8E, 0xE8, 0xEE, 0x88, 0x8E, 0xE8]
+    pattern &= 0x0F
+    control = encode_bits(pattern, 4)
+    payload += control
     return payload
 
 
@@ -100,6 +115,7 @@ def build_switch_msg(state, device_address=ALL_SOCKETS, house_address=None):
     #   1000 UNUSED         8
     #   1001 UNUSED         9
     #   1010 socket 3 off   A
+    #   1011 socket 3 on    B
     #   1100 all off        C
     #   1101 all on         D
     #   1110 socket 1 off   E

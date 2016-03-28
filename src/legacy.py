@@ -109,6 +109,16 @@ def legacy_test():
         time.sleep(1)
 
 
+def pattern_test():
+    """Test all patterns"""
+    while True:
+        p = raw_input("number 0..F")
+        p = int(p, 16)
+        msg = encoder.build_test_message(p)
+        print("pattern %s payload %s" % (str(hex(p)), encoder.ashex(msg)))
+        radio.transmit(msg)
+            
+
 if __name__ == "__main__":
 
     print("starting legacy switch tester")
@@ -118,7 +128,8 @@ if __name__ == "__main__":
     try:
         #legacy_learn_mode()
         #legacy_switch_loop()
-        legacy_test()
+        #legacy_test()
+        pattern_test()
 
     finally:
         radio.finished()
