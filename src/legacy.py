@@ -91,6 +91,19 @@ def legacy_switch_loop():
         print("waiting")
         time.sleep(2)
 
+def legacy_test():
+    ON = radio.OLD_build_OOK_relay_msg(True)
+    OFF = radio.OLD_build_OOK_relay_msg(False)
+
+    while True:
+        print("ON")
+        radio.OLD_send_payload_repeat(ON)
+        time.sleep(1)
+    
+        print("OFF")
+        radio.OLD_send_payload_repeat(OFF)
+        time.sleep(1)
+
 
 if __name__ == "__main__":
 
@@ -99,8 +112,9 @@ if __name__ == "__main__":
     radio.transmitter(ook=True)
 
     try:
-        legacy_learn_mode()
-        legacy_switch_loop()
+        #legacy_learn_mode()
+        #legacy_switch_loop()
+        legacy_test()
 
     finally:
         radio.finished()
