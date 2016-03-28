@@ -12,7 +12,7 @@
 
 import time
 
-from energenie import modulator
+from energenie import encoder
 from energenie import radio
 
 
@@ -22,18 +22,18 @@ from energenie import radio
 
 HOUSE_ADDRESS = None # default
 
-ALL_ON     = modulator.build_switch_msg(True,                    house_address=HOUSE_ADDRESS)
-ONE_ON     = modulator.build_switch_msg(True,  device_address=1, house_address=HOUSE_ADDRESS)
-TWO_ON     = modulator.build_switch_msg(True,  device_address=2, house_address=HOUSE_ADDRESS)
-THREE_ON   = modulator.build_switch_msg(True,  device_address=3, house_address=HOUSE_ADDRESS)
-FOUR_ON    = modulator.build_switch_msg(True,  device_address=4, house_address=HOUSE_ADDRESS)
+ALL_ON     = encoder.build_switch_msg(True,                    house_address=HOUSE_ADDRESS)
+ONE_ON     = encoder.build_switch_msg(True,  device_address=1, house_address=HOUSE_ADDRESS)
+TWO_ON     = encoder.build_switch_msg(True,  device_address=2, house_address=HOUSE_ADDRESS)
+THREE_ON   = encoder.build_switch_msg(True,  device_address=3, house_address=HOUSE_ADDRESS)
+FOUR_ON    = encoder.build_switch_msg(True,  device_address=4, house_address=HOUSE_ADDRESS)
 ON_MSGS    = [ALL_ON, ONE_ON, TWO_ON, THREE_ON, FOUR_ON]
 
-ALL_OFF    = modulator.build_switch_msg(False,                   house_address=HOUSE_ADDRESS)
-ONE_OFF    = modulator.build_switch_msg(False, device_address=1, house_address=HOUSE_ADDRESS)
-TWO_OFF    = modulator.build_switch_msg(False, device_address=2, house_address=HOUSE_ADDRESS)
-THREE_OFF  = modulator.build_switch_msg(False, device_address=3, house_address=HOUSE_ADDRESS)
-FOUR_OFF   = modulator.build_switch_msg(False, device_address=4, house_address=HOUSE_ADDRESS)
+ALL_OFF    = encoder.build_switch_msg(False,                   house_address=HOUSE_ADDRESS)
+ONE_OFF    = encoder.build_switch_msg(False, device_address=1, house_address=HOUSE_ADDRESS)
+TWO_OFF    = encoder.build_switch_msg(False, device_address=2, house_address=HOUSE_ADDRESS)
+THREE_OFF  = encoder.build_switch_msg(False, device_address=3, house_address=HOUSE_ADDRESS)
+FOUR_OFF   = encoder.build_switch_msg(False, device_address=4, house_address=HOUSE_ADDRESS)
 OFF_MSGS   = [ALL_OFF, ONE_OFF, TWO_OFF, THREE_OFF, FOUR_OFF]
 
 
@@ -92,8 +92,8 @@ def legacy_switch_loop():
         time.sleep(2)
 
 def legacy_test():
-    ON = modulator.build_relay_msg(True)
-    OFF = modulator.build_relay_msg(False)
+    ON = encoder.build_relay_msg(True)
+    OFF = encoder.build_relay_msg(False)
 
     while True:
         print("ON")
