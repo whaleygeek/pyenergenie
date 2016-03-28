@@ -40,8 +40,11 @@ def HRF_readreg(addr):
 def HRF_writefifo_burst(buf):
     """Write all bytes in buf to the payload FIFO, in a single burst"""
     spi.select()
-    buf.insert(0, ADDR_FIFO | MASK_WRITE_DATA)
-    spi.frame(buf)
+    # Don't modify buf, in case caller reuses it
+    txbuf = [ADDR_FIFO | MASK_WRITE_DATA]
+    for b in buf:
+      txbuf.append(b)
+    spi.frame(txbuf)
     spi.deselect()
 
 
@@ -289,6 +292,13 @@ def HRF_send_payload(payload):
         warning("Failed to send payload to HRF")
 
 
+def ashex(p):
+    line = ""
+    for b in p:
+        line += str(hex(b)) + " "
+    return line
+
+
 def dumpPayloadAsHex(payload):
     length = payload[0]
     print(hex(length))
@@ -346,20 +356,32 @@ def dumpPayloadAsHex(payload):
 
 def HRF_send_OOK_payload_repeat(payload, times=0):
     """Send a payload multiple times"""
-
+    print("@@@@@ send OOK repeated")
     HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY|MASK_TXREADY, MASK_MODEREADY|MASK_TXREADY)
 
     # A payload is 32 bits enclosed in sync words
     # write first payload without sync preamble
-    payload.insert(0, 0x00) # first byte should be all zeros (TODO add to payload builder)
+    # 4   5   6   7   8   9   10   11   12   13   14
+    # ..  01  10  11  00  01  10   11   00   01   10
+    # 00  8E  E8  EE  88  8E  E8   EE   88   8E   E8
+    
+    payload = [0x8E,0xE8,0xEE,0x88,0x8E,0xE8,0xEE,0x88,0x8E,0xE8]
+    # bits are labeled back to front in C code! D0 D1 D2 D3
+    allon   = [0xEE, 0xEE]
+    alloff  = [0xEE, 0xE8]
+    payload += allon
+
+    ##payload.insert(0, 0x00) # first byte should be all zeros (TODO add to payload builder)
+    #print("send %s" % ashex(payload))
     HRF_writefifo_burst(payload)
 
     # preceed all future payloads with a sync-word preamble
     if times > 0:
-        SYNC_PREAMBLE = [0x00,0x80,0x00,0x00]
+        SYNC_PREAMBLE = [0x00,0x80,0x00,0x00,0x00]
         preamble_payload = SYNC_PREAMBLE + payload
         for i in range(times): # Repeat the message a number of times
             HRF_pollreg(ADDR_IRQFLAGS2, MASK_FIFOLEVEL, 0)
+            #print("send %s" % ashex(preamble_payload))
             HRF_writefifo_burst(preamble_payload)
 
     #TODO: this might be unreliable, as the IRQ might fire on any single packet
