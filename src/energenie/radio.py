@@ -43,16 +43,11 @@ def HRF_writefifo_burst(buf):
     txbuf = [ADDR_FIFO | MASK_WRITE_DATA]
     for b in buf:
       txbuf.append(b)
-    print("write FIFO %s" % ashex(txbuf))
+    #print("write FIFO %s" % ashex(txbuf))
 
-    # This is buggy as it modifies user buffer, but it works at present
     spi.select()
-    #buf.insert(0, ADDR_FIFO | MASK_WRITE_DATA)
     spi.frame(txbuf)
     spi.deselect()
-    #print("written: %s" % ashex(buf))
-    #import time
-    #time.sleep(0.25)
 
 def ashex(buf):
     result = []
@@ -402,75 +397,27 @@ def OLD_build_OOK_relay_msg(relayState=False):
     return payload
 
 
-def OLD_send_payload_repeat(payload):
+def HRF_send_OOK_payload(payload):
     """Send a payload multiple times"""
 
-    # 32 bits enclosed in sync words
-    #print("waiting for mode and tx ready")
     HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY|MASK_TXREADY, MASK_MODEREADY|MASK_TXREADY)
 
     sync = [0x80,0x80,0x80,0x80]
     payload = sync + payload
+    
     HRF_writefifo_burst(payload)
-
-    # preceed all future payloads with a sync-word preamble
-    # Note, payload length configured in OOK table is based on this
-    for i in range(8): # Repeat the message a number of times
-        #print("waiting for fifo empty")
+ 
+    for i in range(8):
         HRF_pollreg(ADDR_IRQFLAGS2, MASK_FIFOLEVEL, 0)
         HRF_writefifo_burst(payload)
 
-    #print("waiting for fifo empty")
     HRF_pollreg(ADDR_IRQFLAGS2, MASK_FIFOLEVEL, 0)
-    #print("waiting for packet sent")
     HRF_pollreg(ADDR_IRQFLAGS2, MASK_PACKETSENT, MASK_PACKETSENT) # wait for Packet sent
 
     reg = HRF_readreg(ADDR_IRQFLAGS2)
-    trace("  irqflags2=%s" % hex(reg))
+    #trace("  irqflags2=%s" % hex(reg))
     if (reg & (MASK_FIFONOTEMPTY) != 0) or ((reg & MASK_FIFOOVERRUN) != 0):
         warning("Failed to send repeated payload to HRF")
-
-
-
-def HRF_send_OOK_payload_repeat(payload, times=0):
-    """Send a payload multiple times"""
-    print("@@@@@ send OOK repeated")
-    HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY|MASK_TXREADY, MASK_MODEREADY|MASK_TXREADY)
-
-    # A payload is 32 bits enclosed in sync words
-    # write first payload without sync preamble
-    # 4   5   6   7   8   9   10   11   12   13   14
-    # ..  01  10  11  00  01  10   11   00   01   10
-    # 00  8E  E8  EE  88  8E  E8   EE   88   8E   E8
-    
-    payload = [0x8E,0xE8,0xEE,0x88,0x8E,0xE8,0xEE,0x88,0x8E,0xE8]
-    # bits are labeled back to front in C code! D0 D1 D2 D3
-    allon   = [0xEE, 0xEE]
-    alloff  = [0xEE, 0xE8]
-    payload += allon
-
-    ##payload.insert(0, 0x00) # first byte should be all zeros (TODO add to payload builder)
-    #print("send %s" % ashex(payload))
-    HRF_writefifo_burst(payload)
-
-    # preceed all future payloads with a sync-word preamble
-    if times > 0:
-        SYNC_PREAMBLE = [0x00,0x80,0x00,0x00,0x00]
-        preamble_payload = SYNC_PREAMBLE + payload
-        for i in range(times): # Repeat the message a number of times
-            HRF_pollreg(ADDR_IRQFLAGS2, MASK_FIFOLEVEL, 0)
-            #print("send %s" % ashex(preamble_payload))
-            HRF_writefifo_burst(preamble_payload)
-
-    #TODO: this might be unreliable, as the IRQ might fire on any single packet
-    #need to check how big the FIFO is, and just build a single payload and burst load it
-    #especially as Python will be slower loading the FIFO than the original C was.
-    HRF_pollreg(ADDR_IRQFLAGS2, MASK_PACKETSENT, MASK_PACKETSENT) # wait for Packet sent
-
-    reg = HRF_readreg(ADDR_IRQFLAGS2)
-    trace("  irqflags2=%s" % hex(reg))
-    if (reg & (MASK_FIFONOTEMPTY) != 0) or ((reg & MASK_FIFOOVERRUN) != 0):
-        warning("Failed to send repeated OOK payload to HRF")
 
 
 
@@ -533,7 +480,7 @@ def transmitter(fsk=None, ook=None):
 def transmit(payload):
     """Transmit a single payload using the present modulation scheme"""
     if not modulation_fsk:
-        HRF_send_OOK_payload_repeat(payload, times=8)
+        HRF_send_OOK_payload(payload)
     else:
         HRF_send_payload(payload)
 

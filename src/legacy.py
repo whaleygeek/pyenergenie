@@ -97,11 +97,11 @@ def legacy_test():
 
     while True:
         print("ON")
-        radio.OLD_send_payload_repeat(ON)
+        radio.transmit(ON)
         time.sleep(1)
     
         print("OFF")
-        radio.OLD_send_payload_repeat(OFF)
+        radio.transmit(OFF)
         time.sleep(1)
 
 
