@@ -354,48 +354,6 @@ def dumpPayloadAsHex(payload):
 #	HRF_wait_for (ADDR_IRQFLAGS1, MASK_MODEREADY, true);		// wait for ModeReady
 #}
 
-def OLD_build_OOK_relay_msg(relayState=False):
-    """Temporary test code to prove we can turn the relay on or off"""
-    #This code does not live in this module, it lives in an EnergenieLegacy codec module
-    #also there are 4 switches, so should pass in up to 4 relayState values
-
-    # This generates a 20*4 bit address i.e. 10 bytes
-    # The number generated is always the same
-    # Presumably this is the 'Energenie address prefix'
-    # The switch number is encoded in the payload
-    # This code looks screwy, but it is correct compared to the C code.
-    # It's probably doing bit encoding on the fly, manchester or sync bits or something.
-    # Wait until we get the OOK spec from Energenie to better document this.
-
-    # Looks like: 0000 00BA gets encoded as:
-    # 128 64 32 16  8  4  2  1
-    #   1  B  B  0  1  A  A  0
-
-    #payload = []
-    #for i in range(10):
-    #    j = i + 5
-    #    payload.append(8 + (j&1) * 6 + 128 + (j&2) * 48)
-    #dumpPayloadAsHex(payload)
-    #
-    #          5     6     7     8     9     10    11    12    13    14
-    #          1(01) 1(10) 1(11) 0(00) 0(01) 0(10) 0(11) 1(00) 1(01) 1(10)
-    payload = [0x8e, 0xe8, 0xee, 0x88, 0x8e, 0xe8, 0xee, 0x88, 0x8e, 0xe8]
-
-    if relayState: # ON
-        # D0=high, D1=high, D2-high, D3=high (S1 on)
-        # 128 64 32 16  8  4  2  1        128 64 32 16  8  4  2  1
-        #   1  0  B  B  1  A  A  0          1  0  B  B  1  A  A  0
-        #   1  1  1  0  1  1  1  0          1  1  1  0  1  1  1  0   = 10 11 10 11
-        payload += [0xEE, 0xEE]
-    else: # OFF
-        # D0=high, D1=high, D2=high, D3=low (S1 off)
-        # 128 64 32 16  8  4  2  1        128 64 32 16  8  4  2  1
-        #   1  0  B  B  1  A  A  0          1  0  B  B  1  A  A  0
-        #   1  1  1  0  1  1  1  0          1  1  1  0  1  0  0  0   = 10 11 10 00
-        payload += [0xEE, 0xE8]
-
-    return payload
-
 
 def HRF_send_OOK_payload(payload):
     """Send a payload multiple times"""

@@ -92,8 +92,8 @@ def legacy_switch_loop():
         time.sleep(2)
 
 def legacy_test():
-    ON = radio.OLD_build_OOK_relay_msg(True)
-    OFF = radio.OLD_build_OOK_relay_msg(False)
+    ON = modulator.build_relay_msg(True)
+    OFF = modulator.build_relay_msg(False)
 
     while True:
         print("ON")
