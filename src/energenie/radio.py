@@ -386,7 +386,7 @@ def transmitter(fsk=None, ook=None):
 def transmit(payload):
     """Transmit a single payload using the present modulation scheme"""
     if not modulation_fsk:
-        HRF_send_OOK_payload_repeat(payload, times=4)
+        HRF_send_OOK_payload_repeat(payload, times=8)
     else:
         HRF_send_payload(payload)
 

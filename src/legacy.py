@@ -59,16 +59,21 @@ def legacy_learn_mode():
             print("Press the LEARN button on any switch %d for 5 secs until LED flashes" % switch_no)
             raw_input("press ENTER when LED is flashing")
 
-            radio.transmit(OFF_MSGS[switch_no])
+            for i in range(8):
+                print("ON")
+                radio.transmit(ON_MSGS[switch_no])
+                time.sleep(1)
 
             print("Device should now be programmed")
             
             print("Testing....")
             for i in range(4):
                 time.sleep(1)
-                radio.transmit(ON_MSGS[switch_no])
-                time.sleep(1)
+                print("OFF")
                 radio.transmit(OFF_MSGS[switch_no])
+                time.sleep(1)
+                print("ON")
+                radio.transmit(ON_MSGS[switch_no])
             print("Test completed")
 
 
