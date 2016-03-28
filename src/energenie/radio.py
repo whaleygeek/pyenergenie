@@ -298,6 +298,51 @@ def dumpPayloadAsHex(payload):
     for i in range(1,length+1):
         print("[%d] = %s" % (i, hex(payload[i])))
 
+#ORIGINAL C CODE
+#void HRF_send_OOK_msg(uint8_t relayState)
+#{
+#	uint8_t buf[17];
+#	uint8_t i;
+#
+#	HRF_config_OOK();
+#
+#	buf[1] = 0x80;										// Preambule 32b enclosed in sync words
+#	buf[2] = 0x00;
+#	buf[3] = 0x00;
+#	buf[4] = 0x00;
+#
+#	for (i = 5; i <= 14; ++i){
+#		buf[i] = 8 + (i&1) * 6 + 128 + (i&2) * 48;		// address 20b * 4 = 10 Bytes
+#	}
+#
+#	if (relayState == 1)
+#	{
+#		printf("relay ON\n\n");
+#		buf[15] = 0xEE;		// D0-high, D1-h		// S1 on
+#		buf[16] = 0xEE;		// D2-h, D3-h
+#	}
+#	else
+#	{
+#		printf("relay OFF\n\n");
+#		buf[15] = 0xEE;		// D0-high, D1-h		// S1 off
+#		buf[16] = 0xE8;		// D2-h, D3-l
+#	}
+#
+#	HRF_wait_for (ADDR_IRQFLAGS1, MASK_MODEREADY | MASK_TXREADY, true);		// wait for ModeReady + TX ready
+#	HRF_reg_Wn(buf + 4, 0, 12);						// don't include sync word (4 bytes) into data buffer
+#
+#	for (i = 0; i < 8; ++i)							// Send the same message few more times
+#	{
+#		HRF_wait_for(ADDR_IRQFLAGS2, MASK_FIFOLEVEL, false);
+#		HRF_reg_Wn(buf, 0, 16);						// with sync word
+#	}
+#
+#	HRF_wait_for (ADDR_IRQFLAGS2, MASK_PACKETSENT, true);		// wait for Packet sent
+#	HRF_assert_reg_val(ADDR_IRQFLAGS2, MASK_FIFONOTEMPTY | MASK_FIFOOVERRUN, false, "are all bytes sent?");
+#	HRF_config_FSK();
+#	HRF_wait_for (ADDR_IRQFLAGS1, MASK_MODEREADY, true);		// wait for ModeReady
+#}
+
 
 def HRF_send_OOK_payload_repeat(payload, times=0):
     """Send a payload multiple times"""
@@ -306,18 +351,20 @@ def HRF_send_OOK_payload_repeat(payload, times=0):
 
     # A payload is 32 bits enclosed in sync words
     # write first payload without sync preamble
+    payload.insert(0, 0x00) # first byte should be all zeros (TODO add to payload builder)
     HRF_writefifo_burst(payload)
 
     # preceed all future payloads with a sync-word preamble
     if times > 0:
-        SYNC_PREAMBLE = [0x00,0x80,0x00,0x00,0x00]
+        SYNC_PREAMBLE = [0x00,0x80,0x00,0x00]
         preamble_payload = SYNC_PREAMBLE + payload
         for i in range(times): # Repeat the message a number of times
             HRF_pollreg(ADDR_IRQFLAGS2, MASK_FIFOLEVEL, 0)
             HRF_writefifo_burst(preamble_payload)
 
-    #TODO: this will be unreliable, as the IRQ might fire on any single packet
+    #TODO: this might be unreliable, as the IRQ might fire on any single packet
     #need to check how big the FIFO is, and just build a single payload and burst load it
+    #especially as Python will be slower loading the FIFO than the original C was.
     HRF_pollreg(ADDR_IRQFLAGS2, MASK_PACKETSENT, MASK_PACKETSENT) # wait for Packet sent
 
     reg = HRF_readreg(ADDR_IRQFLAGS2)
