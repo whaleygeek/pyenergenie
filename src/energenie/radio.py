@@ -40,17 +40,19 @@ def HRF_readreg(addr):
 def HRF_writefifo_burst(buf):
     """Write all bytes in buf to the payload FIFO, in a single burst"""
     # Don't modify buf, in case caller reuses it
-    #txbuf = [ADDR_FIFO | MASK_WRITE_DATA]
-    #for b in buf:
-    #  txbuf.append(b)
-    #print("write FIFO %s" % ashex(txbuf))
+    txbuf = [ADDR_FIFO | MASK_WRITE_DATA]
+    for b in buf:
+      txbuf.append(b)
+    print("write FIFO %s" % ashex(txbuf))
 
     # This is buggy as it modifies user buffer, but it works at present
     spi.select()
-    buf.insert(0, ADDR_FIFO | MASK_WRITE_DATA)
-    spi.frame(buf)
+    #buf.insert(0, ADDR_FIFO | MASK_WRITE_DATA)
+    spi.frame(txbuf)
     spi.deselect()
-    print("written: %s" % ashex(buf))
+    #print("written: %s" % ashex(buf))
+    #import time
+    #time.sleep(0.25)
 
 def ashex(buf):
     result = []
@@ -407,17 +409,16 @@ def OLD_send_payload_repeat(payload):
     #print("waiting for mode and tx ready")
     HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY|MASK_TXREADY, MASK_MODEREADY|MASK_TXREADY)
 
-    #write first payload without sync preamble
+    sync = [0x80,0x80,0x80,0x80]
+    payload = sync + payload
     HRF_writefifo_burst(payload)
 
     # preceed all future payloads with a sync-word preamble
-    preamble = [0x00,0x80,0x00,0x00,0x00]
-    preamble_payload = preamble + payload
     # Note, payload length configured in OOK table is based on this
     for i in range(8): # Repeat the message a number of times
         #print("waiting for fifo empty")
         HRF_pollreg(ADDR_IRQFLAGS2, MASK_FIFOLEVEL, 0)
-        HRF_writefifo_burst(preamble_payload)
+        HRF_writefifo_burst(payload)
 
     #print("waiting for fifo empty")
     HRF_pollreg(ADDR_IRQFLAGS2, MASK_FIFOLEVEL, 0)
