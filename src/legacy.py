@@ -81,33 +81,18 @@ def legacy_switch_loop():
     """Turn all switches on or off every few seconds"""
 
     while True:
-        print("sending ALL ON")
-        radio.transmit(ALL_ON)
-        print("waiting")
-        time.sleep(2)
+        for switch_no in range(5):
+            # switch_no 0 is ALL, then 1=1, 2=2, 3=3, 4=4
+            # ON
+            print("switch %d ON" % switch_no)
+            radio.transmit(ON_MSGS[switch_no])
+            time.sleep(2)
 
-        print("sending ALL OFF")
-        radio.transmit(ALL_OFF)
-        print("waiting")
-        time.sleep(2)
-
-
-def legacy_test():
-    #TODO: This testing shows that the C code and the specs are out of step
-    #ONE_ON = encoder.build_relay_msg(True)
-    #ONE_OFF = encoder.build_relay_msg(False)
-    ONE_ON  = encoder.build_switch_msg(True, device_address=1)
-    ONE_OFF = encoder.build_switch_msg(False, device_address=1)
-
-    while True:
-        print("ON")
-        radio.transmit(ONE_ON)
-        time.sleep(1)
-    
-        print("OFF")
-        radio.transmit(ONE_OFF)
-        time.sleep(1)
-
+            # OFF
+            print("switch %d OFF" % switch_no)
+            radio.transmit(OFF_MSGS[switch_no])
+            time.sleep(2)
+        
 
 def pattern_test():
     """Test all patterns"""
@@ -122,14 +107,15 @@ def pattern_test():
 if __name__ == "__main__":
 
     print("starting legacy switch tester")
+    print("radio init")
     radio.init()
+    print("radio as OOK")
     radio.transmitter(ook=True)
 
     try:
+        #pattern_test()
         #legacy_learn_mode()
-        #legacy_switch_loop()
-        #legacy_test()
-        pattern_test()
+        legacy_switch_loop()
 
     finally:
         radio.finished()

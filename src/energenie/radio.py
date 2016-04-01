@@ -9,6 +9,7 @@
 # and then pushed back into C once it is proved working.
 
 import spi
+import time
 
 def warning(msg):
     print("warning:" + str(msg))
@@ -358,18 +359,19 @@ def dumpPayloadAsHex(payload):
 def HRF_send_OOK_payload(payload):
     """Send a payload multiple times"""
 
-    HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY|MASK_TXREADY, MASK_MODEREADY|MASK_TXREADY)
+    p1 = [0x00] + payload
+    # This sync pattern does not match C code, but it works.
+    # The sync pattern from the C code does not work here
+    # Currently there is no explanation for this.
+    pn = [0x80,0x80,0x80,0x80,0x80] + payload
 
-    sync = [0x80,0x80,0x80,0x80]
-    payload = sync + payload
+    HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY|MASK_TXREADY, MASK_MODEREADY|MASK_TXREADY)
+    HRF_writefifo_burst(p1)
     
-    HRF_writefifo_burst(payload)
- 
     for i in range(8):
         HRF_pollreg(ADDR_IRQFLAGS2, MASK_FIFOLEVEL, 0)
-        HRF_writefifo_burst(payload)
+        HRF_writefifo_burst(pn)
 
-    HRF_pollreg(ADDR_IRQFLAGS2, MASK_FIFOLEVEL, 0)
     HRF_pollreg(ADDR_IRQFLAGS2, MASK_PACKETSENT, MASK_PACKETSENT) # wait for Packet sent
 
     reg = HRF_readreg(ADDR_IRQFLAGS2)
@@ -396,10 +398,10 @@ def init():
     trace("RESET")
     spi.reset() # send a hardware reset to ensure radio in clean state
 
-    trace("config FSK")
-    HRF_config_FSK()
+    #trace("config FSK")
+    #HRF_config_FSK()
     HRF_clear_fifo()
-    receiver()
+    #receiver()
 
 
 def modulation(fsk=None, ook=None):
