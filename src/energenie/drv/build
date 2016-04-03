@@ -33,9 +33,11 @@ chmod u+x spish_test
 # build spi .so library on Raspberry Pi
 gcc -Wall -shared -o spi_rpi.so -fPIC spis.c gpio.c
 # nm -D spi_rpi.so
+cp spi_rpi.so ..
 
 # radio spi .so library on Raspberry Pi
 ## gcc -Wall -shared -o radio_rpi.so -fPIC radio.c hrf69.c spis.c gpio.c
-## nm -D spi_rpi.so
+## nm -D radio_rpi.so
+## cp radio_rpi.so ..
 
 # END
