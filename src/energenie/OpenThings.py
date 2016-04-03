@@ -1,10 +1,10 @@
-# OpenHEMS.py  27/09/2015  D.J.Whale
+# OpenThings.py  27/09/2015  D.J.Whale
 #
-# Implement OpenHEMS message encoding and decoding
+# Implement OpenThings message encoding and decoding
 
 import crypto
 
-class OpenHEMSException(Exception):
+class OpenThingsException(Exception):
 	def __init__(self, value):
 		self.value = value
 
@@ -122,7 +122,8 @@ def warning(msg):
 
 
 def trace(msg):
-        print("OpenHEMS:%s" % str(msg))
+	print("OpenThings:%s" % str(msg))
+
 
 #----- MESSAGE DECODER --------------------------------------------------------
 
@@ -131,13 +132,13 @@ def trace(msg):
 #the code should be more robust to this (by checking the CRC)
 
 def decode(payload, decrypt=True):
-	"""Decode a raw buffer into an OpenHEMS pydict"""
+	"""Decode a raw buffer into an OpenThings pydict"""
 	#Note, decrypt must already have run on this for it to work
 	length = payload[0]
 
 	# CHECK LENGTH
 	if length+1 != len(payload) or length < 10:
-		raise OpenHEMSException("bad payload length")
+		raise OpenThingsException("bad payload length")
 		#return {
 		#	"type":         "BADLEN",
 		#	"len_actual":   len(payload),
@@ -161,7 +162,7 @@ def decode(payload, decrypt=True):
 		# [0]len,mfrid,productid,pipH,pipL,[5]
 		crypto.init(crypt_pid, encryptPIP)
 		crypto.cryptPayload(payload, 5, len(payload)-5) # including CRC
-                #printhex(payload)
+		#printhex(payload)
 	# sensorId is in encrypted region
 	sensorId = (payload[5]<<16) + (payload[6]<<8) + payload[7]
 	header["sensorid"] = sensorId
@@ -173,7 +174,7 @@ def decode(payload, decrypt=True):
 	#trace("crc actual:%s, expected:%s" %(hex(crc_actual), hex(crc_expected)))
 
 	if crc_actual != crc_expected:
-		raise OpenHEMSException("bad CRC")
+		raise OpenThingsException("bad CRC")
 		#return {
 		#	"type":         "BADCRC",
 		#	"crc_actual":   crc_actual,
@@ -213,14 +214,14 @@ def decode(payload, decrypt=True):
 		}
 
 		if plen != 0:
-                        # VALUE
-                        valuebytes = []
-                        for x in range(plen):
-                                valuebytes.append(payload[i])
-                                i += 1
-                        value = Value.decode(valuebytes, typeid, plen)
-                        rec["valuebytes"] = valuebytes
-                        rec["value"] = value
+			# VALUE
+			valuebytes = []
+			for x in range(plen):
+				valuebytes.append(payload[i])
+				i += 1
+			value = Value.decode(valuebytes, typeid, plen)
+			rec["valuebytes"] = valuebytes
+			rec["value"] = value
 
 		# store rec
 		recs.append(rec)
@@ -234,13 +235,13 @@ def decode(payload, decrypt=True):
 
 #----- MESSAGE ENCODER --------------------------------------------------------
 #
-# Encodes a message using the OpenHEMS message payload structure
+# Encodes a message using the OpenThings message payload structure
 
 # R1 message product id 0x02 monitor and control (in switching program?)
 # C1 message product id 0x01 monitor only (in listening program)
 
 def encode(spec, encrypt=True):
-	"""Encode a pydict specification into a OpenHEMS binary payload"""
+	"""Encode a pydict specification into a OpenThings binary payload"""
 	# The message is not encrypted, but the CRC is generated here.
 
 	payload = []
@@ -289,13 +290,13 @@ def encode(spec, encrypt=True):
 		# VALUE
 		valueenc = [] # in case of no value
 		if rec.has_key("value"):
-        		value = rec["value"]
-                        valueenc = Value.encode(value, typeid, length)
-                        if len(valueenc) > 15:
-                                raise ValueError("value longer than 15 bytes")
-                        for b in valueenc:
-                                payload.append(b)
-                payload[lenpos] = (typeid) | len(valueenc)
+			value = rec["value"]
+			valueenc = Value.encode(value, typeid, length)
+			if len(valueenc) > 15:
+				raise ValueError("value longer than 15 bytes")
+			for b in valueenc:
+				payload.append(b)
+			payload[lenpos] = (typeid) | len(valueenc)
 
 	# FOOTER
 	payload.append(0) # NUL
@@ -570,56 +571,68 @@ def calcCRC(payload, start, length):
 
 
 def showMessage(msg):
-    """Show the message in a friendly format"""
-    #pprint.pprint(msg)
-    
-    # HEADER
-    header    = msg["header"]
-    mfrid     = header["mfrid"]
-    productid = header["productid"]
-    sensorid  = header["sensorid"]
-    print("mfrid:%s prodid:%s sensorid:%s" % (hex(mfrid), hex(productid), hex(sensorid)))
+	"""Show the message in a friendly format"""
 
-    # RECORDS
-    for rec in msg["recs"]:
-        wr        = rec["wr"]
-        if wr == True:
-            write = "write"
-        else:
-            write = "read "
+	# HEADER
+	header    = msg["header"]
+	mfrid     = header["mfrid"]
+	productid = header["productid"]
+	sensorid  = header["sensorid"]
+	print("mfrid:%s prodid:%s sensorid:%s" % (hex(mfrid), hex(productid), hex(sensorid)))
 
-        paramid   = rec["paramid"]
-        paramname = rec["paramname"]
-        paramunit = rec["paramunit"]
-        if rec.has_key("value"):
-                value = rec["value"]
-        else:
-                value = None
-        print("%s %s %s = %s" % (write, paramname, paramunit, str(value)))
+	# RECORDS
+	for rec in msg["recs"]:
+		wr = rec["wr"]
+		if wr == True:
+			write = "write"
+		else:
+			write = "read "
+
+		paramid   = rec["paramid"]
+		paramname = rec["paramname"]
+		paramunit = rec["paramunit"]
+		if rec.has_key("value"):
+				value = rec["value"]
+		else:
+				value = None
+		print("%s %s %s = %s" % (write, paramname, paramunit, str(value)))
 
 
 def alterMessage(message, **kwargs):
-    """Change parameters in-place in a message template"""
-    # e.g. header_sensorid=1234, recs_0_value=1
-    for arg in kwargs:
+	"""Change parameters in-place in a message template"""
+	# e.g. header_sensorid=1234, recs_0_value=1
+	for arg in kwargs:
 
-        path = arg.split("_")
-        value = kwargs[arg]
+		path = arg.split("_")
+		value = kwargs[arg]
 
-        m = message
-        for p in path[:-1]:
-            try:
+		m = message
+		for p in path[:-1]:
+			try:
+				p = int(p)
+			except:
+				pass
+			m = m[p]
+		#trace("old value:%s" % m[path[-1]])
+		m[path[-1]] = value
 
-                p = int(p)
-            except:
-                pass
-            m = m[p]
-        #trace("old value:%s" % m[path[-1]])
-        m[path[-1]] = value
+		#trace("modified:" + str(message))
 
-        #trace("modified:" + str(message))
+	return message
 
-    return message
+
+def getFromMessage(message, keypath):
+	"""Get a field from a message, given a keypath to the item"""
+	path = keypath.split("_")
+
+	for p in path[:-1]:
+		try:
+			p = int(p)
+		except:
+			pass
+		m = m[p]
+	return m[path[-1]]
+
 
 #----- TEST HARNESS -----------------------------------------------------------
 

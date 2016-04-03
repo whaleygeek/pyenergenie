@@ -11,9 +11,8 @@
 
 import time
 
-from energenie import OpenHEMS, Devices
-from energenie import radio
-from Timer import Timer
+from energenie import OpenThings
+from energenie import Devices, Messages, radio
 import os
 
 LOG_FILENAME = "energenie.csv"
@@ -64,25 +63,25 @@ def logMessage (msg):
         except:
             value = None
             
-        if   paramid == OpenHEMS.PARAM_SWITCH_STATE:
+        if   paramid == OpenThings.PARAM_SWITCH_STATE:
             switch = value
             flags[0] = 1
-        elif paramid == OpenHEMS.PARAM_VOLTAGE:
+        elif paramid == OpenThings.PARAM_VOLTAGE:
             flags[1] = 1
             voltage = value
-        elif paramid == OpenHEMS.PARAM_FREQUENCY:
+        elif paramid == OpenThings.PARAM_FREQUENCY:
             flags[2] = 1
             freq = value
-        elif paramid == OpenHEMS.PARAM_REACTIVE_POWER:
+        elif paramid == OpenThings.PARAM_REACTIVE_POWER:
             flags[3] = 1
             reactive = value
-        elif paramid == OpenHEMS.PARAM_REAL_POWER:
+        elif paramid == OpenThings.PARAM_REAL_POWER:
             flags[4] = 1
             real = value
-        elif paramid == OpenHEMS.PARAM_APPARENT_POWER:
+        elif paramid == OpenThings.PARAM_APPARENT_POWER:
             flags[5] = 1
             apparent = value
-        elif paramid == OpenHEMS.PARAM_CURRENT:
+        elif paramid == OpenThings.PARAM_CURRENT:
             flags[6] = 1
             current = value
 
@@ -125,30 +124,13 @@ def updateDirectory(message):
     #not as a list index, else merging will be hard.
 
 
-JOIN_ACK_MESSAGE = {
-    "header": {
-        "mfrid":       0, # FILL IN
-        "productid":   0, # FILL IN
-        "encryptPIP":  Devices.CRYPT_PIP,
-        "sensorid":    0 # FILL IN
-    },
-    "recs": [
-        {
-            "wr":      False,
-            "paramid": OpenHEMS.PARAM_JOIN,
-            "typeid":  OpenHEMS.Value.UINT,
-            "length":  0
-        }
-    ]
-}
-
 def send_join_ack(mfrid, productid, sensorid):
     # send back a JOIN ACK, so that join light stops flashing
-    response = OpenHEMS.alterMessage(JOIN_ACK_MESSAGE,
+    response = OpenThings.alterMessage(Messages.JOIN_ACK,
         header_mfrid=mfrid,
         header_productid=productid,
         header_sensorid=sensorid)
-    p = OpenHEMS.encode(response)
+    p = OpenThings.encode(response)
     radio.transmitter()
     radio.transmit(p)
     radio.receiver()
@@ -165,12 +147,12 @@ def monitor_loop():
             #trace("receiving payload")
             payload = radio.receive()
             try:
-                decoded = OpenHEMS.decode(payload)
-            except OpenHEMS.OpenHEMSException as e:
+                decoded = OpenThings.decode(payload)
+            except OpenThings.OpenThingsException as e:
                 warning("Can't decode payload:" + str(e))
                 continue
                       
-            OpenHEMS.showMessage(decoded)
+            OpenThings.showMessage(decoded)
             # Any device that reports will be added to the non-persistent directory
             updateDirectory(decoded)
             #trace(decoded)
@@ -182,8 +164,8 @@ def monitor_loop():
                 print("Empty record:%s" % decoded)
             else:
                 # assume only 1 rec in a join, for now
-                #TODO: write OpenHEMS.getFromMessage("header_mfrid")
-                if decoded["recs"][0]["paramid"] == OpenHEMS.PARAM_JOIN:
+                #TODO: use OpenThings.getFromMessage("header_mfrid")
+                if decoded["recs"][0]["paramid"] == OpenThings.PARAM_JOIN:
                     header    = decoded["header"]
                     mfrid     = header["mfrid"]
                     productid = header["productid"]
@@ -196,7 +178,7 @@ if __name__ == "__main__":
     
     trace("starting monitor tester")
     radio.init()
-    OpenHEMS.init(Devices.CRYPT_PID)
+    OpenThings.init(Devices.CRYPT_PID)
 
     try:
         monitor_loop()

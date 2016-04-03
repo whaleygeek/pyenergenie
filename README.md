@@ -1,6 +1,14 @@
 # pyenergenie
 A python interface to the Energenie line of products
 
+Note
+====
+
+This is a work in progress, please use the 'last known good' from here:
+
+https://github.com/whaleygeek/pyenergenie/tree/f342fe255e9d90920b132711aa49933a867523f6
+
+
 
 This is the beginnings of an open source library to access the Energienie 
 range of power control and monitoring products from within Python.

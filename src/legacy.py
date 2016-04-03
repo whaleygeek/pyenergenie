@@ -8,8 +8,7 @@
 
 import time
 
-from energenie import encoder
-from energenie import radio
+from energenie import encoder, radio
 
 
 #----- TEST APPLICATION -------------------------------------------------------

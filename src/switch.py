@@ -12,10 +12,9 @@
 
 import time
 
-from energenie import OpenHEMS, Devices
-from energenie import radio
+from energenie import OpenThings
+from energenie import Devices, Messages, radio
 from Timer import Timer
-import os
 
 # Increase this if you have lots of switches, so that the receiver has enough
 # time to receive update messages, otherwise your devices won't make it into
@@ -60,50 +59,13 @@ def updateDirectory(message):
     #not as a list index, else merging will be hard.
 
 
-SWITCH_MESSAGE = {
-    "header": {
-        "mfrid":       Devices.MFRID,
-        "productid":   Devices.PRODUCTID_R1_MONITOR_AND_CONTROL,
-        "encryptPIP":  Devices.CRYPT_PIP,
-        "sensorid":    0 # FILL IN
-    },
-    "recs": [
-        {
-            "wr":      True,
-            "paramid": OpenHEMS.PARAM_SWITCH_STATE,
-            "typeid":  OpenHEMS.Value.UINT,
-            "length":  1,
-            "value":   0 # FILL IN
-        }
-    ]
-}
-
-
-JOIN_ACK_MESSAGE = {
-    "header": {
-        "mfrid":       0, # FILL IN
-        "productid":   0, # FILL IN
-        "encryptPIP":  Devices.CRYPT_PIP,
-        "sensorid":    0 # FILL IN
-    },
-    "recs": [
-        {
-            "wr":      False,
-            "paramid": OpenHEMS.PARAM_JOIN,
-            "typeid":  OpenHEMS.Value.UINT,
-            "length":  0
-        }
-    ]
-}
-
-
 def send_join_ack(mfrid, productid, sensorid):
     # send back a JOIN ACK, so that join light stops flashing
-    response = OpenHEMS.alterMessage(JOIN_ACK_MESSAGE,
+    response = OpenThings.alterMessage(Messages.JOIN_ACK,
         header_mfrid=mfrid,
         header_productid=productid,
         header_sensorid=sensorid)
-    p = OpenHEMS.encode(response)
+    p = OpenThings.encode(response)
     radio.transmitter()
     radio.transmit(p)
     radio.receiver()
@@ -123,12 +85,12 @@ def switch_loop():
             #trace("receiving payload")
             payload = radio.receive()
             try:
-                decoded = OpenHEMS.decode(payload)
-            except OpenHEMS.OpenHEMSException as e:
+                decoded = OpenThings.decode(payload)
+            except OpenThings.OpenThingsException as e:
                 warning("Can't decode payload:" + str(e))
                 continue
                       
-            OpenHEMS.showMessage(decoded)
+            OpenThings.showMessage(decoded)
             # Any device that reports will be added to the non-persistent directory
             updateDirectory(decoded)
             #trace(decoded)
@@ -139,8 +101,8 @@ def switch_loop():
                 print("Empty record:%s" % decoded)
             else:
                 # assume only 1 rec in a join, for now
-                #TODO: write OpenHEMS.getFromMessage("header_mfrid")
-                if decoded["recs"][0]["paramid"] == OpenHEMS.PARAM_JOIN:
+                #TODO: use OpenThings.getFromMessage("header_mfrid")
+                if decoded["recs"][0]["paramid"] == OpenThings.PARAM_JOIN:
                     header    = decoded["header"]
                     mfrid     = header["mfrid"]
                     productid = header["productid"]
@@ -160,10 +122,10 @@ def switch_loop():
                 productid = header["productid"]
 
                 if Devices.hasSwitch(mfrid, productid):
-                    request = OpenHEMS.alterMessage(SWITCH_MESSAGE,
+                    request = OpenThings.alterMessage(Messages.SWITCH,
                         header_sensorid=sensorid,
                         recs_0_value=switch_state)
-                    p = OpenHEMS.encode(request)
+                    p = OpenThings.encode(request)
                     print("Sending switch message to %s %s" % (hex(productid), hex(sensorid)))
                     # Transmit multiple times, hope one of them gets through
                     for i in range(4):
@@ -178,7 +140,7 @@ if __name__ == "__main__":
     
     trace("starting switch tester")
     radio.init()
-    OpenHEMS.init(Devices.CRYPT_PID)
+    OpenThings.init(Devices.CRYPT_PID)
 
     try:
         switch_loop()
