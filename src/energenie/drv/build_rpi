@@ -3,41 +3,41 @@
 # build file for Raspberry Pi use
 
 # build gpio_test
-gcc gpio_test.c gpio.c
+gcc gpio_test.c gpio_rpi.c
 mv a.out gpio_test
 chmod u+x gpio_test
 
 
 # build spis_test (soft SPI tester)
-gcc spi_test.c spis_rpi.c gpio.c
+gcc spi_test.c spis_rpi.c gpio_rpi.c
 mv a.out spis_test
 chmod u+x spis_test
 
 # build spih_test (hard SPI tester)
-gcc spi_test.c spih_rpi.c gpio.c
+gcc spi_test.c spih_rpi.c gpio_rpi.c
 mv a.out spih_test
 chmod u+x spish_test
 
 
 # build hrf69_test
-## gcc hrf69_test.c hrf69.c spis_rpi.c gpio.c
+## gcc hrf69_test.c hrf69.c spis_rpi.c gpio_rpi.c
 ## mv a.out hrf69_test
 ## chmod u+x hrf69_test
 
 
 # build radio_test
-## gcc radio_test.c radio.c hrf69.c spis_rpi.c gpio.c
+## gcc radio_test.c radio.c hrf69.c spis_rpi.c gpio_rpi.c
 ## mv a.out radio_test
 ## chmod u+x radio_test
 
 
 # build spi .so library on Raspberry Pi
-gcc -Wall -shared -o spi_rpi.so -fPIC spis_rpi.c gpio.c
+gcc -Wall -shared -o spi_rpi.so -fPIC spis_rpi.c gpio_rpi.c
 # nm -D spi_rpi.so
 cp spi_rpi.so ..
 
 # radio spi .so library on Raspberry Pi
-## gcc -Wall -shared -o radio_rpi.so -fPIC radio.c hrf69.c spis_rpi.c gpio.c
+## gcc -Wall -shared -o radio_rpi.so -fPIC radio.c hrf69.c spis_rpi.c gpio_rpi.c
 ## nm -D radio_rpi.so
 ## cp radio_rpi.so ..
 
