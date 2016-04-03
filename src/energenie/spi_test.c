@@ -1,10 +1,14 @@
 /* spi_test.c  D.J.Whale  18/07/2014 
  *
  * A simple SPI port exerciser.
+ * currently only uses the soft SPI (spis)
+ * TODO: Later will also support hard SPI (spih)
+ * but will have to sort out the pin configuration structure first for that to work.
  */
 
 
 /***** INCLUDES *****/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "gpio.h"

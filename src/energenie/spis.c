@@ -1,4 +1,4 @@
-/* spi.c  D.J.Whale  19/07/2014
+/* spis.c (soft SPI)  D.J.Whale  19/07/2014
  */
 
 
