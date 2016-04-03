@@ -1,14 +1,10 @@
 # legacy.py  17/03/2016  D.J.Whale
 #
-# Simple legacy plug test harness.
-# Legacy plugs have a big green button on the front,
-# and usually come in kits with a handheld remote control.
-#
-# Note: This is a temporary piece of code, that will be thrown away
-# once the device object interface is written.
-#
-# Please don't use this as the basis for an application,
-# it is only designed to be used to test the lower level code.
+# Note: This is a test harness only, to prove that the underlying OOK
+# radio support for legacy plugs is working.
+# Please don't use this as a basis for building your applications from.
+# Another higher level device API will be designed once this has been
+# completely verified.
 
 import time
 

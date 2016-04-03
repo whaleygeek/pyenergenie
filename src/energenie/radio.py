@@ -9,7 +9,6 @@
 # and then pushed back into C once it is proved working.
 
 import spi
-import time
 
 def warning(msg):
     print("warning:" + str(msg))
@@ -18,82 +17,15 @@ def trace(msg):
     print(str(msg))
 
 
-#----- REGISTER ACCESS --------------------------------------------------------
-
-def HRF_writereg(addr, data):
-    """Write an 8 bit value to a register"""
-    buf = [addr | MASK_WRITE_DATA, data]
-    spi.select()
-    spi.frame(buf)
-    spi.deselect()
+def ashex(p):
+    line = ""
+    for b in p:
+        line += str(hex(b)) + " "
+    return line
 
 
-def HRF_readreg(addr):
-    """Read an 8 bit value from a register"""
-    buf = [addr, 0x00]
-    spi.select()
-    res = spi.frame(buf)
-    spi.deselect()
-    #print(hex(res[1]))
-    return res[1] # all registers are 8 bit
-
-
-def HRF_writefifo_burst(buf):
-    """Write all bytes in buf to the payload FIFO, in a single burst"""
-    # Don't modify buf, in case caller reuses it
-    txbuf = [ADDR_FIFO | MASK_WRITE_DATA]
-    for b in buf:
-      txbuf.append(b)
-    #print("write FIFO %s" % ashex(txbuf))
-
-    spi.select()
-    spi.frame(txbuf)
-    spi.deselect()
-
-def ashex(buf):
-    result = []
-    for b in buf:
-        result.append(hex(b))
-    return result
-
-
-def HRF_readfifo_burst():
-    """Read bytes from the payload FIFO using burst read"""
-    #first byte read is the length in remaining bytes
-    buf = []
-    spi.select()
-    spi.frame([ADDR_FIFO])
-    count = 1 # read at least the length byte
-    while count > 0:
-        rx = spi.frame([ADDR_FIFO])
-        data = rx[0]
-        if len(buf) == 0:
-            count = data
-        else:
-            count -= 1
-        buf.append(data)
-    spi.deselect()
-    trace("readfifo:" + str(ashex(buf)))
-    return buf
-
-
-def HRF_checkreg(addr, mask, value):
-    """Check to see if a register matches a specific value or not"""
-    regval = HRF_readreg(addr)
-    #print("addr %d mask %d wanted %d actual %d" % (addr,mask,value,regval))
-    return (regval & mask) == value
-
-
-def HRF_pollreg(addr, mask, value):
-    """Poll a register until it meet some criteria"""
-    while not HRF_checkreg(addr, mask, value):
-        pass
-
-
-#----- HRF REGISTER PROTOCOL --------------------------------------------------
-
-# HopeRF register addresses
-# Precise register descriptions can be found on: 
+#----- HOPERF REGISTER INTERFACE ----------------------------------------------
+# Precise register descriptions can be found in:
 # www.hoperf.com/upload/rf/RFM69W-V1.3.pdf
 # on page 63 - 74
 
@@ -180,7 +112,123 @@ VAL_FIFOTHRESH1             = 0x81	# Condition to start packet transmission: at 
 VAL_FIFOTHRESH30            = 0x1E	# Condition to start packet transmission: wait for 30 bytes in FIFO
 
 
-#----- CONFIGURATION TABLES ------------------------------------------------------------
+#----- HOPERF RADIO INTERFACE -------------------------------------------------
+
+def HRF_writereg(addr, data):
+    """Write an 8 bit value to a register"""
+    buf = [addr | MASK_WRITE_DATA, data]
+    spi.select()
+    spi.frame(buf)
+    spi.deselect()
+
+
+def HRF_readreg(addr):
+    """Read an 8 bit value from a register"""
+    buf = [addr, 0x00]
+    spi.select()
+    res = spi.frame(buf)
+    spi.deselect()
+    #print(hex(res[1]))
+    return res[1] # all registers are 8 bit
+
+
+def HRF_writefifo_burst(buf):
+    """Write all bytes in buf to the payload FIFO, in a single burst"""
+    # Don't modify buf, in case caller reuses it
+    txbuf = [ADDR_FIFO | MASK_WRITE_DATA]
+    for b in buf:
+      txbuf.append(b)
+    #print("write FIFO %s" % ashex(txbuf))
+
+    spi.select()
+    spi.frame(txbuf)
+    spi.deselect()
+
+
+def HRF_readfifo_burst():
+    """Read bytes from the payload FIFO using burst read"""
+    #first byte read is the length in remaining bytes
+    buf = []
+    spi.select()
+    spi.frame([ADDR_FIFO])
+    count = 1 # read at least the length byte
+    while count > 0:
+        rx = spi.frame([ADDR_FIFO])
+        data = rx[0]
+        if len(buf) == 0:
+            count = data
+        else:
+            count -= 1
+        buf.append(data)
+    spi.deselect()
+    trace("readfifo:" + str(ashex(buf)))
+    return buf
+
+
+def HRF_checkreg(addr, mask, value):
+    """Check to see if a register matches a specific value or not"""
+    regval = HRF_readreg(addr)
+    #print("addr %d mask %d wanted %d actual %d" % (addr,mask,value,regval))
+    return (regval & mask) == value
+
+
+def HRF_pollreg(addr, mask, value):
+    """Poll a register until it meet some criteria"""
+    while not HRF_checkreg(addr, mask, value):
+        pass
+
+
+def HRF_wait_ready():
+    """Wait for HRF to be ready after last command"""
+    HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY, MASK_MODEREADY)
+
+
+def HRF_wait_txready():
+    """Wait for HRF to be ready and ready for tx, after last command"""
+    trace("waiting for transmit ready...")
+    HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY|MASK_TXREADY, MASK_MODEREADY|MASK_TXREADY)
+    trace("transmit ready")
+
+
+def HRF_change_mode(mode):
+    HRF_writereg(ADDR_OPMODE, mode)
+
+
+def HRF_clear_fifo():
+    """Clear any data in the HRF payload FIFO by reading until empty"""
+    while (HRF_readreg(ADDR_IRQFLAGS2) & MASK_FIFONOTEMPTY) == MASK_FIFONOTEMPTY:
+        HRF_readreg(ADDR_FIFO)
+
+
+def HRF_check_payload():
+    """Check if there is a payload in the FIFO waiting to be processed"""
+    irqflags1 = HRF_readreg(ADDR_IRQFLAGS1)
+    irqflags2 = HRF_readreg(ADDR_IRQFLAGS2)
+    #trace("irq1 %s   irq2 %s" % (hex(irqflags1), hex(irqflags2)))
+
+    return (irqflags2 & MASK_PAYLOADRDY) == MASK_PAYLOADRDY
+
+
+def HRF_receive_payload():
+    """Receive the whole payload"""
+    return HRF_readfifo_burst()
+
+
+def HRF_send_payload(payload):
+    trace("send_payload")
+    #trace("payload:%s" % ashex(payload))
+    HRF_writefifo_burst(payload)
+    trace("  waiting for sent...")
+    HRF_pollreg(ADDR_IRQFLAGS2, MASK_PACKETSENT, MASK_PACKETSENT)
+    trace("  sent")
+    reg = HRF_readreg(ADDR_IRQFLAGS2)
+    trace("  irqflags2=%s" % hex(reg))
+    if ((reg & MASK_FIFONOTEMPTY) != 0) or ((reg & MASK_FIFOOVERRUN) != 0):
+        warning("Failed to send payload to HRF")
+
+
+
+#----- ENERGENIE SPECIFIC CONFIGURATIONS --------------------------------------
 
 config_FSK = [
     [ADDR_REGDATAMODUL,       VAL_REGDATAMODUL_FSK],         # modulation scheme FSK
@@ -220,95 +268,23 @@ config_OOK = [
     [ADDR_BITRATEMSB, 	      0x40],                         # 1938b/s
     [ADDR_BITRATELSB,         0x80],                         # 1938b/s
     [ADDR_PREAMBLELSB, 	      0],                            # preamble size LSB 3
-    [ADDR_SYNCCONFIG, 	      VAL_SYNCCONFIG4],		     # Size of the Sync word = 4 (SyncSize + 1)
+    [ADDR_SYNCCONFIG, 	      VAL_SYNCCONFIG4],		         # Size of the Sync word = 4 (SyncSize + 1)
     [ADDR_SYNCVALUE1, 	      VAL_SYNCVALUE1OOK],            # sync value 1
     [ADDR_SYNCVALUE2, 	      0],                            # sync value 2
     [ADDR_SYNCVALUE3, 	      0],                            # sync value 3
     [ADDR_SYNCVALUE4, 	      0],                            # sync value 4
     [ADDR_PACKETCONFIG1,      VAL_PACKETCONFIG1OOK],	     # Fixed length, no Manchester coding, OOK
-    [ADDR_PAYLOADLEN, 	      VAL_PAYLOADLEN_OOK],	     # Payload Length
+    [ADDR_PAYLOADLEN, 	      VAL_PAYLOADLEN_OOK],	         # Payload Length
     [ADDR_FIFOTHRESH, 	      VAL_FIFOTHRESH30],             # Condition to start packet transmission: wait for 30 bytes in FIFO
 ]
 
 
-def HRF_wait_ready():
-    """Wait for HRF to be ready after last command"""
-    HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY, MASK_MODEREADY)
-
-
-def HRF_wait_txready():
-    """Wait for HRF to be ready and ready for tx, after last command"""
-    trace("waiting for transmit ready...")
-    HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY|MASK_TXREADY, MASK_MODEREADY|MASK_TXREADY)
-    trace("transmit ready")
-
-
-def HRF_config_FSK():
-    """Configure HRF for FSK modulation"""
-    for cmd in config_FSK:
+def HRF_config(config):
+    """Load a table of configuration values into HRF registers"""
+    for cmd in config:
         HRF_writereg(cmd[0], cmd[1])
         HRF_wait_ready()
 
-
-def HRF_config_OOK():
-    """Configure HRF for OOK modulation"""
-    for cmd in config_OOK:
-        HRF_writereg(cmd[0], cmd[1])
-        HRF_wait_ready()
-
-
-def HRF_change_mode(mode):
-    HRF_writereg(ADDR_OPMODE, mode)
-
-
-def HRF_clear_fifo():
-    """Clear any data in the HRF payload FIFO by reading until empty"""
-    while (HRF_readreg(ADDR_IRQFLAGS2) & MASK_FIFONOTEMPTY) == MASK_FIFONOTEMPTY:
-        HRF_readreg(ADDR_FIFO)
-
-
-def HRF_check_payload():
-    """Check if there is a payload in the FIFO waiting to be processed"""
-    irqflags1 = HRF_readreg(ADDR_IRQFLAGS1)
-    irqflags2 = HRF_readreg(ADDR_IRQFLAGS2)
-    #trace("irq1 %s   irq2 %s" % (hex(irqflags1), hex(irqflags2)))
-
-    return (irqflags2 & MASK_PAYLOADRDY) == MASK_PAYLOADRDY
-
-
-def HRF_receive_payload():
-    """Receive the whole payload"""
-    return HRF_readfifo_burst()
-
-
-def HRF_send_payload(payload):
-    trace("send_payload")
-    #dumpPayloadAsHex(payload)
-    HRF_writefifo_burst(payload)
-    trace("  waiting for sent...")
-    HRF_pollreg(ADDR_IRQFLAGS2, MASK_PACKETSENT, MASK_PACKETSENT)
-    trace("  sent")
-    reg = HRF_readreg(ADDR_IRQFLAGS2)
-    trace("  irqflags2=%s" % hex(reg))
-    if ((reg & MASK_FIFONOTEMPTY) != 0) or ((reg & MASK_FIFOOVERRUN) != 0):
-        warning("Failed to send payload to HRF")
-
-
-def ashex(p):
-    line = ""
-    for b in p:
-        line += str(hex(b)) + " "
-    return line
-
-
-def dumpPayloadAsHex(payload):
-    length = payload[0]
-    print(hex(length))
-    if length+1 != len(payload):
-        print("warning length byte mismatch actual:%d inbuf:%d" % (len(payload), length))
-
-    for i in range(1,length+1):
-        print("[%d] = %s" % (i, hex(payload[i])))
 
 #ORIGINAL C CODE
 #void HRF_send_OOK_msg(uint8_t relayState)
@@ -362,6 +338,8 @@ def HRF_send_OOK_payload(payload):
     p1 = [0x00] + payload
     # This sync pattern does not match C code, but it works.
     # The sync pattern from the C code does not work here
+    # Note that buf[0] in the C is undefined due to being uninitialised
+    #pn = [0x00,0x80,0x00,0x00,0x00] # from the C
     # Currently there is no explanation for this.
     pn = [0x80,0x80,0x80,0x80,0x80] + payload
 
@@ -381,13 +359,7 @@ def HRF_send_OOK_payload(payload):
 
 
 
-#----- USER API ---------------------------------------------------------------
-#
-# This is only a first-pass at a user API.
-# it might change quite a bit in the second pass.
-# The HRF functions are intentionally not used by the caller,
-# this allows mock testing, and also for that part to be rewritten in C
-# for speed later if required.
+#----- RADIO API --------------------------------------------------------------
 
 mode = None
 modulation_fsk = None
@@ -396,12 +368,15 @@ def init():
     """Initialise the module ready for use"""
     spi.init_defaults()
     trace("RESET")
+
+    # Note that if another program left GPIO pins in a different state
+    # and did a dirty exit, the reset fails to work and the clear fifo hangs.
+    # Might have to make the spi.init() set everything to inputs first,
+    # then set to outputs, to make sure that the
+    # GPIO registers are in a deterministic start state.
     spi.reset() # send a hardware reset to ensure radio in clean state
 
-    #trace("config FSK")
-    #HRF_config_FSK()
     HRF_clear_fifo()
-    #receiver()
 
 
 def modulation(fsk=None, ook=None):
@@ -416,13 +391,13 @@ def modulation(fsk=None, ook=None):
     if fsk != None and fsk:
         if modulation_fsk == None or modulation_fsk == False:
             trace("switch to FSK")
-            HRF_config_FSK()
+            HRF_config(config_FSK)
             modulation_fsk = True
 
     elif ook != None and ook:
         if modulation_fsk == None or modulation_fsk == True:
             trace("switch to OOK")
-            HRF_config_OOK()
+            HRF_config(config_OOK)
             modulation_fsk = False
 
 
