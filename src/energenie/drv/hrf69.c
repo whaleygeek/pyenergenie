@@ -22,16 +22,15 @@
 //    return line
 
 
-
+// Write an 8 bit value to a register
 void HRF_writereg(uint8_t addr, uint8_t data)
 {
-//def HRF_writereg(addr, data):
-//    """Write an 8 bit value to a register"""
-//    buf = [addr | MASK_WRITE_DATA, data]
-//    spi.select()
-//    spi.frame(buf)
-//    spi.deselect()
+    spi_select();
+    spi_byte(addr | HRF_MASK_WRITE_DATA);
+    spi_byte(data);
+    spi_deselect();
 }
+
 
 // Read an 8 bit value from a register
 uint8_t HRF_readreg(uint8_t addr)
