@@ -13,6 +13,12 @@ gcc spi_test.c spis.c gpio_sim.c delay_posix.c
 mv a.out spis_test
 chmod u+x spis_test
 
+# build hrf69_test
+gcc hrf69_test.c hrf69.c spis.c gpio_sim.c delay_posix.c
+mv a.out hrf69_test
+chmod u+x hrf69_test
+
+
 
 # build spih_test (hard SPI tester)
 ##gcc spi_test.c spih_rpi.c gpio_rpi.c

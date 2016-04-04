@@ -15,6 +15,8 @@ void delay(struct timespec time);
 
 void delaysec(uint8_t secs);
 
+void delayms(unsigned int ms);
+
 void delayus(unsigned int us);
 
 #endif

@@ -116,7 +116,7 @@ extern void HRF_writereg(uint8_t addr, uint8_t data);
 
 extern uint8_t HRF_readreg(uint8_t addr);
 
-extern void HRF_writefifo_burst(uint8_t* buf uint8_t len);
+extern void HRF_writefifo_burst(uint8_t* buf, uint8_t len);
 
 //TODO unnecessary level of runtime indirection?
 //TODO where is the buffer memory defined?

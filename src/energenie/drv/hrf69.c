@@ -3,6 +3,9 @@
  * Hope RF RFM69 radio controller code.
  */
 
+#include "system.h"
+#include "hrf69.h"
+
 //import spi
 
 //def warning(msg):
@@ -41,10 +44,11 @@ uint8_t HRF_readreg(uint8_t addr)
 //    res = spi.frame(buf)
 //    spi.deselect()
 //    return res[1] # all registers are 8 bit
+    return 0; // TODO
 }
 
 
-void HRF_writefifo_burst(uint8_t* buf uint8_t len)
+void HRF_writefifo_burst(uint8_t* buf, uint8_t len)
 {
 //def HRF_writefifo_burst(buf):
 //    """Write all bytes in buf to the payload FIFO, in a single burst"""
@@ -81,6 +85,7 @@ uint8_t* HRF_readfifo_burst(void)
 //        buf.append(data)
 //    spi.deselect()
 //    return buf
+    return (void*)0; // TODO
 }
 
 
@@ -91,6 +96,7 @@ HRF_RESULT HRF_checkreg(uint8_t addr, uint8_t mask, uint8_t value)
 //    regval = HRF_readreg(addr)
 //    #print("addr %d mask %d wanted %d actual %d" % (addr,mask,value,regval))
 //    return (regval & mask) == value
+    return 0; // TODO
 }
 
 
@@ -142,6 +148,7 @@ HRF_RESULT HRF_check_payload(void)
 //    irqflags1 = HRF_readreg(ADDR_IRQFLAGS1)
 //    irqflags2 = HRF_readreg(ADDR_IRQFLAGS2)
 //    return (irqflags2 & MASK_PAYLOADRDY) == MASK_PAYLOADRDY
+    return 0; // TODO
 }
 
 
@@ -152,9 +159,7 @@ HRF_RESULT HRF_check_payload(void)
 //pass in ptr to len variable
 uint8_t* HRF_receive_payload(void)
 {
-//def HRF_receive_payload():
-//    """Receive the whole payload"""
-//    return HRF_readfifo_burst()
+    return HRF_readfifo_burst();
 }
 
 

@@ -7,14 +7,10 @@
 #include <sys/time.h>
 
 #include "system.h"
+#include "delay.h"
 
-static struct timespec delay_1sec = {1, 0};
-
-
-void delay(struct timespec time)
-{
-  nanosleep(&time, NULL);
-}
+static struct timespec delay_1sec = {1, 0};    // 1sec, 0us
+static struct timespec delay_1ms  = {0, 1000}; // 0sec, 1000us
 
 
 void delaysec(uint8_t secs)
@@ -23,6 +19,21 @@ void delaysec(uint8_t secs)
   {
     delay(delay_1sec);
   }
+}
+
+
+void delayms(unsigned int ms)
+{
+  while (ms-- > 0)
+  {
+    delay(delay_1ms);
+  }
+}
+
+
+void delay(struct timespec time)
+{
+  nanosleep(&time, NULL);
 }
 
 
