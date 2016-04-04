@@ -118,6 +118,11 @@ extern uint8_t HRF_readreg(uint8_t addr);
 
 extern void HRF_writefifo_burst(uint8_t* buf uint8_t len);
 
+//TODO unnecessary level of runtime indirection?
+//TODO where is the buffer memory defined?
+//perhaps pass in buffer memory and maxlen
+//how do we know the actual length of buffer written to?
+//pass in ptr to len variable
 extern uint8_t* HRF_readfifo_burst(void);
 
 extern HRF_RESULT HRF_checkreg(uint8_t addr, uint8_t mask, uint8_t value);
@@ -134,6 +139,12 @@ extern void HRF_clear_fifo(void);
 
 extern HRF_RESULT HRF_check_payload(void);
 
+
+//TODO unnecessary level of runtime indirection?
+//TODO where is the buffer memory defined?
+//perhaps pass in buffer memory and maxlen
+//how do we know the actual length of buffer written to?
+//pass in ptr to len variable
 extern uint8_t* HRF_receive_payload(void);
 
 extern void HRF_send_payload(uint8_t* payload, uint8_t len);
