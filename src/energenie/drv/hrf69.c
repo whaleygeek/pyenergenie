@@ -2,7 +2,7 @@
  *
  * Hope RF RFM69 radio controller code.
  */
-
+#include <stdlib.h>
 #include "system.h"
 #include "hrf69.h"
 #include "spi.h"
@@ -36,7 +36,7 @@ void HRF_writefifo_burst(uint8_t* buf, uint8_t len)
 {
     spi_select();
     spi_byte(HRF_ADDR_FIFO | HRF_MASK_WRITE_DATA);
-    spi_frame(buf, buf, len);
+    spi_frame(buf, NULL, len);
     spi_deselect();
 }
 
