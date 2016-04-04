@@ -13,9 +13,6 @@
  * boards in the future.
  */
 
-#else if defined(ARDUINO)
-#if defined(ARDUINO_PROMICRO)
-
 //TODO: there might be platform specific macros here to
 //extract register address and bitmask
 //really, what we want is to be able to pass in a uint8_t which is a GPIO number
@@ -39,31 +36,13 @@
 //#define GPIO_15  PORTC,0x10
 //#define GPIO_16  PORTC,0x20
 
-#else
-//#error Unknown Arduino platform
-#endif
-#else
-//#error Unknown platform
-#endif
-
 
 /***** INCLUDES *****/
 
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <stdint.h>
-//#include <fcntl.h>
-//#include <sys/mman.h>
-//#include <unistd.h>
-//#include <time.h>
-
-//#include "gpio.h"
-
+#include "gpio.h"
+#include <arduino.h>
 
 /***** CONFIGURATION *****/
-
-/* uncomment to make this a simulated driver */
-//#define GPIO_SIMULATED
 
 
 /***** CONSTANTS *****/
@@ -91,39 +70,45 @@ void gpio_init()
 }
 
 
-void gpio_setin(int g)
+void gpio_setin(uint8_t g)
 {
-  //TODO
+  //TODO this is a temporary hack. Need to use PORT registers
+  pinMode(g, INPUT);
 }
 
 
-void gpio_setout(int g)
+void gpio_setout(uint8_t g)
 {
-  //TODO
+  //TODO this is a temporary hack. Need to use PORT registers
+  pinMode(g, OUTPUT);
 }
 
 
-void gpio_high(int g)
+void gpio_high(uint8_t g)
 {
-  //TODO
+  //TODO this is a temporary hack. Need to use PORT registers
+  digitalWrite(g, 1);
 }
 
 
-void gpio_low(int g)
+void gpio_low(uint8_t g)
 {
-  //TODO
+  //TODO this is a temporary hack. Need to use PORT registers
+  digitalWrite(g, 0);
 }
 
 
-void gpio_write(int g, int v)
+void gpio_write(uint8_t g, uint8_t v)
 {
-  //TODO
+  //TODO this is a temporary hack. Need to use PORT registers
+  digitalWrite(g, v);
 }
 
 
-int  gpio_read(int g)
+uint8_t gpio_read(uint8_t g)
 {
-  //TODO
+  //TODO this is a temporary hack. Need to use PORT registers
+  return digitalRead(g);
 }
 
 
