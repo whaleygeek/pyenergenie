@@ -72,18 +72,24 @@ static void reset(void)
 extern void gpio_mock_set_in(uint8_t g, uint8_t v);
 
 
+// write a register and read it back
+
 void hrf_test_connect(void)
 {
   uint8_t result;
 
-  // can we reset the HRF, and read a register from it?
-
   reset();
   gpio_mock_set_in(MISO, 1); // force return bus high to test
 
-
+  printf("** write:%02X\n", (unsigned int) HRF_MODE_TRANSMITER);
+  HRF_writereg(HRF_ADDR_OPMODE, HRF_MODE_TRANSMITER);
   result = HRF_readreg(0x00);
-  printf("result:0x%02X\n", (unsigned int) result);
+  printf("** read:%02X\n", (unsigned int) result);
+
+  printf("** write:%02X\n", (unsigned int) HRF_MODE_RECEIVER);
+  HRF_writereg(HRF_ADDR_OPMODE, HRF_MODE_RECEIVER);
+  result = HRF_readreg(0x00);
+  printf("** read:%02X\n", (unsigned int) result);
 
   spi_finished();
 }
