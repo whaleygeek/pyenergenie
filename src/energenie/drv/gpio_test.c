@@ -15,12 +15,13 @@ static void delay(struct timespec time)
 
 static struct timespec delay_1sec = {1, 0};
 
+
 // To allow platform specific test harnesses
 
 #define GPIO_A 2
 #define GPIO_B 3
 
-void main(void)
+int main(void)
 {
   int i;
 
@@ -42,4 +43,5 @@ void main(void)
     gpio_write(GPIO_B, 0);
     delay(delay_1sec);
   }
+  return 0;
 }

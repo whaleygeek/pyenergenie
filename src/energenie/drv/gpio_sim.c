@@ -21,8 +21,8 @@
  */
 
 #define OUTS(s)  printf("%s", s)
-#define OUTN(n)  printf("%d", (unsigned int)d)
-#define OUTC(c)  putch(c)
+#define OUTN(n)  printf("%d", (unsigned int)n)
+#define OUTC(c)  putc(c, stdout)
 #define NL()     OUTC('\n')
 
 
@@ -43,8 +43,8 @@ void gpio_setin(uint8_t g)
 #if defined(GPIO_DEBUG)
     //printf("gpio:in:%d\n", g);
     OUTS("gpio:in");
-    OUTN(g)
-    NL()
+    OUTN(g);
+    NL();
 #endif
 }
 
@@ -135,7 +135,7 @@ void gpio_finished(void)
 
 void gpio_mock_set_in(uint8_t g, uint8_t v)
 {
-    gpio_in[g] = v
+    gpio_in[g] = v;
 }
 
 
