@@ -1,6 +1,7 @@
 #include "gpio.h"
 #include "spi.h"
-#include "trace.h"
+//#include "trace.h"
+#include "delay.h"
 
 #define SPI_RESET 2
 #define SPI_CS    3
@@ -8,39 +9,42 @@
 #define SPI_MISO  5
 #define SPI_MOSI  6
 
-
+static SPI_CONFIG spiConfig = {SPI_CS, SPI_SCLK, SPI_MOSI, SPI_MISO, SPI_SPOL1, SPI_CPOL0, SPI_CPHA0, 1000, 1000, 1000};
 
 void setup()
 {
-  unsigned char payload[]  = {0xFF};
-
-  SPI_CONFIG spiConfig = {SPI_CS, SPI_SCLK, SPI_MOSI, SPI_MISO, SPI_SPOL1, SPI_CPOL0, SPI_CPHA0};
-                          //{0,TSETTLE},{0,THOLD},{0,TFREQ}};
-
-  /* Init */
-
-  //printf("init\n");
-  //TRACE_OUTS("init");
-  //TRACE_NL();
-  //gpio_init(); done by spi_init()
+  gpio_setout(SPI_RESET);
+  gpio_low(SPI_RESET);
   spi_init(&spiConfig);
-
-
-  //printf("select\n");
-  //TRACE_OUTS("select");
-  //TRACE_NL();
-  spi_select();
-  
-  //TRACE_OUTS("write");
-  spi_frame(payload, NULL, sizeof(payload));
-
-  spi_deselect();
-  spi_finished();  
 }
+
+void reset()
+{
+  gpio_high(SPI_RESET);
+  delay(150);
+  gpio_low(SPI_RESET);
+}
+
+void test2()
+{
+  unsigned char payload[]  = {0xF0};
+
+  reset();
+  spi_select();
+  spi_frame(payload, NULL, sizeof(payload));
+  spi_deselect();
+}
+
 
 void loop()
 {
+  while (true)
+  {
+    test2();
+  }
 }
+
+
 
 //void setup()
 //{

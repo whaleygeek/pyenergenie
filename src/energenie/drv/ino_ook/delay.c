@@ -18,6 +18,11 @@ void delayus(unsigned int us)
   delayMicroseconds(us);
 }
 
+void delayms(unsigned int ms)
+{
+  delay((unsigned long)ms);
+}
+
 /***** END OF FILE *****/
 
 
