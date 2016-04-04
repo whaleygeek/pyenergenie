@@ -17,6 +17,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define TRACE_OUTS(s)  printf("%s", s)
 #define TRACE_OUTN(n)  printf("%d", (unsigned int)n)

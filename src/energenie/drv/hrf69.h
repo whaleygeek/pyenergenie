@@ -66,7 +66,7 @@ typedef struct
 
 // Radio modes
 #define HRF_MODE_STANDBY               0x04	// Standby
-#define HRF_MODE_TRANSMITER            0x0C	// Transmiter
+#define HRF_MODE_TRANSMITTER           0x0C	// Transmiter
 #define HRF_MODE_RECEIVER              0x10	// Receiver
 
 // Values to store in registers
