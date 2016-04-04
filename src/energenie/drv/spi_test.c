@@ -11,9 +11,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "system.h"
 #include "gpio.h"
 #include "spi.h"
 
+//TODO: printfs will not work on Arduino
 
 /***** CONSTANTS *****/
 
@@ -36,8 +38,8 @@ int main(int argc, char **argv)
   unsigned char cmd_id2[4]  = {0x30, 0x00, 0x02, 0x00};
 
   unsigned char rx[4];
-  SPI_CONFIG spiConfig = {CS, SCLK, MOSI, MISO, SPI_SPOL0, SPI_CPOL0, SPI_CPHA0,
-                          {0,TSETTLE},{0,THOLD},{0,TFREQ}};
+  SPI_CONFIG spiConfig = {CS, SCLK, MOSI, MISO, SPI_SPOL0, SPI_CPOL0, SPI_CPHA0};
+                          //{0,TSETTLE},{0,THOLD},{0,TFREQ}};
   int i;
   unsigned char id[3];
 
@@ -45,7 +47,7 @@ int main(int argc, char **argv)
   /* Init */
 
   printf("init\n");
-  //gpio_init();
+  //gpio_init(); done by spi_init()
   spi_init(&spiConfig);
 
 

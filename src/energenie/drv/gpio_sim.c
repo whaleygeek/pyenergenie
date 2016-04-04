@@ -42,7 +42,7 @@ void gpio_setin(uint8_t g)
 {
 #if defined(GPIO_DEBUG)
     //printf("gpio:in:%d\n", g);
-    OUTS("gpio:in");
+    OUTS("gpio:in:");
     OUTN(g);
     NL();
 #endif
@@ -81,7 +81,7 @@ void gpio_low(uint8_t g)
 {
 #if defined(GPIO_DEBUG)
     //printf("gpio:low:%d\n", g);
-    OUTS("gpio:low");
+    OUTS("gpio:low:");
     OUTN(g);
     NL();
 #endif

@@ -1,4 +1,6 @@
-/* spis.c (soft SPI)  D.J.Whale  19/07/2014
+/* spis.c  D.J.Whale  19/07/2014
+ *
+ * Software SPI driver built on top of gpio
  */
 
 
@@ -6,13 +8,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-//#include <time.h>
-#include <sys/time.h> // Won't work on Arduino
 #include <string.h>
 
 #include "system.h"
 #include "spi.h"
 #include "gpio.h"
+#include "delay.h"
 
 
 /***** MACROS *****/
@@ -23,37 +24,16 @@
 #define SELECTED()     gpio_write(config.cs, config.spol?1:0)
 #define NOT_SELECTED() gpio_write(config.cs, config.spol?0:1)
 
+//TODO: Posix specific, won't work on Arduino
+#define FAIL(msg) do { \
+  fprintf(stderr, "%s", msg); \
+  exit(-1); \
+} while (0)
+
 
 /***** VARIABLES *****/
 
 static SPI_CONFIG config;
-
-
-/* Based on code suggested by Gordon Henderson:
- * https://github.com/WiringPi/WiringPi/blob/master/wiringPi/wiringPi.c
- * 
- * Note that his trick of using the hardware timer just didn't work,
- * and this is the best of a bad bunch. nanosleep() delays at least
- * 100uS in some cases.
- */
-
-//TODO: This is raspberry pi specific
-//Put it in a delay.h delay_rpi.h??
-
-static void delayus(unsigned int us)
-{
-  struct timeval tNow, tLong, tEnd;
-
-  gettimeofday(&tNow, NULL);
-  tLong.tv_sec  = us / 1000000;
-  tLong.tv_usec = us % 1000000;
-  timeradd(&tNow, &tLong, &tEnd);
-
-  while (timercmp(&tNow, &tEnd, <))
-  {
-    gettimeofday(&tNow, NULL);
-  }
-}  
 
 
 void spi_init_defaults(void)
@@ -84,8 +64,7 @@ void spi_init(SPI_CONFIG* pConfig)
   //TODO: Implement CPHA1
   if (config.cpha != 0)
   {
-    fprintf(stderr, "error: CPHA 1 not yet supported");
-    exit(-1);
+    FAIL("error: CPHA 1 not yet supported");
   }
 
   gpio_setout(config.sclk);
