@@ -7,20 +7,6 @@
 #include "hrf69.h"
 #include "spi.h"
 
-//def warning(msg):
-//    print("warning:" + str(msg))
-
-
-//def trace(msg):
-//    print(str(msg))
-
-
-//def ashex(p):
-//    line = ""
-//    for b in p:
-//        line += str(hex(b)) + " "
-//    return line
-
 
 // Write an 8 bit value to a register
 void HRF_writereg(uint8_t addr, uint8_t data)
@@ -45,21 +31,17 @@ uint8_t HRF_readreg(uint8_t addr)
 }
 
 
+// Write all bytes in buf to the payload FIFO, in a single burst
 void HRF_writefifo_burst(uint8_t* buf, uint8_t len)
 {
-//def HRF_writefifo_burst(buf):
-//    """Write all bytes in buf to the payload FIFO, in a single burst"""
-//    # Don't modify buf, in case caller reuses it
-//    txbuf = [ADDR_FIFO | MASK_WRITE_DATA]
-//    for b in buf:
-//      txbuf.append(b)
-//    spi.select()
-//    spi.frame(txbuf)
-//    spi.deselect()
+    spi_select();
+    spi_byte(HRF_ADDR_FIFO | HRF_MASK_WRITE_DATA);
+    spi_frame(buf, buf, len);
+    spi_deselect();
 }
 
 
-//TODO where is the buffer memory defined?
+//TODO: where is the buffer memory defined?
 //perhaps pass in buffer memory and maxlen
 //how do we know the actual length of buffer written to?
 //pass in ptr to len variable
@@ -86,71 +68,68 @@ uint8_t* HRF_readfifo_burst(void)
 }
 
 
+// Check to see if a register matches a specific value or not
 HRF_RESULT HRF_checkreg(uint8_t addr, uint8_t mask, uint8_t value)
 {
-//def HRF_checkreg(addr, mask, value):
-//    """Check to see if a register matches a specific value or not"""
-//    regval = HRF_readreg(addr)
-//    #print("addr %d mask %d wanted %d actual %d" % (addr,mask,value,regval))
-//    return (regval & mask) == value
-    return 0; // TODO
+    uint8_t regval = HRF_readreg(addr);
+    return (regval & mask) == value;
 }
 
 
+// Poll a register until it meets some criteria
 void HRF_pollreg(uint8_t addr, uint8_t mask, uint8_t value)
 {
-//def HRF_pollreg(addr, mask, value):
-//    """Poll a register until it meet some criteria"""
-//    while not HRF_checkreg(addr, mask, value):
-//        pass
+    while (! HRF_checkreg(addr, mask, value))
+    {
+      // busy wait
+    }
 }
 
 
+// Wait for HRF to be ready after last command
 void HRF_wait_ready(void)
 {
-//def HRF_wait_ready():
-//    """Wait for HRF to be ready after last command"""
-//    HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY, MASK_MODEREADY)
+    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY, HRF_MASK_MODEREADY);
 }
 
 
+// Wait for the HRF to be ready, and ready for tx, after last command
 void HRF_wait_txready(void)
 {
-//def HRF_wait_txready():
-//    """Wait for HRF to be ready and ready for tx, after last command"""
-//    HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY|MASK_TXREADY, MASK_MODEREADY|MASK_TXREADY)
+    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY|HRF_MASK_TXREADY, HRF_MASK_MODEREADY|HRF_MASK_TXREADY);
 }
 
 
+// Change the operating mode of the HRF radi
 void HRF_change_mode(uint8_t mode)
 {
-//def HRF_change_mode(mode):
-//    HRF_writereg(ADDR_OPMODE, mode)
+    HRF_writereg(HRF_ADDR_OPMODE, mode);
 }
 
 
+// Clear any data in the HRF payload FIFO, by reading until empty
 void HRF_clear_fifo(void)
 {
-//def HRF_clear_fifo():
-//    """Clear any data in the HRF payload FIFO by reading until empty"""
-//    while (HRF_readreg(ADDR_IRQFLAGS2) & MASK_FIFONOTEMPTY) == MASK_FIFONOTEMPTY:
-//        HRF_readreg(ADDR_FIFO)
+    while ((HRF_readreg(HRF_ADDR_IRQFLAGS2) & HRF_MASK_FIFONOTEMPTY) == HRF_MASK_FIFONOTEMPTY)
+    {
+        HRF_readreg(HRF_ADDR_FIFO);
+    }
 }
 
 
+// Check if there is a payload in the FIFO waiting to be processed
 HRF_RESULT HRF_check_payload(void)
 {
-//def HRF_check_payload():
-//    """Check if there is a payload in the FIFO waiting to be processed"""
-//    irqflags1 = HRF_readreg(ADDR_IRQFLAGS1)
-//    irqflags2 = HRF_readreg(ADDR_IRQFLAGS2)
-//    return (irqflags2 & MASK_PAYLOADRDY) == MASK_PAYLOADRDY
-    return 0; // TODO
+    //TODO: First read might be superflous, but left in just in case
+    uint8_t irqflags1 = HRF_readreg(HRF_ADDR_IRQFLAGS1);
+
+    uint8_t irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
+    return (irqflags2 & HRF_MASK_PAYLOADRDY) == HRF_MASK_PAYLOADRDY;
 }
 
 
-//TODO unnecessary level of runtime indirection?
-//TODO where is the buffer memory defined?
+//TODO: unnecessary level of runtime indirection?
+//TODO: where is the buffer memory defined?
 //perhaps pass in buffer memory and maxlen
 //how do we know the actual length of buffer written to?
 //pass in ptr to len variable
@@ -160,24 +139,27 @@ uint8_t* HRF_receive_payload(void)
 }
 
 
+// Send a preformatted payload of data
 void HRF_send_payload(uint8_t* payload, uint8_t len)
 {
-//def HRF_send_payload(payload):
-//    HRF_writefifo_burst(payload)
-//    HRF_pollreg(ADDR_IRQFLAGS2, MASK_PACKETSENT, MASK_PACKETSENT)
-//    reg = HRF_readreg(ADDR_IRQFLAGS2)
-//    if ((reg & MASK_FIFONOTEMPTY) != 0) or ((reg & MASK_FIFOOVERRUN) != 0):
-//        warning("Failed to send payload to HRF")
+    uint8_t reg;
+
+    HRF_writefifo_burst(payload, len);
+    HRF_pollreg(HRF_ADDR_IRQFLAGS2, HRF_MASK_PACKETSENT, HRF_MASK_PACKETSENT);
+    reg = HRF_readreg(HRF_ADDR_IRQFLAGS2);
+    //if ((reg & HRF_MASK_FIFONOTEMPTY) != 0) or ((reg & HRF_MASK_FIFOOVERRUN) != 0):
+    //    warning("Failed to send payload to HRF")
 }
 
 
+// Load a table of configuration values into HRF registers
 void HRF_config(HRF_CONFIG_REC* config, uint8_t len)
 {
-//def HRF_config(config):
-//    """Load a table of configuration values into HRF registers"""
-//    for cmd in config:
-//        HRF_writereg(cmd[0], cmd[1])
-//        HRF_wait_ready()
+    while (len-- != 0)
+    {
+        HRF_writereg(config->addr, config->value);
+        config++;
+    }
 }
 
 
