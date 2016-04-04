@@ -1,38 +1,35 @@
 /* gpio_sim.c  D.J.Whale  04/04/2016
  * 
- * A very simple interface to a simulated GPIO port with no platform dependencies.
+ * A very simple interface to a simulated GPIO port with minimal platform dependencies.
  */
 
 /***** INCLUDES *****/
 
-#include <stdio.h>
-//#include <stdlib.h>
-
+#include <stdio.h> // OPTIONAL
 #include "gpio.h"
 
 
 /***** CONFIGURATION *****/
 
+#define GPIO_MAX      20
+#define GPIO_DEBUG
+//#define GPIO_LOOPBACK
 
-/***** CONSTANTS *****/
+
+/* Printf is not available on some platforms, or not very efficient.
+ * These macros make it possible to re-map I/O to more efficient functions.
+ */
+
+#define OUTS(s)  printf("%s", s)
+#define OUTN(n)  printf("%d", (unsigned int)d)
+#define OUTC(c)  putch(c)
+#define NL()     OUTC('\n')
 
 
 /***** VARIABLES *****/
 
-
-/****** MACROS *****/
-
-//#define INP_GPIO(g) *(gpio+((g)/10)) &= ~(7<<(((g)%10)*3))
-//#define OUT_GPIO(g) *(gpio+((g)/10)) |=  (1<<(((g)%10)*3))
-//#define SET_GPIO_ALT(g,a) *(gpio+(((g)/10))) |= (((a)<=3?(a)+4:(a)==4?3:2)<<(((g)%10)*3))
-
-//#define GPIO_SET *(gpio+7)  // sets   bits which are 1 ignores bits which are 0
-//#define GPIO_CLR *(gpio+10) // clears bits which are 1 ignores bits which are 0
-
-//#define GPIO_READ(g) ((*(gpio+13)&(1<<g)) != 0)
-
-//#define GPIO_HIGH(g) GPIO_SET = (1<<(g))
-//#define GPIO_LOW(g)  GPIO_CLR = (1<<(g))
+static uint8_t gpio_out[GPIO_MAX] = {0};
+static uint8_t gpio_in[GPIO_MAX]  = {0};
 
 
 void gpio_init()
@@ -41,41 +38,110 @@ void gpio_init()
 }
 
 
-void gpio_setin(int g)
+void gpio_setin(uint8_t g)
 {
-    printf("gpio:in:%d\n", g);
+#if defined(GPIO_DEBUG)
+    //printf("gpio:in:%d\n", g);
+    OUTS("gpio:in");
+    OUTN(g)
+    NL()
+#endif
 }
 
 
-void gpio_setout(int g)
+void gpio_setout(uint8_t g)
 {
-    printf("gpio:out:%d\n", g);
+#if defined(GPIO_DEBUG)
+    //printf("gpio:out:%d\n", g);
+    OUTS("gpio:out:");
+    OUTN(g);
+    NL();
+#endif
 }
 
 
-void gpio_high(int g)
+void gpio_high(uint8_t g)
 {
-    printf("gpio:high:%d\n", g);
+#if defined(GPIO_DEBUG)
+    //printf("gpio:high:%d\n", g);
+    OUTS("gpio:high:");
+    OUTN(g);
+    NL();
+#endif
+
+    gpio_out[g] = 1;
+
+#if defined(GPIO_LOOPBACK)
+    gpio_in[g] = 1;
+#endif
 }
 
 
-void gpio_low(int g)
+void gpio_low(uint8_t g)
 {
-    printf("gpio:low:%d\n", g);
+#if defined(GPIO_DEBUG)
+    //printf("gpio:low:%d\n", g);
+    OUTS("gpio:low");
+    OUTN(g);
+    NL();
+#endif
+
+    gpio_out[g] = 0;
+
+#if defined(GPIO_LOOPBACK)
+    gpio_in[g] = 0;
+#endif
 }
 
 
-void gpio_write(int g, int v)
+void gpio_write(uint8_t g, uint8_t v)
 {
-    printf("gpio:write:%d=%d\n", g, v);
+#if defined(GPIO_DEBUG)
+    //printf("gpio:write:%d=%d\n", g, v);
+    OUTS("gpio:write:");
+    OUTN(g);
+    OUTC('=');
+    OUTN(v);
+    NL();
+#endif
+
+    gpio_out[g] = v;
+
+#if defined(GPIO_LOOPBACK)
+    gpio_in[g] = v;
+#endif
 }
 
 
-int gpio_read(int g)
+uint8_t gpio_read(uint8_t g)
 {
-    //TODO add a console interface to allow GPIO reads to be injected
-    //either from keyboard, or from a script file
-    return 0; /* always low in simulation */
+#if defined(GPIO_DEBUG)
+    //printf("gpio:read:%d=%d\n")
+    OUTS("gpio:read:");
+    OUTN(g);
+    OUTC('=');
+    OUTN(gpio_in[g]);
+    NL();
+#endif
+    return gpio_in[g];
+}
+
+
+void gpio_finished(void)
+{
+    // Nothing to do
+}
+
+
+void gpio_mock_set_in(uint8_t g, uint8_t v)
+{
+    gpio_in[g] = v
+}
+
+
+uint8_t gpio_mock_get_out(uint8_t g)
+{
+    return gpio_out[g];
 }
 
 

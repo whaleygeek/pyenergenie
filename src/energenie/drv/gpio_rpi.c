@@ -146,4 +146,10 @@ int gpio_read(int g)
 }
 
 
+void gpio_finished(void)
+{
+  //TODO probably need gpio_finished() to unmmap() the memory region and clean up the peripheral?
+}
+
+
 /***** END OF FILE *****/

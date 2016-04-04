@@ -12,7 +12,39 @@
  * boards in the future.
  */
 
-//TODO GPIO_SIMULATED can be replaced with gpio_sim.c in future
+#else if defined(ARDUINO)
+#if defined(ARDUINO_PROMICRO)
+
+//TODO: there might be platform specific macros here to
+//extract register address and bitmask
+//really, what we want is to be able to pass in a uint8_t which is a GPIO number
+//and this get converted (at compile time preferably) into the register access code
+//required to read/write and configure that bit. The actual mapping shoudl probably
+//be in the C code for gpio_arduino
+
+//something a bit like this, but this is not correct yet
+//#define GPIO_0   PORTB,0x01
+//#define GPIO_1   PORTB,0x02
+//#define GPIO_2   PORTB,0x04
+//#define GPIO_3   PORTB,0x08
+//#define GPIO_4   PORTB,0x10
+//#define GPIO_5   PORTB,0x20
+//#define GPIO_6   PORTB,0x40
+//#define GPIO_7   PORTB,0x90
+//#define GPIO_8   PORTC,0x01
+//#define GPIO_9   PORTC,0x02
+//#define GPIO_10  PORTC,0x04
+//#define GPIO_14  PORTC,0x08
+//#define GPIO_15  PORTC,0x10
+//#define GPIO_16  PORTC,0x20
+
+#else
+//#error Unknown Arduino platform
+#endif
+#else
+//#error Unknown platform
+#endif
+
 
 /***** INCLUDES *****/
 

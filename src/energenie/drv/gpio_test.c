@@ -7,6 +7,7 @@
 
 #include "gpio.h"
 
+//TODO this is platform specific (won't work on Arduino?)
 static void delay(struct timespec time)
 {
   nanosleep(&time, NULL);
@@ -14,27 +15,31 @@ static void delay(struct timespec time)
 
 static struct timespec delay_1sec = {1, 0};
 
+// To allow platform specific test harnesses
+
+#define GPIO_A 2
+#define GPIO_B 3
 
 void main(void)
 {
   int i;
 
   gpio_init();
-  gpio_setout(2);
-  gpio_setout(3);
+  gpio_setout(GPIO_A);
+  gpio_setout(GPIO_B);
 
   for (i=0; i<10; i++)
   {
-    puts("GPIO 2");
-    gpio_write(2, 1);
+    puts("GPIO A");
+    gpio_write(GPIO_A, 1);
     delay(delay_1sec);
-    gpio_write(2, 0);
+    gpio_write(GPIO_A, 0);
     delay(delay_1sec);
 
-    puts("GPIO 3");
-    gpio_write(3, 1);
+    puts("GPIO B");
+    gpio_write(GPIO_B, 1);
     delay(delay_1sec);
-    gpio_write(3, 0);
+    gpio_write(GPIO_B, 0);
     delay(delay_1sec);
   }
 }

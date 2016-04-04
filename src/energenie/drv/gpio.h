@@ -10,13 +10,14 @@
 /***** FUNCTION PROTOTYPES *****/
 
 void gpio_init(void);
-void gpio_setin(int g);
-void gpio_setout(int g);
-void gpio_high(int g);
-void gpio_low(int g);
-void gpio_write(int g, int v);
-int  gpio_read(int g);
-//TODO probably need gpio_finished() to unmmap() the memory region and clean up the peripheral?
+void gpio_setin(uint8_t g);
+void gpio_setout(uint8_t g);
+void gpio_high(uint8_t g);
+void gpio_low(uint8_t g);
+void gpio_write(uint8_t g, uint8_t v);
+int  gpio_read(uint8_t g);
+void gpio_finished(void);
+
 #endif
 
 /***** END OF FILE *****/
