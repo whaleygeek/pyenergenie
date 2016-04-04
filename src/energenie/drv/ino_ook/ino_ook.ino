@@ -2,20 +2,23 @@
 #include "spi.h"
 //#include "trace.h"
 #include "delay.h"
+                      // pin number on Raspberry Pi (not GPIO number)
+#define SPI_RESET 2   // P1-22 (active high)
+#define SPI_CS    3   // P1-26 (active low)
+#define SPI_SCLK  4   // P1-23
+#define SPI_MOSI  5   // P1-19
+#define SPI_MISO  6   // P1-21
+                      // P1-20   GND
+                      // P1-17   3V3
 
-#define SPI_RESET 2
-#define SPI_CS    3
-#define SPI_SCLK  4
-#define SPI_MISO  5
-#define SPI_MOSI  6
-
-static SPI_CONFIG spiConfig = {SPI_CS, SPI_SCLK, SPI_MOSI, SPI_MISO, SPI_SPOL1, SPI_CPOL0, SPI_CPHA0, 1000, 1000, 1000};
+static SPI_CONFIG spiConfig = {SPI_CS, SPI_SCLK, SPI_MOSI, SPI_MISO, SPI_SPOL0, SPI_CPOL0, SPI_CPHA0, 1000, 1000, 1000};
 
 void setup()
 {
   gpio_setout(SPI_RESET);
   gpio_low(SPI_RESET);
   spi_init(&spiConfig);
+  Serial.begin(19200);
 }
 
 void reset()
@@ -27,12 +30,21 @@ void reset()
 
 void test2()
 {
-  unsigned char payload[]  = {0xF0};
+  unsigned char wr_mode_tx[]  = {0x80 |0x01, 0x0C}; // set mode register to TRANSMITTER
+  unsigned char rd_mode[]     = {0x00 |0x01, 0x00}; // read mode register
+  
+  unsigned char rx[2];
 
   reset();
   spi_select();
-  spi_frame(payload, NULL, sizeof(payload));
+  spi_frame(wr_mode_tx, NULL, sizeof(wr_mode_tx));
   spi_deselect();
+  
+  spi_select();
+  spi_frame(rd_mode, rx, sizeof(rd_mode));
+  spi_deselect();
+  
+  Serial.println(rx[1]);
 }
 
 
