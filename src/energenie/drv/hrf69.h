@@ -10,6 +10,8 @@
 #ifndef _HRF69_H
 #define _HRF69_H
 
+#include "system.h"
+
 typedef uint8_t HRF_RESULT;
 
 typedef struct
