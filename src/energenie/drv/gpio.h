@@ -6,7 +6,7 @@
 #ifndef GPIO_H
 #define GPIO_H
 
-typedef unsigned char uint8_t; //TODO which header file defines this?
+#include "system.h"
 
 /***** FUNCTION PROTOTYPES *****/
 

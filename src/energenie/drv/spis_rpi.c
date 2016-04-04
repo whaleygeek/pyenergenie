@@ -7,9 +7,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 //#include <time.h>
-#include <sys/time.h>
+#include <sys/time.h> // Won't work on Arduino
 #include <string.h>
 
+#include "system.h"
 #include "spi.h"
 #include "gpio.h"
 
@@ -35,7 +36,10 @@ static SPI_CONFIG config;
  * and this is the best of a bad bunch. nanosleep() delays at least
  * 100uS in some cases.
  */
- 
+
+//TODO: This is raspberry pi specific
+//Put it in a delay.h delay_rpi.h??
+
 static void delayus(unsigned int us)
 {
   struct timeval tNow, tLong, tEnd;
@@ -118,11 +122,11 @@ void spi_deselect(void)
 }
 
 
-int spi_byte(int txbyte)
+int spi_byte(uint8_t txbyte)
 {
-  int rxbyte = 0;
-  int bitno;
-  int bit ;
+  uint8_t rxbyte = 0;
+  uint8_t bitno;
+  uint8_t bit ;
 
   //TODO: Implement CPHA1
 
@@ -148,10 +152,10 @@ int spi_byte(int txbyte)
 }
 
 
-void spi_frame(unsigned char* pTx, unsigned char* pRx, unsigned char count)
+void spi_frame(uint8_t* pTx, uint8_t* pRx, uint8_t count)
 {
-  unsigned char tx = 0;
-  unsigned char rx;
+  uint8_t tx = 0;
+  uint8_t rx;
 
   while (count > 0)
   {

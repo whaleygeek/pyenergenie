@@ -7,7 +7,7 @@
 
 /***** INCLUDES *****/
 
-//#include <time.h>
+#include "system.h"
 
 
 /***** CONSTANTS *****/
@@ -24,14 +24,14 @@
 
 typedef struct
 {
-  unsigned char cs;
-  unsigned char sclk;
-  unsigned char mosi;
-  unsigned char miso;
+  uint8_t cs;
+  uint8_t sclk;
+  uint8_t mosi;
+  uint8_t miso;
 
-  unsigned char spol;
-  unsigned char cpol;
-  unsigned char cpha;
+  uint8_t spol;
+  uint8_t cpol;
+  uint8_t cpha;
 
   //struct timespec tSettle;
   //struct timespec tHold;
@@ -53,9 +53,9 @@ void spi_select(void);
 
 void spi_deselect(void);
 
-int spi_byte(int txbyte);
+int spi_byte(uint8_t txbyte);
 
-void spi_frame(unsigned char* pTx, unsigned char* pRx, unsigned char count);
+void spi_frame(uint8_t* pTx, uint8_t* pRx, uint8_t count);
 
 void spi_finished(void);
 
