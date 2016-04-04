@@ -40,7 +40,6 @@ void hrf_test_rw(void);
 void hrf_test_send_ook(void);
 
 
-
 #if defined(HRF69_TEST)
 int main(int argc, char **argv)
 {

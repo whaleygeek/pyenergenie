@@ -5,7 +5,8 @@
  * Arduino internally uses the 'wiring' library, but experiments have shown
  * that it is really slow.
  *
- * (see blog by skpang)
+ * See 'Faster IO on the Arduino' on the SKPang blog:
+ * http://skpang.co.uk/blog/archives/323
  *
  * So this module uses direct register writes, and provides a placeholder for
  * compile-time selection of bitmasks and bitpatterns to support more Arduino
@@ -72,17 +73,16 @@
 
 /****** MACROS *****/
 
-//#define INP_GPIO(g) *(gpio+((g)/10)) &= ~(7<<(((g)%10)*3))
-//#define OUT_GPIO(g) *(gpio+((g)/10)) |=  (1<<(((g)%10)*3))
-//#define SET_GPIO_ALT(g,a) *(gpio+(((g)/10))) |= (((a)<=3?(a)+4:(a)==4?3:2)<<(((g)%10)*3))
+//#define INP_GPIO(g)
+//#define OUT_GPIO(g)
 
-//#define GPIO_SET *(gpio+7)  // sets   bits which are 1 ignores bits which are 0
-//#define GPIO_CLR *(gpio+10) // clears bits which are 1 ignores bits which are 0
+//#define GPIO_SET
+//#define GPIO_CLR
 
-//#define GPIO_READ(g) ((*(gpio+13)&(1<<g)) != 0)
+//#define GPIO_READ(g)
 
-//#define GPIO_HIGH(g) GPIO_SET = (1<<(g))
-//#define GPIO_LOW(g)  GPIO_CLR = (1<<(g))
+//#define GPIO_HIGH(g)
+//#define GPIO_LOW(g)
 
 
 void gpio_init()
