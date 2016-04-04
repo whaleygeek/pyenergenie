@@ -5,8 +5,7 @@
 
 #include "system.h"
 #include "hrf69.h"
-
-//import spi
+#include "spi.h"
 
 //def warning(msg):
 //    print("warning:" + str(msg))
@@ -34,17 +33,16 @@ void HRF_writereg(uint8_t addr, uint8_t data)
 //    spi.deselect()
 }
 
-
+// Read an 8 bit value from a register
 uint8_t HRF_readreg(uint8_t addr)
 {
-//def HRF_readreg(addr):
-//    """Read an 8 bit value from a register"""
-//    buf = [addr, 0x00]
-//    spi.select()
-//    res = spi.frame(buf)
-//    spi.deselect()
-//    return res[1] # all registers are 8 bit
-    return 0; // TODO
+    uint8_t result;
+
+    spi_select();
+    spi_byte(addr);
+    result = spi_byte(0x00);
+    spi_deselect();
+    return result;
 }
 
 

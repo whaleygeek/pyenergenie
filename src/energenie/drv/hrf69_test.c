@@ -69,6 +69,9 @@ static void reset(void)
 }
 
 
+extern void gpio_mock_set_in(uint8_t g, uint8_t v);
+
+
 void hrf_test_connect(void)
 {
   uint8_t result;
@@ -76,8 +79,11 @@ void hrf_test_connect(void)
   // can we reset the HRF, and read a register from it?
 
   reset();
+  gpio_mock_set_in(MISO, 1); // force return bus high to test
+
+
   result = HRF_readreg(0x00);
-  printf("result:%02X", (unsigned int) result);
+  printf("result:0x%02X\n", (unsigned int) result);
 
   spi_finished();
 }
