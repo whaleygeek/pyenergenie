@@ -16,12 +16,6 @@
 #include "gpio.h"
 
 
-/***** CONFIGURATION *****/
-
-/* uncomment to make this a simulated driver */
-//#define GPIO_SIMULATED
-
-
 /***** CONSTANTS *****/
 
 #define BCM2708_PERI_BASE        0x20000000
@@ -57,8 +51,6 @@ static volatile unsigned *gpio;
 
 void gpio_init()
 {
-#ifndef GPIO_SIMULATED
-
    uint32_t peri_base = BCM2708_PERI_BASE; /* default if device tree not found */
    uint32_t gpio_base;
    FILE* fp;
@@ -106,55 +98,37 @@ void gpio_init()
 
    // Always use volatile pointer!
    gpio = (volatile unsigned *)gpio_map;
-#endif
 }
 
 
 void gpio_setin(int g)
 {
-#ifndef GPIO_SIMULATED
   INP_GPIO(g);
-#else
-  printf("gpio:in:%d\n", g);
-#endif
 }
 
 
 void gpio_setout(int g)
 {
-#ifndef GPIO_SIMULATED
   /* always INP_GPIO before OUT_GPIO */
   //INP_GPIO(g); #### this causes glitching
   OUT_GPIO(g);
-#else
-  printf("gpio:out:%d\n", g);
-#endif
 }
 
 
 void gpio_high(int g)
 {
-#ifndef GPIO_SIMULATED
   GPIO_HIGH(g);
-#else
-  printf("gpio:high:%d\n", g);
-#endif
 }
 
 
 void gpio_low(int g)
 {
-#ifndef GPIO_SIMULATED
   GPIO_LOW(g);
-#else
-  printf("gpio:low:%d\n", g);
-#endif
 }
 
 
 void gpio_write(int g, int v)
 {
-#ifndef GPIO_SIMULATED
   if (v != 0)
   {
     GPIO_HIGH(g);
@@ -163,19 +137,12 @@ void gpio_write(int g, int v)
   {
     GPIO_LOW(g);
   }
-#else
-  printf("gpio:write:%d=%d\n", g, v);
-#endif
 }
 
 
-int  gpio_read(int g)
+int gpio_read(int g)
 {
-#ifndef GPIO_SIMULATED
   return GPIO_READ(g);
-#else
-  return 0; /* always low in simulation */
-#endif
 }
 
 
