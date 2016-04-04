@@ -13,6 +13,7 @@
 #include "gpio.h"
 #include "spi.h"
 #include "hrf69.h"
+#include "trace.h"
 
 
 /***** CONFIGURATION *****/
@@ -74,6 +75,9 @@ extern void gpio_mock_set_in(uint8_t g, uint8_t v);
 
 // write a register and read it back
 
+#define TX 0x04
+#define RX 0x0C
+
 void hrf_test_connect(void)
 {
   uint8_t result;
@@ -81,15 +85,31 @@ void hrf_test_connect(void)
   reset();
   gpio_mock_set_in(MISO, 1); // force return bus high to test
 
-  printf("** write:%02X\n", (unsigned int) HRF_MODE_TRANSMITER);
-  HRF_writereg(HRF_ADDR_OPMODE, HRF_MODE_TRANSMITER);
-  result = HRF_readreg(0x00);
-  printf("** read:%02X\n", (unsigned int) result);
+  //printf("** write:%02X\n", (unsigned int) HRF_MODE_TRANSMITER);
+  TRACE_OUTS("** write:");
+  TRACE_OUTN(TX);
+  TRACE_NL();
 
-  printf("** write:%02X\n", (unsigned int) HRF_MODE_RECEIVER);
-  HRF_writereg(HRF_ADDR_OPMODE, HRF_MODE_RECEIVER);
+  HRF_writereg(HRF_ADDR_OPMODE, TX);
   result = HRF_readreg(0x00);
-  printf("** read:%02X\n", (unsigned int) result);
+
+  //printf("** read:%02X\n", (unsigned int) result);
+  TRACE_OUTS("** read:");
+  TRACE_OUTN(result);
+  TRACE_NL();
+
+  //printf("** write:%02X\n", (unsigned int) HRF_MODE_RECEIVER);
+  TRACE_OUTS("** write:");
+  TRACE_OUTN(RX);
+  TRACE_NL();
+
+  HRF_writereg(HRF_ADDR_OPMODE, RX);
+  result = HRF_readreg(0x00);
+
+  //printf("** read:%02X\n", (unsigned int) result);
+  TRACE_OUTS("** read:");
+  TRACE_OUTN(result);
+  TRACE_NL();
 
   spi_finished();
 }

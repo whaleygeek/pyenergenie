@@ -14,6 +14,7 @@
 #include "spi.h"
 #include "gpio.h"
 #include "delay.h"
+#include "trace.h"
 
 
 /***** MACROS *****/
@@ -23,12 +24,6 @@
 
 #define SELECTED()     gpio_write(config.cs, config.spol?1:0)
 #define NOT_SELECTED() gpio_write(config.cs, config.spol?0:1)
-
-//TODO: Posix specific, won't work on Arduino
-#define FAIL(msg) do { \
-  fprintf(stderr, "%s", msg); \
-  exit(-1); \
-} while (0)
 
 
 /***** VARIABLES *****/
@@ -64,7 +59,7 @@ void spi_init(SPI_CONFIG* pConfig)
   //TODO: Implement CPHA1
   if (config.cpha != 0)
   {
-    FAIL("error: CPHA 1 not yet supported");
+    TRACE_FAIL("error: CPHA 1 not yet supported");
   }
 
   gpio_setout(config.sclk);

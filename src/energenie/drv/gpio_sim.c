@@ -5,8 +5,9 @@
 
 /***** INCLUDES *****/
 
-#include <stdio.h> // OPTIONAL
+#include "system.h"
 #include "gpio.h"
+#include "trace.h"
 
 
 /***** CONFIGURATION *****/
@@ -16,14 +17,6 @@
 //#define GPIO_LOOPBACK
 
 
-/* Printf is not available on some platforms, or not very efficient.
- * These macros make it possible to re-map I/O to more efficient functions.
- */
-
-#define OUTS(s)  printf("%s", s)
-#define OUTN(n)  printf("%d", (unsigned int)n)
-#define OUTC(c)  putc(c, stdout)
-#define NL()     OUTC('\n')
 
 
 /***** VARIABLES *****/
@@ -42,9 +35,9 @@ void gpio_setin(uint8_t g)
 {
 #if defined(GPIO_DEBUG)
     //printf("gpio:in:%d\n", g);
-    OUTS("gpio:in:");
-    OUTN(g);
-    NL();
+    TRACE_OUTS("gpio:in:");
+    TRACE_OUTN(g);
+    TRACE_NL();
 #endif
 }
 
@@ -53,9 +46,9 @@ void gpio_setout(uint8_t g)
 {
 #if defined(GPIO_DEBUG)
     //printf("gpio:out:%d\n", g);
-    OUTS("gpio:out:");
-    OUTN(g);
-    NL();
+    TRACE_OUTS("gpio:out:");
+    TRACE_OUTN(g);
+    TRACE_NL();
 #endif
 }
 
@@ -64,9 +57,9 @@ void gpio_high(uint8_t g)
 {
 #if defined(GPIO_DEBUG)
     //printf("gpio:high:%d\n", g);
-    OUTS("gpio:high:");
-    OUTN(g);
-    NL();
+    TRACE_OUTS("gpio:high:");
+    TRACE_OUTN(g);
+    TRACE_NL();
 #endif
 
     gpio_out[g] = 1;
@@ -81,9 +74,9 @@ void gpio_low(uint8_t g)
 {
 #if defined(GPIO_DEBUG)
     //printf("gpio:low:%d\n", g);
-    OUTS("gpio:low:");
-    OUTN(g);
-    NL();
+    TRACE_OUTS("gpio:low:");
+    TRACE_OUTN(g);
+    TRACE_NL();
 #endif
 
     gpio_out[g] = 0;
@@ -98,11 +91,11 @@ void gpio_write(uint8_t g, uint8_t v)
 {
 #if defined(GPIO_DEBUG)
     //printf("gpio:write:%d=%d\n", g, v);
-    OUTS("gpio:write:");
-    OUTN(g);
-    OUTC('=');
-    OUTN(v);
-    NL();
+    TRACE_OUTS("gpio:write:");
+    TRACE_OUTN(g);
+    TRACE_OUTC('=');
+    TRACE_OUTN(v);
+    TRACE_NL();
 #endif
 
     gpio_out[g] = v;
@@ -117,11 +110,11 @@ uint8_t gpio_read(uint8_t g)
 {
 #if defined(GPIO_DEBUG)
     //printf("gpio:read:%d=%d\n")
-    OUTS("gpio:read:");
-    OUTN(g);
-    OUTC('=');
-    OUTN(gpio_in[g]);
-    NL();
+    TRACE_OUTS("gpio:read:");
+    TRACE_OUTN(g);
+    TRACE_OUTC('=');
+    TRACE_OUTN(gpio_in[g]);
+    TRACE_NL();
 #endif
     return gpio_in[g];
 }

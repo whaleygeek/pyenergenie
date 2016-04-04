@@ -14,8 +14,8 @@
 #include "system.h"
 #include "gpio.h"
 #include "spi.h"
+#include "trace.h"
 
-//TODO: printfs will not work on Arduino
 
 /***** CONSTANTS *****/
 
@@ -46,21 +46,28 @@ int main(int argc, char **argv)
 
   /* Init */
 
-  printf("init\n");
+
+  //printf("init\n");
+  TRACE_OUTS("init");
+  TRACE_NL();
   //gpio_init(); done by spi_init()
   spi_init(&spiConfig);
 
 
   /* Enter programming mode */
 
-  printf("select\n");
+  //printf("select\n");
+  TRACE_OUTS("select");
+  TRACE_NL();
   spi_select();
   spi_frame(cmd_prog, NULL, 4);
 
 
   /* Get ID bytes */
 
-  printf("read ID bytes\n");
+  //printf("read ID bytes\n");
+  TRACE_OUTS("read ID bytes");
+  TRACE_NL();
   spi_frame(cmd_id0, rx, 4);
   id[0] = rx[3];
 
@@ -75,7 +82,14 @@ int main(int argc, char **argv)
 
   /* Show ID bytes */
 
-  printf("ID: %02X %02X %02X\n", id[0], id[1], id[2]);
+  //printf("ID: %02X %02X %02X\n", id[0], id[1], id[2]);
+  TRACE_OUTS("ID: ");
+  for (int i=0; i<3; i++)
+  {
+    TRACE_OUTN(id[0]);
+    TRACE_OUTC(' ');
+  }
+  TRACE_NL();
 
   spi_finished();
   return 0;
