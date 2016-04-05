@@ -88,6 +88,17 @@ def legacy_switch_loop():
             radio.transmit(OFF_MSGS[switch_no])
             time.sleep(2)
         
+def switch1_loop():
+    """Repeatedly turn switch 1 ON then OFF"""
+    while True:
+        print("Switch 1 ON")
+        radio.transmit(ON_MSGS[1])
+        time.sleep(2)
+
+        print("Switch 1 OFF")
+        radio.transmit(OFF_MSGS[1])
+        time.sleep(1)
+
 
 def pattern_test():
     """Test all patterns"""
@@ -110,8 +121,8 @@ if __name__ == "__main__":
     try:
         #pattern_test()
         #legacy_learn_mode()
-        legacy_switch_loop()
-
+        #legacy_switch_loop()
+        switch1_loop()
     finally:
         radio.finished()
 
