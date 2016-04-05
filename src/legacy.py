@@ -91,13 +91,14 @@ def legacy_switch_loop():
 def switch1_loop():
     """Repeatedly turn switch 1 ON then OFF"""
     while True:
-        print("Switch 1 ON")
-        radio.transmit(ON_MSGS[1])
-        time.sleep(1)
+        print("Switch 1 ON repeatedly")
+        while True:
+	    radio.transmit(ON_MSGS[1])
 
-        print("Switch 1 OFF")
-        radio.transmit(OFF_MSGS[1])
-        time.sleep(1)
+        #print("Switch 1 OFF")
+	#for i in range(50):
+	#        radio.transmit(OFF_MSGS[1])
+        ##time.sleep(1)
 
 
 def pattern_test():

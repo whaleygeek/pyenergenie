@@ -265,8 +265,8 @@ config_OOK = [
     [ADDR_FRMID,              VAL_FRMID433],                 # carrier freq -> 433.92MHz 0x6C7AE1
     [ADDR_FRLSB,              VAL_FRLSB433],                 # carrier freq -> 433.92MHz 0x6C7AE1
     [ADDR_RXBW,               VAL_RXBW120],                  # channel filter bandwidth 120kHz
-    [ADDR_BITRATEMSB, 	      0x40],                         # 1938b/s
-    [ADDR_BITRATELSB,         0x80],                         # 1938b/s
+    [ADDR_BITRATEMSB, 	      0x1A],                         # 4800b/s
+    [ADDR_BITRATELSB,         0x0B],                         # 4800b/s
     [ADDR_PREAMBLELSB, 	      0],                            # preamble size LSB 3
     [ADDR_SYNCCONFIG, 	      VAL_SYNCCONFIG4],		         # Size of the Sync word = 4 (SyncSize + 1)
     [ADDR_SYNCVALUE1, 	      VAL_SYNCVALUE1OOK],            # sync value 1
@@ -339,9 +339,9 @@ def HRF_send_OOK_payload(payload):
     # This sync pattern does not match C code, but it works.
     # The sync pattern from the C code does not work here
     # Note that buf[0] in the C is undefined due to being uninitialised
-    #pn = [0x00,0x80,0x00,0x00,0x00] # from the C
-    # Currently there is no explanation for this.
-    pn = [0x80,0x80,0x80,0x80,0x80] + payload
+    pn = [0x00,0x80,0x00,0x00,0x00] + payload # from the C
+    # Currently there is no explanation for this. (looks like baud rate was wrong)
+    #pn = [0x80,0x80,0x80,0x80,0x80] + payload
 
     HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY|MASK_TXREADY, MASK_MODEREADY|MASK_TXREADY)
     HRF_writefifo_burst(p1)
