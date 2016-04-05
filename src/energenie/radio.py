@@ -414,10 +414,12 @@ def transmitter(fsk=None, ook=None):
 
 def transmit(payload):
     """Transmit a single payload using the present modulation scheme"""
+    spi.start_transaction()
     if not modulation_fsk:
         HRF_send_OOK_payload(payload)
     else:
         HRF_send_payload(payload)
+    spi.end_transaction()
 
 
 def receiver(fsk=None, ook=None):
@@ -433,12 +435,18 @@ def receiver(fsk=None, ook=None):
 
 def isReceiveWaiting():
     """Check to see if a payload is waiting in the receive buffer"""
-    return HRF_check_payload()
+    spi.start_transaction()
+    waiting = HRF_check_payload()
+    spi.end_transaction()
+    return waiting
 
 
 def receive():
     """Receive a single payload from the buffer using the present modulation scheme"""
-    return HRF_receive_payload()
+    spi.start_transaction()
+    payload = HRF_receive_payload()
+    spi.end_transaction()
+    return payload
 
 
 def finished():

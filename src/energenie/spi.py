@@ -10,6 +10,10 @@ import time
 from os import path
 mydir = path.dirname(path.abspath(__file__))
 
+RESET     = 25 # BCM GPIO
+LED_GREEN = 27 # BCM GPIO (not B rev1)
+LED_RED   = 22 # BCM GPIO
+
 libspi               = ctypes.cdll.LoadLibrary(mydir + "/" + LIBNAME)
 spi_init_defaults_fn = libspi["spi_init_defaults"]
 spi_init_fn          = libspi["spi_init"]
@@ -51,13 +55,21 @@ def trace(msg):
 
 def reset():
   trace("reset")
-  RESET = 25 # BCM GPIO number
+
   reset = ctypes.c_int(RESET)
   gpio_setout_fn(reset)
   gpio_high_fn(reset)
   time.sleep(0.1)
   gpio_low_fn(reset)
   time.sleep(0.1)
+
+  # Put LEDs into known off state
+  led_red = ctypes.c_int(LED_RED)
+  led_green = ctypes.c_int(LED_GREEN)
+  gpio_setout_fn(led_red)
+  gpio_low_fn(led_red)
+  gpio_setout_fn(led_green)
+  gpio_low_fn(led_green)
 
 
 def init_defaults():
@@ -70,6 +82,20 @@ def init():
   #TODO build a config structure
   #TODO pass in pointer to config structure
   #spi_init_fn()
+
+
+def start_transaction():
+  """Start a transmit or receive, perhaps multiple bursts"""
+  # turn the GREEN LED on
+  led_green = ctypes.c_int(LED_GREEN)
+  gpio_high_fn(led_green)
+
+
+def end_transaction():
+  """End a transmit or receive, perhaps multiple listens"""
+  # turn the GREEN LED off
+  led_green = ctypes.c_int(LED_GREEN)
+  gpio_low_fn(led_green)
 
 
 def select():
