@@ -160,9 +160,9 @@ void HRF_send_payload(uint8_t* payload, uint8_t len)
 
 
 // Load a table of configuration values into HRF registers
-void HRF_config(HRF_CONFIG_REC* config, uint8_t len)
+void HRF_config(HRF_CONFIG_REC* config, uint8_t count)
 {
-    while (len-- != 0)
+    while (count-- != 0)
     {
         HRF_writereg(config->addr, config->value);
         config++;

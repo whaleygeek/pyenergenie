@@ -120,32 +120,45 @@ HRF_CONFIG_REC config_OOK[] = {
     {HRF_ADDR_RXBW,               HRF_VAL_RXBW120},              // channel filter bandwidth 120kHz
     {HRF_ADDR_BITRATEMSB, 	  0x1A},                         // 4800b/s
     {HRF_ADDR_BITRATELSB,         0x0B},                         // 4800b/s
-    {HRF_ADDR_PREAMBLELSB, 	  0},                            // preamble size LSB 3
-    {HRF_ADDR_SYNCCONFIG, 	  HRF_VAL_SYNCCONFIG0},		 // Size of the Sync word = 4 (SyncSize + 1)
-    {HRF_ADDR_PACKETCONFIG1,      0x00},	                 // Fixed length, no Manchester coding, OOK
+    {HRF_ADDR_PREAMBLELSB, 	  0},                            // preamble size LSB 0
+    {HRF_ADDR_SYNCCONFIG, 	  HRF_VAL_SYNCCONFIG4},		 // Size of the Sync word
+    {HRF_ADDR_SYNCVALUE1,         0x80},
+    {HRF_ADDR_SYNCVALUE2,         0x00},
+    {HRF_ADDR_SYNCVALUE3,         0x00},
+    {HRF_ADDR_SYNCVALUE4,         0x00}, 
+    {HRF_ADDR_PACKETCONFIG1,      0x00},	                 // Fixed length, no Manchester coding
     {HRF_ADDR_PAYLOADLEN, 	  8},	                         // Payload Length
     {HRF_ADDR_FIFOTHRESH, 	  7}                             // Condition to start packet transmission: exceeds 7 bytes in FIFO
 };
-
+#define CONFIG_OOK_COUNT (sizeof(config_OOK)/sizeof(HRF_CONFIG_REC))
 
 // Send a test tone using OOK modulation
 void hrf_test_send_ook_tone(void)
 {
     int i;
 
+    TRACE_OUTS("standby mode\n");
+    HRF_change_mode(HRF_MODE_STANDBY);
+    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY, HRF_MASK_MODEREADY);
+
     TRACE_OUTS("config\n");
-    HRF_config(config_OOK, sizeof(config_OOK));
+    HRF_config(config_OOK, CONFIG_OOK_COUNT);
 
     TRACE_OUTS("transmitter mode\n");
     HRF_change_mode(HRF_MODE_TRANSMITTER);
+    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY, HRF_MASK_MODEREADY);
 
-    TRACE_OUTS("read irqflags1=");
-    delaysec(1);
+
     uint8_t irqflags1 = HRF_readreg(HRF_ADDR_IRQFLAGS1);
+    uint8_t irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
+    TRACE_OUTS("irqflags1,2=");
     TRACE_OUTN(irqflags1);
+    TRACE_OUTC(',');
+    TRACE_OUTN(irqflags2);
     TRACE_NL();
 
-    TRACE_OUTS("wait for txready\n");
+
+    TRACE_OUTS("wait for txready in irqflags1\n");
     HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY|HRF_MASK_TXREADY, HRF_MASK_MODEREADY|HRF_MASK_TXREADY);
 
     /* A regular tone */
@@ -153,23 +166,32 @@ void hrf_test_send_ook_tone(void)
         0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA
     };
 
-    for (i=0; i<8; i++)
+    while (1)
     {
-        TRACE_OUTS("tx\n");
-        HRF_writefifo_burst(payload, sizeof(payload));
-        HRF_pollreg(HRF_ADDR_IRQFLAGS2, HRF_MASK_PACKETSENT, HRF_MASK_PACKETSENT); // wait for Packet sent
+        for (i=0; i<1; i++)
+        {
+            TRACE_OUTS("tx\n");
+            HRF_writefifo_burst(payload, sizeof(payload));
+            HRF_pollreg(HRF_ADDR_IRQFLAGS2, HRF_MASK_PACKETSENT, HRF_MASK_PACKETSENT); // wait for Packet sent
+        }
+
+        uint8_t irqflags1 = HRF_readreg(HRF_ADDR_IRQFLAGS1);
+        uint8_t irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
+
+        TRACE_OUTS("irqflags1,2=");
+        TRACE_OUTN(irqflags1);
+        TRACE_OUTC(',');
+        TRACE_OUTN(irqflags2);
+        TRACE_NL();
+
+        if (((irqflags2 & HRF_MASK_FIFONOTEMPTY) != 0) || ((irqflags2 & HRF_MASK_FIFOOVERRUN) != 0))
+        {
+            TRACE_OUTN(irqflags2);
+            TRACE_NL();
+            TRACE_FAIL("FIFO not empty or overrun at end of burst");
+        }
+        delaysec(1);
     }
-
-
-    //uint8_t irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
-
-    //TRACE_OUTS("irqflags2:");
-    //TRACE_OUTN(irqflags2);
-    //TRACE_NL();
-    //if (((irqflags2 & HRF_MASK_FIFONOTEMPTY) != 0) || ((irqflags2 & HRF_MASK_FIFOOVERRUN) != 0))
-    //{
-    //    TRACE_FAIL("Failed to send repeated payload");
-    //}
 }
 
 
