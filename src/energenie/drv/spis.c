@@ -7,8 +7,8 @@
 /***** INCLUDES *****/
 
 //#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
+//#include <stdlib.h> // memcpy
+#include <string.h> // memcpy (not on Arduino?)
 
 #include "system.h"
 #include "spi.h"

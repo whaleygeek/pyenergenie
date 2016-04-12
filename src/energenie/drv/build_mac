@@ -3,20 +3,21 @@
 # build file for Mac use
 
 # build gpio_test
-gcc gpio_test.c gpio_sim.c delay_posix.c
-mv a.out gpio_test
-chmod u+x gpio_test
+##gcc gpio_test.c gpio_sim.c delay_posix.c
+##mv a.out gpio_test
+##chmod u+x gpio_test
 
 
 # build spis_test (soft SPI tester)
-gcc spi_test.c spis.c gpio_sim.c delay_posix.c
-mv a.out spis_test
-chmod u+x spis_test
+##gcc spi_test.c spis.c gpio_sim.c delay_posix.c
+##mv a.out spis_test
+##chmod u+x spis_test
+
 
 # build hrf69_test
-gcc hrf69_test.c hrf69.c spis.c gpio_sim.c delay_posix.c
-mv a.out hrf69_test
-chmod u+x hrf69_test
+gcc hrfm69_test.c hrfm69.c spis.c gpio_sim.c delay_posix.c
+mv a.out hrfm69_test
+chmod u+x hrfm69_test
 
 
 

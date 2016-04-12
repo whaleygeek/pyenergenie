@@ -70,8 +70,6 @@ typedef struct
 #define HRF_MODE_RECEIVER              0x10	// Receiver
 
 // Values to store in registers
-//TODO some of these are energenie radio config specific
-
 #define HRF_VAL_REGDATAMODUL_FSK       0x00	// Modulation scheme FSK
 #define HRF_VAL_REGDATAMODUL_OOK       0x08	// Modulation scheme OOK
 #define HRF_VAL_FDEVMSB30              0x01	// frequency deviation 5kHz 0x0052 -> 30kHz 0x01EC
@@ -90,24 +88,13 @@ typedef struct
 #define HRF_VAL_RXBW60                 0x43	// channel filter bandwidth 10kHz -> 60kHz  page:26
 #define HRF_VAL_RXBW120                0x41	// channel filter bandwidth 120kHz
 #define HRF_VAL_AFCFEIRX               0x04	// AFC is performed each time RX mode is entered
-
-//TODO: These might be energenie config specific
 #define HRF_VAL_RSSITHRESH220          0xDC	// RSSI threshold 0xE4 -> 0xDC (220)
 #define HRF_VAL_PREAMBLELSB3           0x03	// preamble size LSB 3
 #define HRF_VAL_PREAMBLELSB5           0x05	// preamble size LSB 5
 #define HRF_VAL_SYNCCONFIG2            0x88	// Size of the Synch word = 2 (SyncSize + 1)
 #define HRF_VAL_SYNCCONFIG4            0x98	// Size of the Synch word = 4 (SyncSize + 1)
-#define HRF_VAL_SYNCVALUE1FSK          0x2D	// 1st byte of Sync word
-#define HRF_VAL_SYNCVALUE2FSK          0xD4	// 2nd byte of Sync word
-#define HRF_VAL_SYNCVALUE1OOK          0x80	// 1nd byte of Sync word
-#define HRF_VAL_PACKETCONFIG1FSK       0xA2	// Variable length, Manchester coding, Addr must match NodeAddress
-#define HRF_VAL_PACKETCONFIG1FSKNO     0xA0	// Variable length, Manchester coding
-#define HRF_VAL_PACKETCONFIG1OOK       0		// Fixed length, no Manchester coding
 #define HRF_VAL_PAYLOADLEN255          0xFF	// max Length in RX, not used in Tx
 #define HRF_VAL_PAYLOADLEN66           66	// max Length in RX, not used in Tx
-#define HRF_VAL_PAYLOADLEN_OOK         (13 + 8 * 17)	// Payload Length
-#define HRF_VAL_NODEADDRESS01          0x01	// Node address used in address filtering
-#define HRF_VAL_NODEADDRESS04          0x04	// Node address used in address filtering
 #define HRF_VAL_FIFOTHRESH1            0x81	// Condition to start packet transmission: at least one byte in FIFO
 #define HRF_VAL_FIFOTHRESH30           0x1E	// Condition to start packet transmission: wait for 30 bytes in FIFO
 

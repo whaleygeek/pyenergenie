@@ -2,9 +2,10 @@
  *
  * Hope RF RFM69 radio controller code.
  */
+
 #include <stdlib.h>
 #include "system.h"
-#include "hrf69.h"
+#include "hrfm69.h"
 #include "spi.h"
 
 

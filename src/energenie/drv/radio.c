@@ -1,15 +1,17 @@
-/* radio.c    D.J.Whale */
+/* radio.c  12/04/2016  D.J.Whale
+ *
+ * An interface to the Energenie radio.
+ */
 
-// # test1.py  26/09/2015  D.J.Whale
-// #
-// # Simple low level test of the HopeRF interface
-// # Uses direct SPI commands to exercise the interface.
-// #
-// # Receives and dumps payload buffers.
-// #
-// # Eventually a lot of this will be pushed into a separate module,
-// # and then pushed back into C once it is proved working.
-// // 
+
+/***** CONFIGURATION TABLES *****/
+
+
+
+
+
+
+// //
 // import spi
 // // 
 // def warning(msg):
