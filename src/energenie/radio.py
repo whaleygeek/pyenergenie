@@ -105,11 +105,13 @@ VAL_PACKETCONFIG1FSKNO      = 0xA0	# Variable length, Manchester coding
 VAL_PACKETCONFIG1OOK        = 0		# Fixed length, no Manchester coding
 VAL_PAYLOADLEN255           = 0xFF	# max Length in RX, not used in Tx
 VAL_PAYLOADLEN66            = 66	# max Length in RX, not used in Tx
+##TODO: This calculation looks wrong, inherited from the original C code.
+#It accounts for the 'magic' byte that C used for the SPI address.
 VAL_PAYLOADLEN_OOK          = (13 + 8 * 17)	# Payload Length
 VAL_NODEADDRESS01           = 0x01	# Node address used in address filtering
 VAL_NODEADDRESS04           = 0x04	# Node address used in address filtering
-VAL_FIFOTHRESH1             = 0x81	# Condition to start packet transmission: at least one byte in FIFO
-VAL_FIFOTHRESH30            = 0x1E	# Condition to start packet transmission: wait for 30 bytes in FIFO
+VAL_FIFOTHRESH1             = 0x81	# Condition to start packet transmission: at least two? bytes in FIFO
+VAL_FIFOTHRESH30            = 0x1E	# Condition to start packet transmission: wait for >30 bytes in FIFO
 
 
 #----- HOPERF RADIO INTERFACE -------------------------------------------------
@@ -332,21 +334,42 @@ def HRF_config(config):
 #}
 
 
+# first payload
+# (radio sync 4 bytes, not counted)
+# address 10 bytes
+# command 2 bytes
+# i.e. 12 bytes
+# so, >30 is 2 and a bit payloads loaded.
+# 66 byte FIFO size
+# so that means FIFO roughly half full before starts tx,
+# FIFO at or below half full before another payload will be added
+
+# packetsent is based on the fixed payload length
+# which is (13 + 8 * 17) = 149
+# This maths looks wrong.
+# 10 bytes of address, two bytes of command = 12
+# 13 includes the dummy byte at the start, but that is for the SPI address and not counted
+
 def HRF_send_OOK_payload(payload):
     """Send a payload multiple times"""
 
+    #TODO: note the zero at the start was the C method of reserving space for address byte
     p1 = [0x00] + payload
     # This sync pattern does not match C code, but it works.
     # The sync pattern from the C code does not work here
     # Note that buf[0] in the C is undefined due to being uninitialised
+    # but it is a space for the address byte in the C fifo burst routine
     pn = [0x00,0x80,0x00,0x00,0x00] + payload # from the C
-    # Currently there is no explanation for this. (looks like baud rate was wrong)
+    #TODO: note the zero at the start was the C method of reserving space for address byte
+    # which is not needed here in this python.
+    # This is old test data due to wrong baud rate - deprecated
     #pn = [0x80,0x80,0x80,0x80,0x80] + payload
 
     HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY|MASK_TXREADY, MASK_MODEREADY|MASK_TXREADY)
     HRF_writefifo_burst(p1)
     
     for i in range(8):
+        # waits for <31 bytes in FIFO
         HRF_pollreg(ADDR_IRQFLAGS2, MASK_FIFOLEVEL, 0)
         HRF_writefifo_burst(pn)
 
@@ -356,6 +379,8 @@ def HRF_send_OOK_payload(payload):
     #trace("  irqflags2=%s" % hex(reg))
     if (reg & (MASK_FIFONOTEMPTY) != 0) or ((reg & MASK_FIFOOVERRUN) != 0):
         warning("Failed to send repeated payload to HRF")
+
+    # Note: packetsent is only cleared on exit from TX (i.e to STANDBY or RECEIVE)
 
 
 

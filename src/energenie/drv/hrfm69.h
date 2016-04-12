@@ -103,44 +103,39 @@ typedef struct
 #define HRF_VAL_FIFOTHRESH30           0x1E	// Condition to start packet transmission: wait for 30 bytes in FIFO
 
 
+/* Low level register interface */
+
 extern void HRF_writereg(uint8_t addr, uint8_t data);
 
 extern uint8_t HRF_readreg(uint8_t addr);
 
 extern void HRF_writefifo_burst(uint8_t* buf, uint8_t len);
 
-//TODO unnecessary level of runtime indirection?
-//TODO where is the buffer memory defined?
-//perhaps pass in buffer memory and maxlen
-//how do we know the actual length of buffer written to?
-//pass in ptr to len variable
-extern uint8_t* HRF_readfifo_burst(void);
+extern void HRF_readfifo_burst(uint8_t* buf, uint8_t len);
 
 extern HRF_RESULT HRF_checkreg(uint8_t addr, uint8_t mask, uint8_t value);
 
 extern void HRF_pollreg(uint8_t addr, uint8_t mask, uint8_t value);
 
+extern void HRF_clear_fifo(void);
+
+
+/* High level payload interface */
+
+extern void HRF_change_mode(uint8_t mode);
+
 extern void HRF_wait_ready(void);
 
 extern void HRF_wait_txready(void);
 
-extern void HRF_change_mode(uint8_t mode);
-
-extern void HRF_clear_fifo(void);
+extern void HRF_config(HRF_CONFIG_REC* config, uint8_t len);
 
 extern HRF_RESULT HRF_check_payload(void);
 
-
-//TODO unnecessary level of runtime indirection?
-//TODO where is the buffer memory defined?
-//perhaps pass in buffer memory and maxlen
-//how do we know the actual length of buffer written to?
-//pass in ptr to len variable
-extern uint8_t* HRF_receive_payload(void);
+extern void HRF_receive_payload(uint8_t* buf, uint8_t len);
 
 extern void HRF_send_payload(uint8_t* payload, uint8_t len);
 
-extern void HRF_config(HRF_CONFIG_REC* config, uint8_t len);
 
 #endif
 
