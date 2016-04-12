@@ -33,6 +33,7 @@ typedef struct
 #define HRF_ADDR_FRMID                 0x08
 #define HRF_ADDR_FRLSB                 0x09
 #define HRF_ADDR_AFCCTRL               0x0B
+#define HRF_ADDR_VERSION               0x10
 #define HRF_ADDR_LNA                   0x18
 #define HRF_ADDR_RXBW                  0x19
 #define HRF_ADDR_AFCFEI                0x1E
@@ -91,6 +92,7 @@ typedef struct
 #define HRF_VAL_RSSITHRESH220          0xDC	// RSSI threshold 0xE4 -> 0xDC (220)
 #define HRF_VAL_PREAMBLELSB3           0x03	// preamble size LSB 3
 #define HRF_VAL_PREAMBLELSB5           0x05	// preamble size LSB 5
+#define HRF_VAL_SYNCCONFIG0            0x00     // sync word disabled
 #define HRF_VAL_SYNCCONFIG2            0x88	// Size of the Synch word = 2 (SyncSize + 1)
 #define HRF_VAL_SYNCCONFIG4            0x98	// Size of the Synch word = 4 (SyncSize + 1)
 #define HRF_VAL_PAYLOADLEN255          0xFF	// max Length in RX, not used in Tx
