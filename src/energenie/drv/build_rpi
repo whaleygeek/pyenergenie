@@ -9,9 +9,9 @@ chmod u+x gpio_test
 
 
 # build spis_test (soft SPI tester)
-##gcc spi_test.c spis_rpi.c gpio_rpi.c
-##mv a.out spis_test
-##chmod u+x spis_test
+gcc spi_test.c spis.c gpio_rpi.c delay_posix.c
+mv a.out spis_test
+chmod u+x spis_test
 
 
 # build spih_test (hard SPI tester)
