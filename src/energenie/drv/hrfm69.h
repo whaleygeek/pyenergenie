@@ -93,8 +93,10 @@ typedef struct
 #define HRF_VAL_PREAMBLELSB3           0x03	// preamble size LSB 3
 #define HRF_VAL_PREAMBLELSB5           0x05	// preamble size LSB 5
 #define HRF_VAL_SYNCCONFIG0            0x00     // sync word disabled
-#define HRF_VAL_SYNCCONFIG2            0x88	// Size of the Synch word = 2 (SyncSize + 1)
-#define HRF_VAL_SYNCCONFIG4            0x98	// Size of the Synch word = 4 (SyncSize + 1)
+#define HRF_VAL_SYNCCONFIG1            0x80     // 1 byte  of tx sync
+#define HRF_VAL_SYNCCONFIG2            0x88	// 2 bytes of tx sync
+#define HRF_VAL_SYNCCONFIG3            0x90     // 3 bytes of tx sync
+#define HRF_VAL_SYNCCONFIG4            0x98	// 4 bytes of tx sync
 #define HRF_VAL_PAYLOADLEN255          0xFF	// max Length in RX, not used in Tx
 #define HRF_VAL_PAYLOADLEN66           66	// max Length in RX, not used in Tx
 #define HRF_VAL_FIFOTHRESH1            0x81	// Condition to start packet transmission: at least one byte in FIFO

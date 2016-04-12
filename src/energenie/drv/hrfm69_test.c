@@ -79,6 +79,10 @@ int main(int argc, char **argv)
     uint8_t rv = read_ver();
     TRACE_OUTN(rv);
     TRACE_NL();
+    if (rv != 36)
+    {
+        TRACE_FAIL("unexpected radio ver, not 36(dec)\n");
+    }
 
     TRACE_OUTS("testing...\n");
     hrf_test_send_ook_tone();
@@ -121,14 +125,14 @@ HRF_CONFIG_REC config_OOK[] = {
     {HRF_ADDR_BITRATEMSB, 	  0x1A},                         // 4800b/s
     {HRF_ADDR_BITRATELSB,         0x0B},                         // 4800b/s
     {HRF_ADDR_PREAMBLELSB, 	  0},                            // preamble size LSB 0
-    {HRF_ADDR_SYNCCONFIG, 	  HRF_VAL_SYNCCONFIG4},		 // Size of the Sync word
-    {HRF_ADDR_SYNCVALUE1,         0x80},
-    {HRF_ADDR_SYNCVALUE2,         0x00},
-    {HRF_ADDR_SYNCVALUE3,         0x00},
-    {HRF_ADDR_SYNCVALUE4,         0x00}, 
+    {HRF_ADDR_SYNCCONFIG, 	  HRF_VAL_SYNCCONFIG0},		 // Size of the Sync word
+    //{HRF_ADDR_SYNCVALUE1,         0x81},
+    //{HRF_ADDR_SYNCVALUE2,         0x00},
+    //{HRF_ADDR_SYNCVALUE3,         0x00},
+    //{HRF_ADDR_SYNCVALUE4,         0x00}, 
     {HRF_ADDR_PACKETCONFIG1,      0x00},	                 // Fixed length, no Manchester coding
-    {HRF_ADDR_PAYLOADLEN, 	  8},	                         // Payload Length
-    {HRF_ADDR_FIFOTHRESH, 	  7}                             // Condition to start packet transmission: exceeds 7 bytes in FIFO
+    {HRF_ADDR_PAYLOADLEN, 	  2},	                         // Payload Length
+    {HRF_ADDR_FIFOTHRESH, 	  1}                             // Condition to start packet transmission: exceeds 7 bytes in FIFO
 };
 #define CONFIG_OOK_COUNT (sizeof(config_OOK)/sizeof(HRF_CONFIG_REC))
 
@@ -163,7 +167,7 @@ void hrf_test_send_ook_tone(void)
 
     /* A regular tone */
     static uint8_t payload[] = {
-        0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA
+        0x81, 0x00 //0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA
     };
 
     while (1)
