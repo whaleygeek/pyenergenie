@@ -1,5 +1,5 @@
 /* gpio_test.c  30/07/2015  D.J.Whale
- * Simple test that GPIO 2/3 work
+ * Simple test that two GPIO pins work
  */
 
 #include <stdio.h>
@@ -14,8 +14,8 @@
  * different platforms will have different available GPIO numbers
  */
 
-#define GPIO_A 2
-#define GPIO_B 3
+#define GPIO_A 22
+#define GPIO_B 27
 
 int main(void)
 {

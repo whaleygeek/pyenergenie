@@ -101,13 +101,13 @@ void gpio_init()
 }
 
 
-void gpio_setin(int g)
+void gpio_setin(uint8_t g)
 {
   INP_GPIO(g);
 }
 
 
-void gpio_setout(int g)
+void gpio_setout(uint8_t g)
 {
   /* always INP_GPIO before OUT_GPIO */
   //INP_GPIO(g); #### this causes glitching
@@ -115,19 +115,19 @@ void gpio_setout(int g)
 }
 
 
-void gpio_high(int g)
+void gpio_high(uint8_t g)
 {
   GPIO_HIGH(g);
 }
 
 
-void gpio_low(int g)
+void gpio_low(uint8_t g)
 {
   GPIO_LOW(g);
 }
 
 
-void gpio_write(int g, int v)
+void gpio_write(uint8_t g, uint8_t v)
 {
   if (v != 0)
   {
@@ -140,7 +140,7 @@ void gpio_write(int g, int v)
 }
 
 
-int gpio_read(int g)
+uint8_t gpio_read(uint8_t g)
 {
   return GPIO_READ(g);
 }
