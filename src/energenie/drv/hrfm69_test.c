@@ -258,7 +258,10 @@ void hrf_test_send_energenie_ook_switch(void)
 /* Last byte of the payload for switch 1 */
 #define ON  0xEE
 #define OFF 0xE8
-#define REPEATS 1
+// Limited by U8 size of PAYLOADLEN reg (15*16=240) 
+#define REPEATS 15
+// To get longer repeats, we'll have to design a new 'unlimited'
+// payload sender, and use FIFOEMPTY as a way to detect end of transmit.
 
     int i;
     uint8_t irqflags1;
