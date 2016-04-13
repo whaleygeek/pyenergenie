@@ -86,6 +86,11 @@ int main(int argc, char **argv)
         TRACE_FAIL("unexpected radio ver, not 36(dec)\n");
     }
 
+    TRACE_OUTS("standby mode\n");
+    HRF_change_mode(HRF_MODE_STANDBY);
+    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY, HRF_MASK_MODEREADY);
+
+
     TRACE_OUTS("testing...\n");
     //hrf_test_send_ook_tick();
     hrf_test_send_energenie_ook_switch();
@@ -128,7 +133,15 @@ HRF_CONFIG_REC config_OOK[] = {
     {HRF_ADDR_BITRATEMSB,     0x1A},                      // bitrate:4800b/s
     {HRF_ADDR_BITRATELSB,     0x0B},                      // bitrate:4800b/s
     {HRF_ADDR_PREAMBLELSB, 	  0},                         // preamble size LSB
-    {HRF_ADDR_SYNCCONFIG,     HRF_VAL_SYNCCONFIG0},       // Size of sync word
+    {HRF_ADDR_SYNCCONFIG,     HRF_VAL_SYNCCONFIG0},       // Size of sync word (disabled)
+    //{HRF_ADDR_SYNCVALUE1,     0x00},
+    //{HRF_ADDR_SYNCVALUE2,     0x00},
+    //{HRF_ADDR_SYNCVALUE3,     0x00},
+    //{HRF_ADDR_SYNCVALUE4,     0x00},
+    //{HRF_ADDR_SYNCVALUE5,     0x00},
+    //{HRF_ADDR_SYNCVALUE6,     0x00},
+    //{HRF_ADDR_SYNCVALUE7,     0x00},
+    //{HRF_ADDR_SYNCVALUE8,     0x00},
     {HRF_ADDR_PACKETCONFIG1,  0x00},                      // Fixed length, no Manchester coding
     //{HRF_ADDR_PAYLOADLEN,     2},                         // Payload Length
     //{HRF_ADDR_FIFOTHRESH,     1}                          // Start tx when this is exceeded
@@ -146,10 +159,6 @@ void hrf_test_send_ook_tick(void)
 
     int i;
 
-    TRACE_OUTS("standby mode\n");
-    HRF_change_mode(HRF_MODE_STANDBY);
-    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY, HRF_MASK_MODEREADY);
-
     TRACE_OUTS("config\n");
     HRF_config(config_OOK, CONFIG_OOK_COUNT);
     HRF_writereg(HRF_ADDR_PAYLOADLEN, sizeof(payload));
@@ -157,8 +166,9 @@ void hrf_test_send_ook_tick(void)
 
     TRACE_OUTS("transmitter mode\n");
     HRF_change_mode(HRF_MODE_TRANSMITTER);
-    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY, HRF_MASK_MODEREADY);
 
+    TRACE_OUTS("wait for modeready,txready in irqflags1\n");
+    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY|HRF_MASK_TXREADY, HRF_MASK_MODEREADY|HRF_MASK_TXREADY);
 
     uint8_t irqflags1 = HRF_readreg(HRF_ADDR_IRQFLAGS1);
     uint8_t irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
@@ -168,27 +178,14 @@ void hrf_test_send_ook_tick(void)
     TRACE_OUTN(irqflags2);
     TRACE_NL();
 
-
-    TRACE_OUTS("wait for txready in irqflags1\n");
-    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY|HRF_MASK_TXREADY, HRF_MASK_MODEREADY|HRF_MASK_TXREADY);
-
-
-    //NOTE: This uses a payloadlen of 2, and polls PACKETSENT in the repeat loop.
-    //A better way to do it would be to set payloadlen to the total length,
-    //check FIFOLEVEL < limit before putting more into FIFO
-    //and check PACKETSENT at the end. That's how the original C code does it,
-    //but there seems to be an error in the payload length calculation.
     while (1)
     {
         for (i=0; i<1; i++)
         {
             TRACE_OUTS("tx\n");
             HRF_writefifo_burst(payload, sizeof(payload));
-            //TODO: should check FIFO level here??
-            HRF_pollreg(HRF_ADDR_IRQFLAGS2, HRF_MASK_PACKETSENT, HRF_MASK_PACKETSENT); // wait for Packet sent
+            HRF_pollreg(HRF_ADDR_IRQFLAGS2, HRF_MASK_PACKETSENT, HRF_MASK_PACKETSENT);
         }
-
-        //TODO: should check PACKETSENT here??
 
         uint8_t irqflags1 = HRF_readreg(HRF_ADDR_IRQFLAGS1);
         uint8_t irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
@@ -212,8 +209,8 @@ void hrf_test_send_ook_tick(void)
 }
 
 
-/* Note, D0123 are transmitted as D3210
-    # Coded as per the (working) C code would be:
+/* Note, D0123 are transmitted as b3210
+    # Coded as per the (working) C code and HS1527 datasheet bitorder
     # b 3210
     #   0000 UNUSED         0
     #   0001 UNUSED         1
@@ -237,11 +234,18 @@ void hrf_test_send_ook_tick(void)
 // A hard coded test of switching an Energenie switch on and off
 void hrf_test_send_energenie_ook_switch(void)
 {
+    // Note, when PA starts up, radio inserts a 01 at start before any user data
+    // we might need to pad away from this by sending a sync of many zero bits
+    // to prevent it being misinterpreted as a preamble, and prevent it causing
+    // the first bit of the preamble being twice the length it should be in the
+    // first packet.
+    // Also need to confirm this bit only occurs when transmit actually starts,
+    // and not on every FIFO load.
+
     /* manual preamble, 20 bit encoded address, 4 encoded data bits */
-    static uint8_t payload[17] = {
-        0x00,                   // pad away from the radio inserted 01 at start
+    static uint8_t payload[16] = {
         0x80, 0x00, 0x00, 0x00, // preamble pulse with timing violation gap
-        // Energenie 'random' 20 bit address is 6C6C6
+        // Energenie 'random' 20 bit address is 0x6C6C6
         // 0110 1100 0110 1100 0110
         // 0 encoded as 8 (1000)
         // 1 encoded as E (1110)
@@ -257,43 +261,42 @@ void hrf_test_send_energenie_ook_switch(void)
 #define REPEATS 1
 
     int i;
-
-    TRACE_OUTS("standby mode\n");
-    HRF_change_mode(HRF_MODE_STANDBY);
-    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY, HRF_MASK_MODEREADY);
+    uint8_t irqflags1;
+    uint8_t irqflags2;
 
     TRACE_OUTS("config\n");
     HRF_config(config_OOK, CONFIG_OOK_COUNT);
     // the full packet/burst consists of repeated payloads
+    // packetsent will trigger when this number of bytes have been transmitted
     HRF_writereg(HRF_ADDR_PAYLOADLEN, sizeof(payload) * REPEATS);
-    // but the FIFO is filled in 1 message sections
+    // but the FIFO is filled in 1 message (4+10+2=16 byte) sections
+    // level triggers when it 'strictly exceeds' level (i.e. 16 bytes starts tx,
+    // and <=15 bytes triggers fifolevel irqflag to be cleared)
     HRF_writereg(HRF_ADDR_FIFOTHRESH, sizeof(payload)-1);
-
-    //TODO move this into the loop
-    TRACE_OUTS("transmitter mode\n");
-    HRF_change_mode(HRF_MODE_TRANSMITTER);
-    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY, HRF_MASK_MODEREADY);
-
-    uint8_t irqflags1 = HRF_readreg(HRF_ADDR_IRQFLAGS1);
-    uint8_t irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
-    TRACE_OUTS("irqflags1,2=");
-    TRACE_OUTN(irqflags1);
-    TRACE_OUTC(',');
-    TRACE_OUTN(irqflags2);
-    TRACE_NL();
-
-    TRACE_OUTS("wait for txready in irqflags1\n");
-    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY|HRF_MASK_TXREADY, HRF_MASK_MODEREADY|HRF_MASK_TXREADY);
-    //TODO end of move
 
     uint8_t last_byte = ON;
 
     while (1)
     {
-        payload[sizeof(payload)-1] = last_byte;
-        //TODO put radio into TX mode first
+        /* Bring into transmitter mode and ramp up the PA */
+        TRACE_OUTS("transmitter mode\n");
+        HRF_change_mode(HRF_MODE_TRANSMITTER);
 
-        TRACE_OUTS("tx:");
+        TRACE_OUTS("wait for modeready,txready in irqflags1\n");
+        HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY|HRF_MASK_TXREADY, HRF_MASK_MODEREADY|HRF_MASK_TXREADY);
+
+        irqflags1 = HRF_readreg(HRF_ADDR_IRQFLAGS1);
+        irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
+        TRACE_OUTS("irqflags1,2=");
+        TRACE_OUTN(irqflags1);
+        TRACE_OUTC(',');
+        TRACE_OUTN(irqflags2);
+        TRACE_NL();
+
+        /* Set this as alternate ON or OFF bursts */
+        payload[sizeof(payload)-1] = last_byte;
+
+        TRACE_OUTS("tx repeats in a single burst:");
         TRACE_OUTN(last_byte);
         TRACE_NL();
 
@@ -301,25 +304,39 @@ void hrf_test_send_energenie_ook_switch(void)
         for (i=0; i<REPEATS; i++)
         {
             HRF_writefifo_burst(payload, sizeof(payload));
-            //TODO: should check FIFO level here?
-            //if so, calculate payloadlen based on repeat count and payload size
-            //HRF_pollreg(HRF_ADDR_IRQFLAGS2, HRF_MASK_PACKETSENT, HRF_MASK_PACKETSENT); // wait for Packet sent
-            // wait for below threshold before loading more bytes
+            // Tx will auto start when fifolevel is exceeded by loading the payload
+            // so the level register must be correct for the size of the payload
+            // otherwise transmit will never start.
+            /* wait for FIFO to not exceed threshold level */
             HRF_pollreg(HRF_ADDR_IRQFLAGS2, HRF_MASK_FIFOLEVEL, 0);
         }
 
-        // wait for packet sent (packet length in PAYLOADLEN reg)
+        // wait for packet sent (num bytes tx'ed matches PAYLOADLEN reg)
         HRF_pollreg(HRF_ADDR_IRQFLAGS2, HRF_MASK_PACKETSENT, HRF_MASK_PACKETSENT);
 
         // Check final flags in case of overruns etc
-        uint8_t irqflags1 = HRF_readreg(HRF_ADDR_IRQFLAGS1);
-        uint8_t irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
+        irqflags1 = HRF_readreg(HRF_ADDR_IRQFLAGS1);
+        irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
 
         TRACE_OUTS("irqflags1,2=");
         TRACE_OUTN(irqflags1);
         TRACE_OUTC(',');
         TRACE_OUTN(irqflags2);
         TRACE_NL();
+
+        // Read back PAYLOADLENGTH to confirm chip doesn't use it as a counter itself
+        uint8_t pl = HRF_readreg(HRF_ADDR_PAYLOADLEN);
+        TRACE_OUTS("payloadlen reg at end:");
+        TRACE_OUTN(pl);
+        TRACE_NL();
+
+        /* Back to STANDBY, this clears packetsent flag */
+        // always back to standby, regardless of errors above
+        // otherwise PA/carrier might be left permanently on.
+
+        TRACE_OUTS("standby mode\n");
+        HRF_change_mode(HRF_MODE_STANDBY);
+        HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY, HRF_MASK_MODEREADY);
 
         if (((irqflags2 & HRF_MASK_FIFONOTEMPTY) != 0) || ((irqflags2 & HRF_MASK_FIFOOVERRUN) != 0))
         {
@@ -328,8 +345,7 @@ void hrf_test_send_energenie_ook_switch(void)
             TRACE_FAIL("FIFO not empty or overrun at end of burst");
         }
 
-        // turn off TX to clear packetsent
-        //TODO change mode to STANDBY, wait for mode change success
+        /* Inter-burst delay */
         delaysec(1);
 
         /* Toggle next switch state */

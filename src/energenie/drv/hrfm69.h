@@ -46,6 +46,10 @@ typedef struct
 #define HRF_ADDR_SYNCVALUE2            0x30
 #define HRF_ADDR_SYNCVALUE3            0x31
 #define HRF_ADDR_SYNCVALUE4            0x32
+#define HRF_ADDR_SYNCVALUE5            0x33
+#define HRF_ADDR_SYNCVALUE6            0x34
+#define HRF_ADDR_SYNCVALUE7            0x35
+#define HRF_ADDR_SYNCVALUE8            0x36
 #define HRF_ADDR_PACKETCONFIG1         0x37
 #define HRF_ADDR_PAYLOADLEN            0x38
 #define HRF_ADDR_NODEADDRESS           0x39
