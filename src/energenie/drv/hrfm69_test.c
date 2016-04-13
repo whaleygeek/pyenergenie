@@ -55,7 +55,7 @@ SPI_CONFIG radioConfig = {CS, SCLK, MOSI, MISO, SPI_SPOL0, SPI_CPOL0, SPI_CPHA0}
 static uint8_t read_ver(void);
 static void reset(void);
 
-void hrf_test_send_ook_tone(void);
+void hrf_test_send_ook_tick(void);
 void hrf_test_send_energenie_ook_switch(void);
 
 
@@ -87,8 +87,8 @@ int main(int argc, char **argv)
     }
 
     TRACE_OUTS("testing...\n");
-    hrf_test_send_ook_tone();
-    //hrf_test_send_energenie_ook_switch();
+    //hrf_test_send_ook_tick();
+    hrf_test_send_energenie_ook_switch();
 
     //spi_finished();
     gpio_finished();
@@ -136,8 +136,8 @@ HRF_CONFIG_REC config_OOK[] = {
 #define CONFIG_OOK_COUNT (sizeof(config_OOK)/sizeof(HRF_CONFIG_REC))
 
 
-// Send a test tone using OOK modulation
-void hrf_test_send_ook_tone(void)
+// Send a test tick using OOK modulation
+void hrf_test_send_ook_tick(void)
 {
     /* two blips, to help prove the 01 at start */
     static uint8_t payload[] = {
@@ -264,9 +264,12 @@ void hrf_test_send_energenie_ook_switch(void)
 
     TRACE_OUTS("config\n");
     HRF_config(config_OOK, CONFIG_OOK_COUNT);
-    HRF_writereg(HRF_ADDR_PAYLOADLEN, sizeof(payload));
+    // the full packet/burst consists of repeated payloads
+    HRF_writereg(HRF_ADDR_PAYLOADLEN, sizeof(payload) * REPEATS);
+    // but the FIFO is filled in 1 message sections
     HRF_writereg(HRF_ADDR_FIFOTHRESH, sizeof(payload)-1);
 
+    //TODO move this into the loop
     TRACE_OUTS("transmitter mode\n");
     HRF_change_mode(HRF_MODE_TRANSMITTER);
     HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY, HRF_MASK_MODEREADY);
@@ -281,27 +284,34 @@ void hrf_test_send_energenie_ook_switch(void)
 
     TRACE_OUTS("wait for txready in irqflags1\n");
     HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY|HRF_MASK_TXREADY, HRF_MASK_MODEREADY|HRF_MASK_TXREADY);
-
+    //TODO end of move
 
     uint8_t last_byte = ON;
 
     while (1)
     {
         payload[sizeof(payload)-1] = last_byte;
+        //TODO put radio into TX mode first
+
         TRACE_OUTS("tx:");
         TRACE_OUTN(last_byte);
         TRACE_NL();
 
+        // send a number of payload repeats for the whole packet burst
         for (i=0; i<REPEATS; i++)
         {
             HRF_writefifo_burst(payload, sizeof(payload));
             //TODO: should check FIFO level here?
             //if so, calculate payloadlen based on repeat count and payload size
-            HRF_pollreg(HRF_ADDR_IRQFLAGS2, HRF_MASK_PACKETSENT, HRF_MASK_PACKETSENT); // wait for Packet sent
+            //HRF_pollreg(HRF_ADDR_IRQFLAGS2, HRF_MASK_PACKETSENT, HRF_MASK_PACKETSENT); // wait for Packet sent
+            // wait for below threshold before loading more bytes
+            HRF_pollreg(HRF_ADDR_IRQFLAGS2, HRF_MASK_FIFOLEVEL, 0);
         }
 
-        //TODO: should check packetsent here?
+        // wait for packet sent (packet length in PAYLOADLEN reg)
+        HRF_pollreg(HRF_ADDR_IRQFLAGS2, HRF_MASK_PACKETSENT, HRF_MASK_PACKETSENT);
 
+        // Check final flags in case of overruns etc
         uint8_t irqflags1 = HRF_readreg(HRF_ADDR_IRQFLAGS1);
         uint8_t irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
 
@@ -318,6 +328,8 @@ void hrf_test_send_energenie_ook_switch(void)
             TRACE_FAIL("FIFO not empty or overrun at end of burst");
         }
 
+        // turn off TX to clear packetsent
+        //TODO change mode to STANDBY, wait for mode change success
         delaysec(1);
 
         /* Toggle next switch state */
@@ -330,7 +342,6 @@ void hrf_test_send_energenie_ook_switch(void)
             last_byte = OFF;
         }
     }
-    //NOTE: packetsent is only cleared when exiting TX (i.e. to STANDBY or RECEIVE)
 }
 
 
