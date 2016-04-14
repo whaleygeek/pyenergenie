@@ -8,8 +8,6 @@
 
 /***** INCLUDES *****/
 
-//#include <stdio.h>
-//#include <stdlib.h>
 #include "system.h"
 #include "delay.h"
 #include "gpio.h"
