@@ -51,9 +51,7 @@ static void _change_mode(uint8_t mode);
 static void _wait_ready(void);
 static void _wait_txready(void);
 static void _config(HRF_CONFIG_REC* config, uint8_t len);
-static int _payload_waiting(void);
-static void _receive_payload(uint8_t* buf, uint8_t len);
-static void _send_payload(uint8_t* payload, uint8_t len, uint8_t repeats);
+//static int _payload_waiting(void);
 
 
 //----- ENERGENIE SPECIFIC CONFIGURATIONS --------------------------------------
@@ -149,14 +147,15 @@ static void _wait_txready(void)
 /*---------------------------------------------------------------------------*/
 // Check if there is a payload in the FIFO waiting to be processed
 
-static int _payload_waiting(void)
-{
-    //TODO: First read might be superflous, but left in just in case
-    uint8_t irqflags1 = HRF_readreg(HRF_ADDR_IRQFLAGS1);
-
-    uint8_t irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
-    return (irqflags2 & HRF_MASK_PAYLOADRDY) == HRF_MASK_PAYLOADRDY;
-}
+//static int _payload_waiting(void)
+//{
+//    //TODO: First read might be superflous, but left in just in case
+//    //uint8_t irqflags1 =
+//    HRF_readreg(HRF_ADDR_IRQFLAGS1);
+//
+//    uint8_t irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
+//    return (irqflags2 & HRF_MASK_PAYLOADRDY) == HRF_MASK_PAYLOADRDY;
+//}
 
 
 /***** PUBLIC ****************************************************************/
@@ -165,11 +164,11 @@ static int _payload_waiting(void)
 
 void radio_reset(void)
 {
-  gpio_high(RESET);
-  delayms(150);
+    gpio_high(RESET);
+    delayms(150);
 
-  gpio_low(RESET);
-  delayus(100);
+    gpio_low(RESET);
+    delayus(100);
 }
 
 
