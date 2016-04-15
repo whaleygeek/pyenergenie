@@ -84,11 +84,13 @@ void radio_test_ook(void)
     {
         /* Turn switch 1 on */
         TRACE_OUTS("Switch 1 ON\n");
-        radio_transmit(enc_1on, sizeof(enc_1on), REPEATS);
+        radio_send_payload(enc_1on, sizeof(enc_1on), REPEATS);
+        radio_standby();
         delaysec(1);
 
         TRACE_OUTS("Switch 1 OFF\n");
-        radio_transmit(enc_1off, sizeof(enc_1off), REPEATS);
+        radio_send_payload(enc_1off, sizeof(enc_1off), REPEATS);
+        radio_standby();
         delaysec(1);
     }
 
