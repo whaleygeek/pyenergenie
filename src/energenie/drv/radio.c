@@ -219,6 +219,15 @@ void radio_init(void)
 
 void radio_modulation(RADIO_MODULATION mod)
 {
+    if (mod == RADIO_MODULATION_OOK)
+    {
+        _config(config_OOK, CONFIG_OOK_COUNT);
+    }
+    else
+    {
+        TRACE_FAIL("Unknown modulation requested\n");
+    }
+
 // def modulation(fsk=None, ook=None):
 //     """Switch modulation, if needed"""
 //     global modulation_fsk
@@ -297,11 +306,11 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t repeats)
 
     // the full packet/burst consists of repeated payloads
     // packetsent will trigger when this number of bytes have been transmitted
-    HRF_writereg(HRF_ADDR_PAYLOADLEN, sizeof(payload) * repeats);
+    HRF_writereg(HRF_ADDR_PAYLOADLEN, len * repeats);
     // but the FIFO is filled in 1 message (4+10+2=16 byte) sections
     // level triggers when it 'strictly exceeds' level (i.e. 16 bytes starts tx,
     // and <=15 bytes triggers fifolevel irqflag to be cleared)
-    HRF_writereg(HRF_ADDR_FIFOTHRESH, sizeof(payload)-1);
+    HRF_writereg(HRF_ADDR_FIFOTHRESH, len-1);
 
 
     /* Bring into transmitter mode and ramp up the PA */
@@ -326,7 +335,7 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t repeats)
     // send a number of payload repeats for the whole packet burst
     for (i=0; i<repeats; i++)
     {
-        HRF_writefifo_burst(payload, sizeof(payload));
+        HRF_writefifo_burst(payload, len);
         // Tx will auto start when fifolevel is exceeded by loading the payload
         // so the level register must be correct for the size of the payload
         // otherwise transmit will never start.
