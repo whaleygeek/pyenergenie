@@ -27,9 +27,9 @@ chmod u+x hrfm69_test
 
 
 # build radio_test
-## gcc radio_test.c radio.c hrf69.c spis_rpi.c gpio_rpi.c
-## mv a.out radio_test
-## chmod u+x radio_test
+gcc radio_test.c radio.c hrfm69.c spis.c gpio_rpi.c delay_posix.c
+mv a.out radio_test
+chmod u+x radio_test
 
 
 # build spi .so library on Raspberry Pi

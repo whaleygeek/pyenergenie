@@ -144,7 +144,7 @@ HRF_CONFIG_REC config_OOK[] = {
     //{HRF_ADDR_PAYLOADLEN,     2},                         // Payload Length
     //{HRF_ADDR_FIFOTHRESH,     1}                          // Start tx when this is exceeded
 };
-#define CONFIG_OOK_LEN (sizeof(config_OOK)/sizeof(HRF_CONFIG_REC))
+#define CONFIG_OOK_COUNT (sizeof(config_OOK)/sizeof(HRF_CONFIG_REC))
 
 
 // Send a test tick using OOK modulation
@@ -158,7 +158,7 @@ void hrf_test_send_ook_tick(void)
     int i;
 
     TRACE_OUTS("config\n");
-    for (i=0; i<sizeof(config_OOK); i++)
+    for (i=0; i<CONFIG_OOK_COUNT; i++)
     {
         HRF_writereg(config_OOK[i].addr, config_OOK[i].value);
     }
@@ -271,7 +271,7 @@ void hrf_test_send_energenie_ook_switch(void)
     uint8_t irqflags2;
 
     TRACE_OUTS("config\n");
-    for (i=0; i<sizeof(config_OOK); i++)
+    for (i=0; i<CONFIG_OOK_COUNT; i++)
     {
         HRF_writereg(config_OOK[i].addr, config_OOK[i].value);
     }
