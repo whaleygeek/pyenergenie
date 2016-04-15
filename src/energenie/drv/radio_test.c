@@ -22,7 +22,7 @@
 /***** FORWARD FUNCTION PROTOTYPES *****/
 
 void radio_test_ook(void);
-void radio_test_fsk(void);
+//void radio_test_fsk(void);
 
 
 /*---------------------------------------------------------------------------*/
@@ -42,7 +42,7 @@ void radio_test_ook(void)
     //spi_init(&spi_config);
 
     radio_init();
-    radio_transmitter(RADIO_MODULATION_OOK);
+    radio_modulation(RADIO_MODULATION_OOK);
 
     /* The 'radio' module knows nothing about the Energenie (HS1527) bit encoding,
      * so this test code manually encodes the bits.
@@ -85,12 +85,10 @@ void radio_test_ook(void)
         /* Turn switch 1 on */
         TRACE_OUTS("Switch 1 ON\n");
         radio_transmit(enc_1on, sizeof(enc_1on), REPEATS);
-        radio_standby(); //TODO put this here? move out from radio_transmit??
         delaysec(1);
 
         TRACE_OUTS("Switch 1 OFF\n");
         radio_transmit(enc_1off, sizeof(enc_1off), REPEATS);
-        radio_standby(); //TODO put this here? move out from radio_transmit??
         delaysec(1);
     }
 
@@ -100,10 +98,10 @@ void radio_test_ook(void)
 
 /*---------------------------------------------------------------------------*/
 
-void radio_test_fsk(void)
-{
-    //TODO
-}
+//void radio_test_fsk(void)
+//{
+//    //TODO
+//}
 
 
 /***** END OF FILE *****/

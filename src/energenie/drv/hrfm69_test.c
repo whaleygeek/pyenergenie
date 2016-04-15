@@ -85,7 +85,7 @@ int main(int argc, char **argv)
     }
 
     TRACE_OUTS("standby mode\n");
-    HRF_change_mode(HRF_MODE_STANDBY);
+    HRF_writereg(HRF_ADDR_OPMODE, HRF_MODE_STANDBY);
     HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY, HRF_MASK_MODEREADY);
 
 
@@ -144,7 +144,7 @@ HRF_CONFIG_REC config_OOK[] = {
     //{HRF_ADDR_PAYLOADLEN,     2},                         // Payload Length
     //{HRF_ADDR_FIFOTHRESH,     1}                          // Start tx when this is exceeded
 };
-#define CONFIG_OOK_COUNT (sizeof(config_OOK)/sizeof(HRF_CONFIG_REC))
+#define CONFIG_OOK_LEN (sizeof(config_OOK)/sizeof(HRF_CONFIG_REC))
 
 
 // Send a test tick using OOK modulation
@@ -158,12 +158,17 @@ void hrf_test_send_ook_tick(void)
     int i;
 
     TRACE_OUTS("config\n");
-    HRF_config(config_OOK, CONFIG_OOK_COUNT);
+    for (i=0; i<sizeof(config_OOK); i++)
+    {
+        HRF_writereg(config_OOK[i].addr, config_OOK[i].value);
+    }
+
     HRF_writereg(HRF_ADDR_PAYLOADLEN, sizeof(payload));
     HRF_writereg(HRF_ADDR_FIFOTHRESH, sizeof(payload)-1);
 
     TRACE_OUTS("transmitter mode\n");
-    HRF_change_mode(HRF_MODE_TRANSMITTER);
+    HRF_writereg(HRF_ADDR_OPMODE, HRF_MODE_TRANSMITTER);
+
 
     TRACE_OUTS("wait for modeready,txready in irqflags1\n");
     HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY|HRF_MASK_TXREADY, HRF_MASK_MODEREADY|HRF_MASK_TXREADY);
@@ -266,7 +271,10 @@ void hrf_test_send_energenie_ook_switch(void)
     uint8_t irqflags2;
 
     TRACE_OUTS("config\n");
-    HRF_config(config_OOK, CONFIG_OOK_COUNT);
+    for (i=0; i<sizeof(config_OOK); i++)
+    {
+        HRF_writereg(config_OOK[i].addr, config_OOK[i].value);
+    }
     // the full packet/burst consists of repeated payloads
     // packetsent will trigger when this number of bytes have been transmitted
     HRF_writereg(HRF_ADDR_PAYLOADLEN, sizeof(payload) * REPEATS);
@@ -281,7 +289,7 @@ void hrf_test_send_energenie_ook_switch(void)
     {
         /* Bring into transmitter mode and ramp up the PA */
         TRACE_OUTS("transmitter mode\n");
-        HRF_change_mode(HRF_MODE_TRANSMITTER);
+        HRF_writereg(HRF_ADDR_OPMODE, HRF_MODE_TRANSMITTER);
 
         TRACE_OUTS("wait for modeready,txready in irqflags1\n");
         HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY|HRF_MASK_TXREADY, HRF_MASK_MODEREADY|HRF_MASK_TXREADY);
@@ -336,7 +344,8 @@ void hrf_test_send_energenie_ook_switch(void)
         // otherwise PA/carrier might be left permanently on.
 
         TRACE_OUTS("standby mode\n");
-        HRF_change_mode(HRF_MODE_STANDBY);
+        HRF_writereg(HRF_ADDR_OPMODE, HRF_MODE_STANDBY);
+
         HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY, HRF_MASK_MODEREADY);
 
         if (((irqflags2 & HRF_MASK_FIFONOTEMPTY) != 0) || ((irqflags2 & HRF_MASK_FIFOOVERRUN) != 0))
