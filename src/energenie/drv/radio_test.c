@@ -5,6 +5,10 @@
  * Repeatedly transmits OOK packets to turn switch 1 on and off.
  */
 
+//TODO: When radio2.py is finished off (the ctypes wrapper)
+//move this code up into radio_test.py
+//For now, it's fine here.
+
 
 /***** INCLUDES *****/
 

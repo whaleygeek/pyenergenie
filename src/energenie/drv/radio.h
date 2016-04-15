@@ -17,6 +17,10 @@ typedef uint8_t RADIO_MODULATION;
 
 extern void radio_init(void);
 
+extern void radio_reset(void);
+
+extern uint8_t radio_get_ver(void);
+
 extern void radio_modulation(RADIO_MODULATION mod);
 
 extern void radio_transmitter(RADIO_MODULATION mod);

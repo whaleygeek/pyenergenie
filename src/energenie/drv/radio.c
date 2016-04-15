@@ -46,8 +46,7 @@ SPI_CONFIG radioConfig = {CS, SCLK, MOSI, MISO, SPI_SPOL0, SPI_CPOL0, SPI_CPHA0}
 
 /***** LOCAL FUNCTION PROTOTYPES *****/
 
-static void _reset(void);
-static uint8_t _read_ver(void);
+
 static void _change_mode(uint8_t mode);
 static void _wait_ready(void);
 static void _wait_txready(void);
@@ -106,25 +105,6 @@ static HRF_CONFIG_REC config_OOK[] = {
 
 /***** PRIVATE ***************************************************************/
 
-/*---------------------------------------------------------------------------*/
-
-static void reset(void)
-{
-  gpio_high(RESET);
-  delayms(150);
-
-  gpio_low(RESET);
-  delayus(100);
-}
-
-
-/*---------------------------------------------------------------------------*/
-
-static uint8_t read_ver(void)
-{
-  return HRF_readreg(HRF_ADDR_VERSION);
-}
-
 
 /*---------------------------------------------------------------------------*/
 // Change the operating mode of the HRF radi
@@ -181,6 +161,25 @@ static int _payload_waiting(void)
 
 /***** PUBLIC ****************************************************************/
 
+/*---------------------------------------------------------------------------*/
+
+void radio_reset(void)
+{
+  gpio_high(RESET);
+  delayms(150);
+
+  gpio_low(RESET);
+  delayus(100);
+}
+
+
+/*---------------------------------------------------------------------------*/
+
+uint8_t radio_get_ver(void)
+{
+  return HRF_readreg(HRF_ADDR_VERSION);
+}
+
 
 /*---------------------------------------------------------------------------*/
 
@@ -199,10 +198,10 @@ void radio_init(void)
     gpio_low(LED_GREEN);
 
     TRACE_OUTS("reset...\n");
-    reset();
+    radio_reset();
 
     TRACE_OUTS("reading radiover...\n");
-    uint8_t rv = read_ver();
+    uint8_t rv = radio_get_ver();
     TRACE_OUTN(rv);
     TRACE_NL();
     if (rv != 36)

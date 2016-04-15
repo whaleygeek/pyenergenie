@@ -40,6 +40,7 @@ ADDR_FRMSB                  = 0x07
 ADDR_FRMID                  = 0x08
 ADDR_FRLSB                  = 0x09
 ADDR_AFCCTRL                = 0x0B
+ADDR_VERSION               =  0x10
 ADDR_LNA                    = 0x18
 ADDR_RXBW                   = 0x19
 ADDR_AFCFEI                 = 0x1E
@@ -402,6 +403,16 @@ def init():
     spi.reset() # send a hardware reset to ensure radio in clean state
 
     HRF_clear_fifo()
+
+
+def reset():
+    """Reset the radio chip"""
+    spi.reset()
+
+
+def get_ver():
+    """Get the version number of the radio chip"""
+    return HRF_readreg(ADDR_VERSION)
 
 
 def modulation(fsk=None, ook=None):
