@@ -16,7 +16,21 @@
 
 /***** CONSTANTS *****/
 
+/* How many times to repeat the OOK payload.
+ * NOTE: At the moment this is limited to 16*8<256 in the HRF module
+ * but that restriction will soon be removed.
+ */
+
 #define REPEATS 8
+
+
+/* The 'radio' module knows nothing about the Energenie (HS1527) bit encoding,
+ * so this test code manually encodes the bits.
+ * For the full Python stack, there is an encoder module that can generate
+ * specific payloads. Repeats are done in radio_transmitter.
+ * The HRF preamble feature is no longer used, it's more predictable to
+ * put the preamble in the payload.
+ */
 
 // preamble pulse with timing violation gap
 #define PREAMBLE 0x80, 0x00, 0x00, 0x00
@@ -37,13 +51,6 @@
 static uint8_t enc_1on[16]  = {PREAMBLE, ADDR, SW1_ON};
 static uint8_t enc_1off[16] = {PREAMBLE, ADDR, SW1_OFF};
 
-/* The 'radio' module knows nothing about the Energenie (HS1527) bit encoding,
- * so this test code manually encodes the bits.
- * For the full Python stack, there is an encoder module that can generate
- * specific payloads. Repeats are done in radio_transmitter.
- * The HRF preamble feature is no longer used, it's more predictable to
- * put the preamble in the payload.
- */
 
 
 /***** FORWARD FUNCTION PROTOTYPES *****/
