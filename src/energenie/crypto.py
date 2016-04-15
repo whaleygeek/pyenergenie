@@ -1,6 +1,6 @@
 # crypto.py  27/09/2015  D.J.Whale
 #
-# Crypto engine for OpenHEMS, including crc calculation
+# Crypto engine for OpenThings, including crc calculation
 
 
 

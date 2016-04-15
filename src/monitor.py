@@ -25,7 +25,7 @@ def trace(msg):
 
 log_file = None
 
-def logMessage (msg):
+def logMessage(msg):
     HEADINGS = 'timestamp,mfrid,prodid,sensorid,flags,switch,voltage,freq,reactive,real'
 
     global log_file

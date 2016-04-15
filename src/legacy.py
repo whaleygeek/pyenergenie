@@ -93,7 +93,7 @@ def switch1_loop():
     while True:
         print("Switch 1 ON repeatedly")
         while True:
-	    radio.transmit(ON_MSGS[1])
+            radio.transmit(ON_MSGS[1])
 
         #print("Switch 1 OFF")
 	#for i in range(50):
