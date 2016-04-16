@@ -24,7 +24,7 @@ import ctypes
 from os import path
 mydir = path.dirname(path.abspath(__file__))
 
-libradio                   = ctypes.cdll.LoadLibrary(mydir + "/drv/" + LIBNAME)
+libradio                   = ctypes.cdll.LoadLibrary(mydir + "/" + LIBNAME)
 radio_init_fn              = libradio["radio_init"]
 radio_reset_fn             = libradio["radio_reset"]
 radio_get_ver_fn           = libradio["radio_get_ver"]
