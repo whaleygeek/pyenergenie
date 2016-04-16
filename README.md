@@ -4,12 +4,6 @@ A python interface to the Energenie line of products
 Note
 ====
 
-This is a work in progress, please use the 'last known good' from here:
-
-https://github.com/whaleygeek/pyenergenie/tree/f342fe255e9d90920b132711aa49933a867523f6
-
-
-
 This is the beginnings of an open source library to access the Energienie 
 range of power control and monitoring products from within Python.
 
@@ -31,6 +25,18 @@ access to many or all of the features of the OpenHEMS, HopeRF and Energenie
 product line.
 
 
+Note that there are two ways to control Energenie's from a Raspberry Pi.
+One of the boards maps 4 GPIO's to transmit 4 standard messages.
+For that board, use this code from Ben and Amy:
+https://pypi.python.org/pypi/energenie
+
+The second board, the ENER314-RT board, is a full radio that is programmable
+from the SPI interface of the Raspberry Pi. For that board, please use
+this code, which now supports all models of Raspberry Pi, and all devices
+from Energenie (including the old green button devices and the new
+MiHome monitor devices).
+
+
 Purpose
 ====
 
@@ -46,7 +52,7 @@ You can also turn switches on MiHome Adaptor Plus on and off.
 
 There is support for the legacy green-button switch devices ENER002,
 but it is not yet fully tested, and not integrated into the main application
-flow yet.
+flow yet - it is a separate test program legacy.py.
 
 I've tried to make this a 'zero install' and 'zero configuration' experience.
 In theory (at least) you should be able to download the zip or git-clone,
@@ -74,7 +80,7 @@ cd pyenergenie-master
 cd src
 ```
 
-4. run the monitor test program
+4. run the monitor test program with your MiHome adaptors
 
 ```
 sudo python monitor.py
@@ -84,7 +90,7 @@ After a few seconds, you should see some packet dumps appearing on the screen.
 These packets are then decoded and displayed in a dictionary format,
 and for certain messages, also in a more friendly format.
 
-5. run the switch test program
+5. run the switch test program with MiHome control adaptors
 
 ```
 sudo python switch.py
@@ -93,18 +99,17 @@ sudo python switch.py
 This will listen for any MiHome adaptor plus devices, and then turn their
 switch on and off every 10 seconds.
 
-6. Try the (provisional) legacy device support
+6. Try the legacy device support with your green button devices
 
 ```
 sudo python legacy.py
 ```
 
-Follow the on screen instructions to pair up the program with any of your
-green-button legacy devices. Then the switches should turn on and off
-every 2 seconds.
+At the moment, this just switches socket 1 on and off repeatedly,
+but there are other test modes in the software.
 
 
-Note that the protocol module (OpenHEMS) is completely generic and will
+Note that the protocol module (OpenThings) is completely generic and will
 pretty much work with any device. Try plugging in an E-TRV and see what
 messages get reported. Construct new template messages as pydict initialisers
 and encode and send those in to make the device do something in response.
@@ -114,8 +119,9 @@ Plans
 ====
 
 1. Finish off support for the legacy green-button devices.
+(This is nearly completed)
 
-2. Finish off the message scheduler, so that transmits only occur in safe
+2. Write a message scheduler, so that transmits only occur in safe
 timeslots that are less likely to collide with transmits from devices
 (and thus increase reliability of messaging in a large device installation)
 
@@ -124,19 +130,11 @@ physical device on the network, with a method for each feature of that
 device. This will allow very high level object oriented access to a set of
 devices in an installation, in a very expressive and easy to use manner.
 
-4. Push a fair amount of the radio interface and some of OpenHEMS back down into
-a C library that implements the same interface as what we have at this point in the
-Python. Write a ctypes wrapper around this, so that the identical Python internal
-API is presented. The idea being that the first pass of Python coding defines the
-API we want to use, and the second pass turns this into a single library that
-does everything, exposed to Python via ctypes, but linkable to other applications
-and languages too.
-
-5. Write javascript NodeRed wrappers around the Python (like GPIO nodes do)
+4. Write javascript NodeRed wrappers around the Python (like GPIO nodes do)
 so that you can drop NodeRed nodes for Energenie devices into a flow.
 
 David Whale
 
 @whaleygeek
 
-March 2016
+April 2016
