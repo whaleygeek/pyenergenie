@@ -65,7 +65,7 @@ to see data coming back.
 Getting Going
 ====
 
-1. Plug in your ENER314-RT-VER01 board from energine onto the 26 pin connector of
+1. Plug in your ENER314-RT-VER01 board from energenie onto the 26 pin connector of
 your Raspberry Pi. At the moment I have only tested this with a Raspberry Pi B,
 although there is no reason why it should not work with any of the models currently
 available on the market. The underlying GPIO and SPI has been tested in other
@@ -123,17 +123,26 @@ Plans
 1. Finish off support for the legacy green-button devices.
 (This is nearly completed)
 
+https://github.com/whaleygeek/pyenergenie/issues/32
+
+
 2. Write a message scheduler, so that transmits only occur in safe
 timeslots that are less likely to collide with transmits from devices
 (and thus increase reliability of messaging in a large device installation)
+
+https://github.com/whaleygeek/pyenergenie/issues/9
 
 3. Write a Python object interface for devices - i.e. one object per
 physical device on the network, with a method for each feature of that
 device. This will allow very high level object oriented access to a set of
 devices in an installation, in a very expressive and easy to use manner.
 
+https://github.com/whaleygeek/pyenergenie/issues/18
+
 4. Write javascript NodeRed wrappers around the Python (like GPIO nodes do)
 so that you can drop NodeRed nodes for Energenie devices into a flow.
+
+https://github.com/whaleygeek/pyenergenie/issues/38
 
 David Whale
 
