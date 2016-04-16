@@ -1,10 +1,12 @@
 # pyenergenie
 A python interface to the Energenie line of products
 
+https://energenie4u.co.uk/
+
 Note
 ====
 
-This is the beginnings of an open source library to access the Energienie 
+This is the beginnings of an open source library to access the Energenie 
 range of power control and monitoring products from within Python.
 
 The Energenie product line uses the HopeRF radio transciever, and the OpenThings 
