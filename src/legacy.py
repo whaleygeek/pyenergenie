@@ -13,10 +13,11 @@ from energenie import encoder
 from energenie import radio2 as radio
 
 # How many times to repeat messages
-# Present version of driver limits to 8
+# Present version of driver limits to 15
 # but this restriction will be lifted soon
-REPEATS = 8
-
+REPEATS = 15
+# 4800bps, burst transmit time at 15 repeats is 400mS
+# 1 payload takes 26mS
 
 #----- TEST APPLICATION -------------------------------------------------------
 
