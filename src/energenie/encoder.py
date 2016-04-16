@@ -4,6 +4,53 @@
 
 ALL_SOCKETS = 0
 
+# The preamble is now stored in the payload,
+# this is more predictable than using the radio sync feature
+PREAMBLE = [0x80, 0x00, 0x00, 0x00]
+
+# This generates a 20*4 bit address i.e. 10 bytes
+# The number generated is always the same
+# This is the random 'Energenie address prefix'
+# The switch number is encoded in the payload
+# 0000 00BA gets encoded as:
+# 128 64 32 16  8  4  2  1
+#   1  B  B  0  1  A  A  0
+#payload = []
+#for i in range(10):
+#    j = i + 5
+#    payload.append(8 + (j&1) * 6 + 128 + (j&2) * 48)
+#dumpPayloadAsHex(payload)
+
+#this is just a fixed address generator, from the C code
+#payload = []
+#for i in range(10):
+#    j = i + 5
+#    payload.append(8 + (j&1) * 6 + 128 + (j&2) * 48)
+#dumpPayloadAsHex(payload)
+# binary = 0110 1100 0110 1100 0110
+# hex    = 6    C    6    C    6
+
+DEFAULT_ADDR = 0x6C6C6
+
+#                   5     6     7     8     9     10    11    12    13    14
+#                   1(01) 1(10) 1(11) 0(00) 0(01) 0(10) 0(11) 1(00) 1(01) 1(10)
+DEFAULT_ADDR_ENC = [0x8e, 0xe8, 0xee, 0x88, 0x8e, 0xe8, 0xee, 0x88, 0x8e, 0xe8]
+
+# D0=high, D1=high, D2-high, D3=high (S1 on) sent as:(D0D1D2D3)
+# 128 64 32 16  8  4  2  1        128 64 32 16  8  4  2  1
+#   1  B  B  0  1  A  A  0          1  B  B  0  1  A  A  0
+#   1  1  1  0  1  1  1  0          1  1  1  0  1  1  1  0
+
+SW1_ON_ENC  = [0xEE, 0xEE] # 1111 sent as 1111
+
+# D0=high, D1=high, D2=high, D3=low (S1 off)
+# 128 64 32 16  8  4  2  1        128 64 32 16  8  4  2  1
+#   1  B  B  0  1  A  A  0          1  B  B  0  1  A  A  0
+#   1  1  1  0  1  1  1  0          1  1  1  0  1  0  0  0
+
+SW1_OFF_ENC = [0xEE, 0xE8] # 1110 sent as 0111
+
+
 def ashex(payload):
     line = ""
     for b in payload:
@@ -14,46 +61,20 @@ def ashex(payload):
 def build_relay_msg(relayState=False):
     """Temporary test code to prove we can turn the relay on or off"""
 
-    # This generates a 20*4 bit address i.e. 10 bytes
-    # The number generated is always the same
-    # Presumably this is the random 'Energenie address prefix'
-    # The switch number is encoded in the payload
+    payload = PREAMBLE
 
-    # Looks like: 0000 00BA gets encoded as:
-    # 128 64 32 16  8  4  2  1
-    #   1  B  B  0  1  A  A  0
-
-    #payload = []
-    #for i in range(10):
-    #    j = i + 5
-    #    payload.append(8 + (j&1) * 6 + 128 + (j&2) * 48)
-    #dumpPayloadAsHex(payload)
-    #
-    #          5     6     7     8     9     10    11    12    13    14
-    #          1(01) 1(10) 1(11) 0(00) 0(01) 0(10) 0(11) 1(00) 1(01) 1(10)
-    payload = [0x8e, 0xe8, 0xee, 0x88, 0x8e, 0xe8, 0xee, 0x88, 0x8e, 0xe8]
-
-    #TODO: This is taken from the C code, it might be wrong
-    #(the D bit order seems reversed compared to the pdf spec)
     if relayState: # ON
-        # D0=high, D1=high, D2-high, D3=high (S1 on)
-        # 128 64 32 16  8  4  2  1        128 64 32 16  8  4  2  1
-        #   1  B  B  0  1  A  A  0          1  B  B  0  1  A  A  0
-        #   1  1  1  0  1  1  1  0          1  1  1  0  1  1  1  0
-        payload += [0xEE, 0xEE] # 1111
+        payload += SW1_ON_ENC
 
     else: # OFF
-        # D0=high, D1=high, D2=high, D3=low (S1 off)
-        # 128 64 32 16  8  4  2  1        128 64 32 16  8  4  2  1
-        #   1  B  B  0  1  A  A  0          1  B  B  0  1  A  A  0
-        #   1  1  1  0  1  1  1  0          1  1  1  0  1  0  0  0
-        payload += [0xEE, 0xE8] # 1110
+        payload += SW1_OFF_ENC
 
     return payload
 
 
 def build_test_message(pattern):
-    payload = [0x8E, 0xE8, 0xEE, 0x88, 0x8E, 0xE8, 0xEE, 0x88, 0x8E, 0xE8]
+    """build a test message for a D3D2D1D0 control patter"""
+    payload = PREAMBLE + DEFAULT_ADDR_ENC
     pattern &= 0x0F
     control = encode_bits(pattern, 4)
     payload += control
@@ -65,44 +86,15 @@ def build_switch_msg(state, device_address=ALL_SOCKETS, house_address=None):
     #print("build: state:%s, device:%d, house:%s" % (str(state), device_address, str(house_address)))
 
     if house_address == None:
-        #this is just a fixed address generator, from the C code
-        #payload = []
-        #for i in range(10):
-        #    j = i + 5
-        #    payload.append(8 + (j&1) * 6 + 128 + (j&2) * 48)
-        #dumpPayloadAsHex(payload)
-        # binary = 0110 1100 0110 1100 0110
-        # hex    = 6    C    6    C    6
-        house_address = 0x6C6C6
+        house_address = DEFAULT_ADDR
 
-    payload  = encode_bits((house_address & 0x0F0000) >> 16, 4)
+    payload = [] + PREAMBLE
+    payload += encode_bits((house_address & 0x0F0000) >> 16, 4)
     payload += encode_bits((house_address & 0x00FF00) >> 8,  8)
     payload += encode_bits((house_address & 0x0000FF),       8)
 
-    #TODO: D3210 are the other way round in the message??
-    #This is correct as presented by the PDF from Energenie though.
-    #the relay test code above proves that bit position 0 is the on/off command
-    #so the next 3 bits are just like extra address bits
-    # Turn switch request into a 4 bit switch command, and add to payload
-    # D 3210
-    #   0000 UNUSED
-    #   0001 UNUSED
-    #   0010 UNUSED
-    #   0011 All off      (3)
-    #   0100 socket 4 off (4)
-    #   0101 socket 3 off (5)
-    #   0110 socket 2 off (6)
-    #   0111 socket 1 off (7)
-    #   1000 UNUSED
-    #   1001 UNUSED
-    #   1010 UNUSED
-    #   1011 All on       (3)
-    #   1100 socket 4 on  (4)
-    #   1101 socket 3 on  (5)
-    #   1110 socket 2 on  (6)
-    #   1111 socket 1 on  (7)
-
-    # Coded as per the (working) C code would be:
+    # Coded as per the (working) C code, as it is transmitted D0D1D2D3:
+    # D 0123
     # b 3210
     #   0000 UNUSED         0
     #   0001 UNUSED         1
@@ -138,6 +130,7 @@ def build_switch_msg(state, device_address=ALL_SOCKETS, house_address=None):
         bits |= 0x02
         
     payload += encode_bits(bits, 4)
+    #print("encoded as:%s" % ashex(payload))
     return payload
 
 
@@ -168,7 +161,7 @@ def encode_bits(data, number):
         #print("    shift %d bits %d" % (shift, bits))
         encoded.append(ENCODER[bits])
         shift -= 2
-    #print("  returns:%s" % ashex(modulated))
+    #print("  returns:%s" % ashex(encoded))
     return encoded
 
 

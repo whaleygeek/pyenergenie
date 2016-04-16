@@ -33,7 +33,9 @@ MYHOUSE_ALL_ON = encoder.build_switch_msg(True, house_address=0x12345)
 tests = [ALL_ON, ALL_OFF, ONE_ON, ONE_OFF, TWO_ON, TWO_OFF, THREE_ON, THREE_OFF, FOUR_ON, FOUR_OFF, MYHOUSE_ALL_ON]
 
 for t in tests:
+    print('')
     print(ashex(t))
 
 # END
+
 

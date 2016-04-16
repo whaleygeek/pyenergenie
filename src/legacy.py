@@ -8,7 +8,14 @@
 
 import time
 
-from energenie import encoder, radio
+from energenie import encoder
+# moving over to the new, faster, C radio driver
+from energenie import radio2 as radio
+
+# How many times to repeat messages
+# Present version of driver limits to 8
+# but this restriction will be lifted soon
+REPEATS = 8
 
 
 #----- TEST APPLICATION -------------------------------------------------------
@@ -54,10 +61,9 @@ def legacy_learn_mode():
             print("Press the LEARN button on any switch %d for 5 secs until LED flashes" % switch_no)
             raw_input("press ENTER when LED is flashing")
 
-            for i in range(8):
-                print("ON")
-                radio.transmit(ON_MSGS[switch_no])
-                time.sleep(1)
+            print("ON")
+            radio.send_payload(ON_MSGS[switch_no], REPEATS)
+            time.sleep(1)
 
             print("Device should now be programmed")
             
@@ -65,10 +71,10 @@ def legacy_learn_mode():
             for i in range(4):
                 time.sleep(1)
                 print("OFF")
-                radio.transmit(OFF_MSGS[switch_no])
+                radio.send_payload(OFF_MSGS[switch_no], REPEATS)
                 time.sleep(1)
                 print("ON")
-                radio.transmit(ON_MSGS[switch_no])
+                radio.send_payload(ON_MSGS[switch_no], REPEATS)
             print("Test completed")
 
 
@@ -80,25 +86,24 @@ def legacy_switch_loop():
             # switch_no 0 is ALL, then 1=1, 2=2, 3=3, 4=4
             # ON
             print("switch %d ON" % switch_no)
-            radio.transmit(ON_MSGS[switch_no])
+            radio.send_payload(ON_MSGS[switch_no], REPEATS)
             time.sleep(2)
 
             # OFF
             print("switch %d OFF" % switch_no)
-            radio.transmit(OFF_MSGS[switch_no])
+            radio.send_payload(OFF_MSGS[switch_no], REPEATS)
             time.sleep(2)
         
 def switch1_loop():
     """Repeatedly turn switch 1 ON then OFF"""
     while True:
-        print("Switch 1 ON repeatedly")
-        while True:
-            radio.transmit(ON_MSGS[1])
+        print("Switch 1 ON")
+        radio.send_payload(ON_MSGS[1], REPEATS)
+        time.sleep(1)
 
-        #print("Switch 1 OFF")
-	#for i in range(50):
-	#        radio.transmit(OFF_MSGS[1])
-        ##time.sleep(1)
+        print("Switch 1 OFF")
+	radio.send_payload(OFF_MSGS[1], REPEATS)
+        time.sleep(1)
 
 
 def pattern_test():
@@ -108,7 +113,7 @@ def pattern_test():
         p = int(p, 16)
         msg = encoder.build_test_message(p)
         print("pattern %s payload %s" % (str(hex(p)), encoder.ashex(msg)))
-        radio.transmit(msg)
+        radio.send_payload(msg, REPEATS)
             
 
 if __name__ == "__main__":
@@ -117,7 +122,7 @@ if __name__ == "__main__":
     print("radio init")
     radio.init()
     print("radio as OOK")
-    radio.transmitter(ook=True)
+    radio.modulation(ook=True)
 
     try:
         #pattern_test()
