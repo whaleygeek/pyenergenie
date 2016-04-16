@@ -17,8 +17,8 @@
 #All you would need is a different radio.py that marshalled data to and from
 #the Arduino via pyserial.
 
-#LIBNAME = "radio_rpi.so"
-LIBNAME = "radio_mac.so" # testing
+LIBNAME = "radio_rpi.so"
+#LIBNAME = "radio_mac.so" # testing
 
 import ctypes
 from os import path
@@ -139,7 +139,7 @@ def send_payload(payload, times=1):
 #    # returns list of bytes
 
 
-def radio_standby():
+def standby():
     """Put radio into standby mode"""
     #extern void radio_standby(void);
     radio_standby_fn()
