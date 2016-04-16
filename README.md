@@ -7,7 +7,7 @@ Note
 This is the beginnings of an open source library to access the Energienie 
 range of power control and monitoring products from within Python.
 
-The Energenie product line uses the HopeRF radio transciever, and the OpenHEMS 
+The Energenie product line uses the HopeRF radio transciever, and the OpenThings 
 protocol from Sentec. Energenie have built a RaspberryPi add-on board that 
 interfaces to the HopeRF RFM69, and allows both control and monitoring of their 
 products from a Raspberry Pi.
