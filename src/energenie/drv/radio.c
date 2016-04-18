@@ -1,6 +1,8 @@
 /* radio.c  12/04/2016  D.J.Whale
  *
- * An interface to the Energenie Raspberry Pi Radio.
+ * An interface to the Energenie Raspberry Pi Radio board ENER314-RT-VER01
+ *
+ * https://energenie4u.co.uk/index.phpcatalogue/product/ENER314-RT
  */
 
 
@@ -35,6 +37,7 @@
 
 /* GPIO assignments for Raspberry Pi using BCM numbering */
 #define RESET     25
+// GREEN used for RX, RED used for TX
 #define LED_GREEN 27   // (not B rev1)
 #define LED_RED   22
 
@@ -93,7 +96,9 @@ static HRF_CONFIG_REC config_OOK[] = {
     {HRF_ADDR_BITRATELSB,     0x0B},                      // bitrate:4800b/s
     {HRF_ADDR_PREAMBLELSB, 	  0},                         // preamble size LSB
     {HRF_ADDR_SYNCCONFIG,     HRF_VAL_SYNCCONFIG0},       // Size of sync word (disabled)
-    {HRF_ADDR_PACKETCONFIG1,  0x00},                      // Fixed length, no Manchester coding
+    {HRF_ADDR_PACKETCONFIG1,  0x80},                      // Tx Variable length, no Manchester coding
+    {HRF_ADDR_PAYLOADLEN,     0}                          // no payload length
+
 };
 #define CONFIG_OOK_COUNT (sizeof(config_OOK)/sizeof(HRF_CONFIG_REC))
 
@@ -133,6 +138,18 @@ static void _change_mode(uint8_t mode)
 {
     HRF_writereg(HRF_ADDR_OPMODE, mode);
     _wait_ready();
+    gpio_low(LED_GREEN); // TX OFF
+    gpio_low(LED_RED);   // RX OFF
+
+    if (mode == HRF_MODE_TRANSMITTER)
+    {
+        _wait_txready();
+        gpio_high(LED_RED);   // TX ON
+    }
+    else if (mode == HRF_MODE_RECEIVER)
+    {
+        gpio_high(LED_GREEN); // RX ON
+    }
     radio_data.mode = mode;
 }
 
@@ -208,7 +225,7 @@ void radio_init(void)
     uint8_t rv = radio_get_ver();
     TRACE_OUTN(rv);
     TRACE_NL();
-    if (rv < EXPECTED_RADIOVER)
+    if (rv < EXPECTED_RADIOVER) //TODO: make this ASSERT()
     {
         TRACE_OUTS("warning:unexpected radio ver<min\n");
         //TRACE_FAIL("unexpected radio ver<min\n");
@@ -218,7 +235,6 @@ void radio_init(void)
         TRACE_OUTS("warning:unexpected radio ver>exp\n");
     }
 
-    TRACE_OUTS("standby mode\n");
     radio_standby();
 }
 
@@ -247,7 +263,7 @@ void radio_modulation(RADIO_MODULATION mod)
     //    _config(config_FSK, CONFIG_FSK_COUNT);
     //    radio_data.modu = mod;
     //}
-    else
+    else //TODO: make this ASSERT()
     {
         TRACE_FAIL("Unknown modulation\n");
     }
@@ -259,9 +275,9 @@ void radio_modulation(RADIO_MODULATION mod)
 void radio_transmitter(RADIO_MODULATION mod)
 {
     TRACE_OUTS("radio_transmitter\n");
+
     radio_modulation(mod);
     _change_mode(HRF_MODE_TRANSMITTER);
-    _wait_txready();
 }
 
 
@@ -270,6 +286,7 @@ void radio_transmitter(RADIO_MODULATION mod)
 void radio_receiver(RADIO_MODULATION mod)
 {
     TRACE_OUTS("radio_receiver\n");
+
     radio_modulation(mod);
     _change_mode(HRF_MODE_RECEIVER);
 }
@@ -286,7 +303,7 @@ void radio_standby(void)
 
 /*---------------------------------------------------------------------------*/
 
-void radio_transmit(uint8_t* payload, uint8_t len, uint8_t repeats)
+void radio_transmit(uint8_t* payload, uint8_t len, uint8_t times)
 {
     TRACE_OUTS("radio_transmit\n");
 
@@ -294,10 +311,9 @@ void radio_transmit(uint8_t* payload, uint8_t len, uint8_t repeats)
     if (radio_data.mode != HRF_MODE_TRANSMITTER)
     {
         _change_mode(HRF_MODE_TRANSMITTER);
-        _wait_txready();
     }
 
-    radio_send_payload(payload, len, repeats);
+    radio_send_payload(payload, len, times);
 
     if (radio_data.mode != prevmode)
     {
@@ -312,8 +328,8 @@ void radio_transmit(uint8_t* payload, uint8_t len, uint8_t repeats)
 /* DESIGN FOR DUTY CYCLE PROTECTION REQUIREMENT (write this later)
  *
  * At OOK 4800bps, 1 bit is 20uS, 1 byte is 1.6ms, 16 bytes is 26.6ms
- * 15 repeats (old design limit) is 400ms
- * 255 repeats (new design limit) is 6.8s
+ * 15 times (old design limit) is 400ms
+ * 255 times (new design limit) is 6.8s
 
  * See page 3 of this app note: http://www.ti.com/lit/an/swra090/swra090.pdf
  *
@@ -340,28 +356,6 @@ void radio_transmit(uint8_t* payload, uint8_t len, uint8_t repeats)
    and also adding on manchester coding will slow the emptying rate.
  */
 
-/* DESIGN FOR NEW TRANSMITTER (write this first)
-   payloadlen of 256 would mean loading 255 into fifolev register
-   if fifolev is filled based on packetlen (as it is at moment)
-   FIFO is only 66 bytes in size, so would be better to set it max midway (33)
-   and therefore limit the payload size to say 32 bytes.
-
-   VALIDATE
-     if payloadlen>32, reject (too long for this design)
-     i.e. fifolen is 66
-   CONFIGURE
-     set packetlen=0 (arbitrary length)
-     set fifolevel=payloadlen-1
-     set txstartcondition=fifolevel
-   BURST
-     TRANSMIT PAYLOAD
-       fifo burst a single payload into fifo
-     WAIT NEXT
-       wait for fifolev interrupt flag to be set (not greater than fifolev)
-   WAIT FINISHED
-     wait for fifoempty interrupt flag to be set
-     ??check data sheet: (wait 1 byte * bps to ensure last byte transmitted)
-*/
 
 void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
 {
@@ -380,15 +374,15 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
     uint8_t irqflags2;
 
     /* VALIDATE: Check input parameters are in range */
-    if (times == 0 || len == 0) //TODO make this an ASSERT()
+    if (times == 0 || len == 0) //TODO: make this an ASSERT()
     {
         TRACE_FAIL("zero times or payloadlen\n");
     }
-    if (len > 32) //TODO make this an ASSERT()
+    if (len > 32) //TODO: make this an ASSERT()
     {
         TRACE_FAIL("payload length>32\n");
     }
-    if ((unsigned int)times * (unsigned int)len > 255) //TODO make this an ASSERT()
+    if ((unsigned int)times * (unsigned int)len > 255) //TODO: make this an ASSERT()
     {
         // This is a temporary situation until the new 'indefinite transmit'
         // scheme is implemented using fifolevel only, and ignoring packetsent.
@@ -397,29 +391,11 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
 
     /* CONFIGURE: Setup the radio for transmit of the correct payload length */
     TRACE_OUTS("config\n");
-    // unlimited packet length mode
-    HRF_writereg(HRF_ADDR_PAYLOADLEN, 0);
     // Start transmitting when a full payload is loaded. So for '15':
     // level triggers when it 'strictly exceeds' level (i.e. 16 bytes starts tx,
     // and <=15 bytes triggers fifolevel irqflag to be cleared)
     // We already know from earlier that payloadlen<=32 (which fits into half a FIFO)
     HRF_writereg(HRF_ADDR_FIFOTHRESH, len-1);
-
-    /* Bring into transmitter mode and ramp up the PA */
-    //TODO don't need this if already in transmitter mode,
-    //this should be in transmit(), as send_payload is the raw sender
-    //TRACE_OUTS("transmitter mode\n");
-    //_change_mode(HRF_MODE_TRANSMITTER);
-    //TRACE_OUTS("wait for modeready,txready in irqflags1\n");
-    //HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY|HRF_MASK_TXREADY, HRF_MASK_MODEREADY|HRF_MASK_TXREADY);
-
-    //irqflags1 = HRF_readreg(HRF_ADDR_IRQFLAGS1);
-    //irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
-    //TRACE_OUTS("irqflags1,2=");
-    //TRACE_OUTN(irqflags1);
-    //TRACE_OUTC(',');
-    //TRACE_OUTN(irqflags2);
-    //TRACE_NL();
 
 
     /* TRANSMIT: Transmit a number of payloads back to back */
@@ -451,6 +427,7 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
     TRACE_OUTN(irqflags2);
     TRACE_NL();
 
+    //TODO: make this ASSERT()??
     if (((irqflags2 & HRF_MASK_FIFONOTEMPTY) != 0) || ((irqflags2 & HRF_MASK_FIFOOVERRUN) != 0))
     {
         TRACE_FAIL("FIFO not empty or overrun at end of burst");
@@ -470,14 +447,15 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
 
 
 /*---------------------------------------------------------------------------*/
-//TODO high level receive, put into receive, receive a payload, back to standby
+//TODO: high level receive, put into receive, receive a payload, back to standby
 
 //RADIO_RESULT radio_receive(uint8_t* buf, uint8_t len)
 //{
 // def receive():
 //     """Receive a single payload from the buffer using the present modulation scheme"""
-//     return HRF_receive_payload()
-//    return RADIO_RESULT_ERR_UNIMPLEMENTED;
+// change into receive mode if not already there
+// receive payload
+// if was not in receive mode, change back to previous mode
 //}
 
 
