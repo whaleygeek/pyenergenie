@@ -49,7 +49,6 @@ SPI_CONFIG radioConfig = {CS, SCLK, MOSI, MISO, SPI_SPOL0, SPI_CPOL0, SPI_CPHA0}
 
 /***** LOCAL FUNCTION PROTOTYPES *****/
 
-
 static void _change_mode(uint8_t mode);
 static void _wait_ready(void);
 static void _wait_txready(void);
@@ -79,6 +78,7 @@ static void _config(HRF_CONFIG_REC* config, uint8_t len);
 //     [ADDR_FIFOTHRESH,         VAL_FIFOTHRESH1],              # Condition to start packet transmission: at least one byte in FIFO
 //     [ADDR_OPMODE,             MODE_RECEIVER]                 # Operating mode to Receiver
 // ]
+//#define CONFIG_FSK_COUNT (sizeof(config_FSK)/sizeof(HRF_CONFIG_REC))
 
 
 static HRF_CONFIG_REC config_OOK[] = {
@@ -100,31 +100,18 @@ static HRF_CONFIG_REC config_OOK[] = {
 
 /***** MODULE STATE *****/
 
-// mode = None
-// modulation_fsk = None
+typedef uint8_t RADIO_MODE; // Stores HRF_MODE_xxx
+
+typedef struct
+{
+  RADIO_MODULATION modu;
+  RADIO_MODE       mode;
+} RADIO_DATA;
+
+RADIO_DATA radio_data;
 
 
 /***** PRIVATE ***************************************************************/
-
-
-/*---------------------------------------------------------------------------*/
-// Change the operating mode of the HRF radi
-
-static void _change_mode(uint8_t mode)
-{
-    HRF_writereg(HRF_ADDR_OPMODE, mode);
-}
-
-
-/*---------------------------------------------------------------------------*/
-// Wait for HRF to be ready after last command
-
-static void _wait_ready(void)
-{
-    TRACE_OUTS("_wait_ready\n");
-    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY, HRF_MASK_MODEREADY);
-}
-
 
 /*---------------------------------------------------------------------------*/
 // Load a table of configuration values into HRF registers
@@ -136,6 +123,27 @@ static void _config(HRF_CONFIG_REC* config, uint8_t count)
         HRF_writereg(config->addr, config->value);
         config++;
     }
+}
+
+
+/*---------------------------------------------------------------------------*/
+// Change the operating mode of the HRF radio
+
+static void _change_mode(uint8_t mode)
+{
+    HRF_writereg(HRF_ADDR_OPMODE, mode);
+    _wait_ready();
+    radio_data.mode = mode;
+}
+
+
+/*---------------------------------------------------------------------------*/
+// Wait for HRF to be ready after last command
+
+static void _wait_ready(void)
+{
+    TRACE_OUTS("_wait_ready\n");
+    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY, HRF_MASK_MODEREADY);
 }
 
 
@@ -179,14 +187,6 @@ void radio_reset(void)
 
 /*---------------------------------------------------------------------------*/
 
-uint8_t radio_get_ver(void)
-{
-  return HRF_readreg(HRF_ADDR_VERSION);
-}
-
-
-/*---------------------------------------------------------------------------*/
-
 void radio_init(void)
 {
     TRACE_OUTS("radio_init\n");
@@ -219,43 +219,38 @@ void radio_init(void)
     }
 
     TRACE_OUTS("standby mode\n");
-    _change_mode(HRF_MODE_STANDBY);
-    _wait_ready();
+    radio_standby();
 }
+
+
+/*---------------------------------------------------------------------------*/
+
+uint8_t radio_get_ver(void)
+{
+  return HRF_readreg(HRF_ADDR_VERSION);
+}
+
 
 /*---------------------------------------------------------------------------*/
 
 void radio_modulation(RADIO_MODULATION mod)
 {
+    if (radio_data.modu == mod) return;
+
     if (mod == RADIO_MODULATION_OOK)
     {
         _config(config_OOK, CONFIG_OOK_COUNT);
+        radio_data.modu = mod;
     }
+    //else if (mod == RADIO_MODULATION_FSK)
+    //{
+    //    _config(config_FSK, CONFIG_FSK_COUNT);
+    //    radio_data.modu = mod;
+    //}
     else
     {
-        TRACE_FAIL("Unknown modulation requested\n");
+        TRACE_FAIL("Unknown modulation\n");
     }
-
-// def modulation(fsk=None, ook=None):
-//     """Switch modulation, if needed"""
-//     global modulation_fsk
-//
-//     # Handle sensible module defaults for earlier versions of user code
-//     if fsk == None and ook == None:
-//         # Force FSK mode
-//         fsk = True
-//
-//     if fsk != None and fsk:
-//         if modulation_fsk == None or modulation_fsk == False:
-//             trace("switch to FSK")
-//             HRF_config(config_FSK)
-//             modulation_fsk = True
-//
-//     elif ook != None and ook:
-//         if modulation_fsk == None or modulation_fsk == True:
-//             trace("switch to OOK")
-//             HRF_config(config_OOK)
-//             modulation_fsk = False
 }
 
 
@@ -267,7 +262,25 @@ void radio_transmitter(RADIO_MODULATION mod)
     radio_modulation(mod);
     _change_mode(HRF_MODE_TRANSMITTER);
     _wait_txready();
-    //radio_data.modulation = mod;
+}
+
+
+/*---------------------------------------------------------------------------*/
+
+void radio_receiver(RADIO_MODULATION mod)
+{
+    TRACE_OUTS("radio_receiver\n");
+    radio_modulation(mod);
+    _change_mode(HRF_MODE_RECEIVER);
+}
+
+
+/*---------------------------------------------------------------------------*/
+
+void radio_standby(void)
+{
+    TRACE_OUTS("radio_standby\n");
+    _change_mode(HRF_MODE_STANDBY);
 }
 
 
@@ -276,9 +289,20 @@ void radio_transmitter(RADIO_MODULATION mod)
 void radio_transmit(uint8_t* payload, uint8_t len, uint8_t repeats)
 {
     TRACE_OUTS("radio_transmit\n");
-    radio_transmitter(RADIO_MODULATION_OOK); //TODO use present state
+
+    uint8_t prevmode = radio_data.mode;
+    if (radio_data.mode != HRF_MODE_TRANSMITTER)
+    {
+        _change_mode(HRF_MODE_TRANSMITTER);
+        _wait_txready();
+    }
+
     radio_send_payload(payload, len, repeats);
-    radio_standby();
+
+    if (radio_data.mode != prevmode)
+    {
+       _change_mode(prevmode);
+    }
 }
 
 
@@ -356,11 +380,15 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
     uint8_t irqflags2;
 
     /* VALIDATE: Check input parameters are in range */
-    if (times == 0 || len == 0)
+    if (times == 0 || len == 0) //TODO make this an ASSERT()
     {
         TRACE_FAIL("zero times or payloadlen\n");
     }
-    if ((unsigned int)times * (unsigned int)len > 255)
+    if (len > 32) //TODO make this an ASSERT()
+    {
+        TRACE_FAIL("payload length>32\n");
+    }
+    if ((unsigned int)times * (unsigned int)len > 255) //TODO make this an ASSERT()
     {
         // This is a temporary situation until the new 'indefinite transmit'
         // scheme is implemented using fifolevel only, and ignoring packetsent.
@@ -369,33 +397,33 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
 
     /* CONFIGURE: Setup the radio for transmit of the correct payload length */
     TRACE_OUTS("config\n");
-    // the full packet/burst consists of repeated payloads
-    // packetsent will trigger when this number of bytes have been transmitted
-    HRF_writereg(HRF_ADDR_PAYLOADLEN, len * times);
-    // but the FIFO is filled in 1 message (4+10+2=16 byte) sections
+    // unlimited packet length mode
+    HRF_writereg(HRF_ADDR_PAYLOADLEN, 0);
+    // Start transmitting when a full payload is loaded. So for '15':
     // level triggers when it 'strictly exceeds' level (i.e. 16 bytes starts tx,
     // and <=15 bytes triggers fifolevel irqflag to be cleared)
+    // We already know from earlier that payloadlen<=32 (which fits into half a FIFO)
     HRF_writereg(HRF_ADDR_FIFOTHRESH, len-1);
 
     /* Bring into transmitter mode and ramp up the PA */
     //TODO don't need this if already in transmitter mode,
     //this should be in transmit(), as send_payload is the raw sender
-    TRACE_OUTS("transmitter mode\n");
-    _change_mode(HRF_MODE_TRANSMITTER);
-    TRACE_OUTS("wait for modeready,txready in irqflags1\n");
-    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY|HRF_MASK_TXREADY, HRF_MASK_MODEREADY|HRF_MASK_TXREADY);
+    //TRACE_OUTS("transmitter mode\n");
+    //_change_mode(HRF_MODE_TRANSMITTER);
+    //TRACE_OUTS("wait for modeready,txready in irqflags1\n");
+    //HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY|HRF_MASK_TXREADY, HRF_MASK_MODEREADY|HRF_MASK_TXREADY);
 
-    irqflags1 = HRF_readreg(HRF_ADDR_IRQFLAGS1);
-    irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
-    TRACE_OUTS("irqflags1,2=");
-    TRACE_OUTN(irqflags1);
-    TRACE_OUTC(',');
-    TRACE_OUTN(irqflags2);
-    TRACE_NL();
+    //irqflags1 = HRF_readreg(HRF_ADDR_IRQFLAGS1);
+    //irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
+    //TRACE_OUTS("irqflags1,2=");
+    //TRACE_OUTN(irqflags1);
+    //TRACE_OUTC(',');
+    //TRACE_OUTN(irqflags2);
+    //TRACE_NL();
 
 
-    /* TRANSMIT: Transmit a number of bursts back to back */
-    TRACE_OUTS("tx repeats in a single burst\n");
+    /* TRANSMIT: Transmit a number of payloads back to back */
+    TRACE_OUTS("tx multiple payloads in a single burst\n");
 
     // send a number of payload repeats for the whole packet burst
     for (i=0; i<times; i++)
@@ -408,8 +436,8 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
         HRF_pollreg(HRF_ADDR_IRQFLAGS2, HRF_MASK_FIFOLEVEL, 0);
     }
 
-    // wait for packet sent (num bytes tx'ed matches PAYLOADLEN reg)
-    HRF_pollreg(HRF_ADDR_IRQFLAGS2, HRF_MASK_PACKETSENT, HRF_MASK_PACKETSENT);
+    // wait for FIFO empty, to indicate transmission completed
+    HRF_pollreg(HRF_ADDR_IRQFLAGS2, HRF_MASK_FIFONOTEMPTY, 0);
 
 
     /* CONFIRM: Was the transmit ok? */
@@ -428,22 +456,6 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
         TRACE_FAIL("FIFO not empty or overrun at end of burst");
     }
 }
-
-
-/*---------------------------------------------------------------------------*/
-
-//void radio_receiver(RADIO_MODULATION mod)
-//{
-// def receiver(fsk=None, ook=None):
-//     """Change into receiver mode"""
-//     global mode
-//
-//     trace("receiver mode")
-//     modulation(fsk, ook)
-//     _change_mode(MODE_RECEIVER)
-//     _wait_ready()
-//     mode = "RECEIVER"
-//}
 
 
 /*---------------------------------------------------------------------------*/
@@ -479,17 +491,6 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
 //     return HRF_receive_payload()
 //    return RADIO_RESULT_ERR_UNIMPLEMENTED;
 //}
-
-
-/*---------------------------------------------------------------------------*/
-
-void radio_standby(void)
-{
-    TRACE_OUTS("radio_standby\n");
-    _change_mode(HRF_MODE_STANDBY);
-    _wait_ready();
-    //radio_data.mode = STANDBY
-}
 
 
 /*---------------------------------------------------------------------------*/

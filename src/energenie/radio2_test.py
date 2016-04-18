@@ -13,7 +13,7 @@ import time
 # but that restriction will soon be removed.
 
 
-REPEATS = 8
+TIMES = 8
 
 
 # The 'radio' module knows nothing about the Energenie (HS1527) bit encoding,
@@ -48,19 +48,20 @@ def radio_test_ook():
     """Repeatedly test switch 1 ON then OFF"""
 
     radio.init()
-
+    # init() defaults to standby()
     try:
         radio.modulation(ook=True)
         while True:
             print("Switch 1 ON")
-            radio.send_payload(enc_1on, REPEATS)
-            radio.standby()
+            radio.transmit(enc_1on, TIMES)
+            # auto returns to standby
             time.sleep(1)
 
             print("Switch 1 OFF")
-            radio.send_payload(enc_1off, REPEATS)
-            radio.standby()
+            radio.transmit(enc_1off, TIMES)
+            # auto returns to standby
             time.sleep(1)
+
     finally:
         radio.finished()
 

@@ -79,16 +79,15 @@ def transmitter(fsk=None, ook=None):
     radio_transmitter_fn(m)
 
 
-#TODO: Underlying C code is buggy at moment, so disabled temporarily.
-#def transmit(payload, times=1):
-#    """Transmit a single payload using the present modulation scheme"""
-#    #Note, this does a mode change before and after
-#    #extern void radio_transmit(uint8_t* payload, uint8_t len, uint8_t repeats);
-#    framelen = len(payload)
-#    Frame    = ctypes.c_ubyte * framelen
-#    txframe  = Frame(*payload)
-#    repeats  = ctypes.c_ubyte(times)
-#    radio_transmit_fn(txframe, framelen, repeats)
+def transmit(payload, times=1):
+    """Transmit a single payload using the present modulation scheme"""
+    #Note, this optionally does a mode change before and after
+    #extern void radio_transmit(uint8_t* payload, uint8_t len, uint8_t repeats);
+    framelen = len(payload)
+    Frame    = ctypes.c_ubyte * framelen
+    txframe  = Frame(*payload)
+    times  = ctypes.c_ubyte(times)
+    radio_transmit_fn(txframe, framelen, times)
 
 
 def send_payload(payload, times=1):
