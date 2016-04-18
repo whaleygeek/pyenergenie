@@ -3,6 +3,8 @@
  * Hope RF RFM69 radio controller low level register interface.
  */
 
+#include <stdlib.h>
+
 #include "system.h"
 #include "hrfm69.h"
 #include "spi.h"

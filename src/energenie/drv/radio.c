@@ -368,8 +368,6 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
     // and not on every FIFO load.
 
     int i;
-    uint8_t irqflags1;
-    uint8_t irqflags2;
 
     /* VALIDATE: Check input parameters are in range */
     if (times == 0 || len == 0) //TODO: make this an ASSERT()
@@ -410,9 +408,9 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
 
     /* CONFIRM: Was the transmit ok? */
     // Check final flags in case of overruns etc
-    irqflags1 = HRF_readreg(HRF_ADDR_IRQFLAGS1);
-    irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
-
+#if defined(TRACE)
+    uint8_t irqflags1 = HRF_readreg(HRF_ADDR_IRQFLAGS1);
+    uint8_t irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
     TRACE_OUTS("irqflags1,2=");
     TRACE_OUTN(irqflags1);
     TRACE_OUTC(',');
@@ -424,6 +422,7 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
     {
         TRACE_FAIL("FIFO not empty or overrun at end of burst");
     }
+#endif
 }
 
 
