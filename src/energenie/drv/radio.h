@@ -25,16 +25,20 @@ extern void radio_modulation(RADIO_MODULATION mod);
 
 extern void radio_transmitter(RADIO_MODULATION mod);
 
-extern void radio_transmit(uint8_t* payload, uint8_t len, uint8_t repeats);
+//TODO: This needs to include push/pop of radio state
+//extern void radio_transmit(uint8_t* payload, uint8_t len, uint8_t repeats);
 
-extern void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t repeats);
+//TODO:this assumes radio state is transmit
+extern void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times);
 
 //extern void radio_receiver(RADIO_MODULATION mod);
 
 //extern RADIO_RESULT radio_isReceiveWaiting(void);
 
+//TODO:this needs to include push/pop of radio state
 //extern RADIO_RESULT radio_receive(uint8_t* buf, uint8_t len);
 
+//TODO:this will assume radio state is already receive
 //extern RADIO_RESULT radio_receive_payload(uint8_t* buf, uint8_t len);
 
 extern void radio_standby(void);

@@ -19,15 +19,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define TRACE_OUTS(s)  printf("%s", s)
-#define TRACE_OUTN(n)  printf("%d", (unsigned int)n)
-#define TRACE_OUTC(c)  putc(c, stdout)
-#define TRACE_NL()     TRACE_OUTC('\n')
-
-#define TRACE_FAIL(msg) do { \
-  fprintf(stderr, "%s", msg); \
-  exit(-1); \
-} while (0)
+#define TRACE_OUTS(S)   do{printf("%s", S);fflush(stdout);} while (0)
+#define TRACE_OUTN(N)   do{printf("%d", (unsigned int)N);fflush(stdout);} while (0)
+#define TRACE_OUTC(C)   putc(C, stdout)
+#define TRACE_NL()      do{TRACE_OUTC('\n');fflush(stdout);} while (0)
+#define TRACE_FAIL(msg) do{fprintf(stderr, "%s", msg);exit(-1);} while (0)
 
 #endif
 

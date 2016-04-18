@@ -17,6 +17,9 @@
 
 /***** CONFIGURATION *****/
 
+#define EXPECTED_RADIOVER 36
+
+
 // Energenie specific radio config values
 //#define RADIO_VAL_SYNCVALUE1FSK          0x2D	// 1st byte of Sync word
 //#define RADIO_VAL_SYNCVALUE2FSK          0xD4	// 2nd byte of Sync word
@@ -118,6 +121,7 @@ static void _change_mode(uint8_t mode)
 
 static void _wait_ready(void)
 {
+    TRACE_OUTS("_wait_ready\n");
     HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY, HRF_MASK_MODEREADY);
 }
 
@@ -140,6 +144,7 @@ static void _config(HRF_CONFIG_REC* config, uint8_t count)
 
 static void _wait_txready(void)
 {
+    TRACE_OUTS("_wait_txready\n");
     HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY|HRF_MASK_TXREADY, HRF_MASK_MODEREADY|HRF_MASK_TXREADY);
 }
 
@@ -203,14 +208,19 @@ void radio_init(void)
     uint8_t rv = radio_get_ver();
     TRACE_OUTN(rv);
     TRACE_NL();
-    if (rv != 36)
+    if (rv < EXPECTED_RADIOVER)
     {
-        TRACE_FAIL("unexpected radio ver, not 36(dec)\n");
+        TRACE_OUTS("warning:unexpected radio ver<min\n");
+        //TRACE_FAIL("unexpected radio ver<min\n");
+    }
+    else if (rv > EXPECTED_RADIOVER)
+    {
+        TRACE_OUTS("warning:unexpected radio ver>exp\n");
     }
 
     TRACE_OUTS("standby mode\n");
     _change_mode(HRF_MODE_STANDBY);
-    HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY, HRF_MASK_MODEREADY);
+    _wait_ready();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -274,26 +284,64 @@ void radio_transmit(uint8_t* payload, uint8_t len, uint8_t repeats)
 
 /*---------------------------------------------------------------------------*/
 // Send a payload of data
-//TODO: Rewrite this to use FIFOLEV and FIFOEMPTY with payloadlen=0
-//rather than PACKETSENT, as it will allow any number of repeats.
 
-/* NEW DESIGN
+/* DESIGN FOR DUTY CYCLE PROTECTION REQUIREMENT (write this later)
+ *
+ * At OOK 4800bps, 1 bit is 20uS, 1 byte is 1.6ms, 16 bytes is 26.6ms
+ * 15 repeats (old design limit) is 400ms
+ * 255 repeats (new design limit) is 6.8s
+
+ * See page 3 of this app note: http://www.ti.com/lit/an/swra090/swra090.pdf
+ *
+ * Transmitter duty cycle
+ * The transmitter duty cycle is defined as the ratio of the maximum ”on” time, relative to a onehour period.
+ * If message acknowledgement is required, the additional ”on” time shall be included. Advisory limits are:
+ *
+ * Duty cycle  Maximum “on” time [sec]   Minimum “off” time [sec]
+ * 0.1 %       0.72                      0.72
+ * 1 %         3.6                       1.8
+ * 10 %        36                        3.6
+ */
+
+/* DESIGN FOR >255 payload len (write this later)
+
+   will need to set fifolevel as a proportion of payload len
+   and load that proportion.
+   i.e. inside the payload repeat loop
+     load the fifo up in non integral payload portions
+   also, txstart condition would need to start before whole payload loaded in FIFO
+   that is probably ok, but fifolev is more to do with fill rate and transmit rate,
+   and less to do with the actual payload length.
+   Note that FIFO empties at a rate proportional to the bitrate,
+   and also adding on manchester coding will slow the emptying rate.
+ */
+
+/* DESIGN FOR NEW TRANSMITTER (write this first)
+   payloadlen of 256 would mean loading 255 into fifolev register
+   if fifolev is filled based on packetlen (as it is at moment)
+   FIFO is only 66 bytes in size, so would be better to set it max midway (33)
+   and therefore limit the payload size to say 32 bytes.
+
+   VALIDATE
+     if payloadlen>32, reject (too long for this design)
+     i.e. fifolen is 66
    CONFIGURE
      set packetlen=0 (arbitrary length)
      set fifolevel=payloadlen-1
-     set txcondition=fifolevel
-   TRANSMIT PAYLOAD
-     fifo burst a single payload into fifo
-   WAIT NEXT
-     wait for fifolev interrupt flag to be set
+     set txstartcondition=fifolevel
+   BURST
+     TRANSMIT PAYLOAD
+       fifo burst a single payload into fifo
+     WAIT NEXT
+       wait for fifolev interrupt flag to be set (not greater than fifolev)
    WAIT FINISHED
      wait for fifoempty interrupt flag to be set
-     (wait 1 byte * bps to ensure last byte transmitted)
+     ??check data sheet: (wait 1 byte * bps to ensure last byte transmitted)
 */
 
-void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t repeats)
+void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
 {
-    TRACE_OUTS("send_payload\n");
+    TRACE_OUTS("radio_send_payload\n");
 
     // Note, when PA starts up, radio inserts a 01 at start before any user data
     // we might need to pad away from this by sending a sync of many zero bits
@@ -307,28 +355,33 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t repeats)
     uint8_t irqflags1;
     uint8_t irqflags2;
 
-    /* CONFIGURE: Setup the radio for transmit of the correct payload length */
-    TRACE_OUTS("config\n");
-    if ((unsigned int)repeats * (unsigned int)len > 255)
+    /* VALIDATE: Check input parameters are in range */
+    if (times == 0 || len == 0)
+    {
+        TRACE_FAIL("zero times or payloadlen\n");
+    }
+    if ((unsigned int)times * (unsigned int)len > 255)
     {
         // This is a temporary situation until the new 'indefinite transmit'
         // scheme is implemented using fifolevel only, and ignoring packetsent.
-        TRACE_FAIL("repeats*payloadlen > 255, can't configure\n");
+        TRACE_FAIL("times*payloadlen > 255, can't configure\n");
     }
 
+    /* CONFIGURE: Setup the radio for transmit of the correct payload length */
+    TRACE_OUTS("config\n");
     // the full packet/burst consists of repeated payloads
     // packetsent will trigger when this number of bytes have been transmitted
-    HRF_writereg(HRF_ADDR_PAYLOADLEN, len * repeats);
+    HRF_writereg(HRF_ADDR_PAYLOADLEN, len * times);
     // but the FIFO is filled in 1 message (4+10+2=16 byte) sections
     // level triggers when it 'strictly exceeds' level (i.e. 16 bytes starts tx,
     // and <=15 bytes triggers fifolevel irqflag to be cleared)
     HRF_writereg(HRF_ADDR_FIFOTHRESH, len-1);
 
-
     /* Bring into transmitter mode and ramp up the PA */
+    //TODO don't need this if already in transmitter mode,
+    //this should be in transmit(), as send_payload is the raw sender
     TRACE_OUTS("transmitter mode\n");
     _change_mode(HRF_MODE_TRANSMITTER);
-
     TRACE_OUTS("wait for modeready,txready in irqflags1\n");
     HRF_pollreg(HRF_ADDR_IRQFLAGS1, HRF_MASK_MODEREADY|HRF_MASK_TXREADY, HRF_MASK_MODEREADY|HRF_MASK_TXREADY);
 
@@ -345,7 +398,7 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t repeats)
     TRACE_OUTS("tx repeats in a single burst\n");
 
     // send a number of payload repeats for the whole packet burst
-    for (i=0; i<repeats; i++)
+    for (i=0; i<times; i++)
     {
         HRF_writefifo_burst(payload, len);
         // Tx will auto start when fifolevel is exceeded by loading the payload

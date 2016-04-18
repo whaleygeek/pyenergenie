@@ -2,23 +2,22 @@
 #
 # New version of the radio driver, with most of the fast stuff pushed into C.
 #
-# This is a temporary test only, eventually when OOK and FSK are reimplemented
-# and re-tested, this module will replace the radio.py/spi.py and spi_rpi.so files.
+# NOTE 1: This is partially tested, and only used for OOK transmit at the moment.
+# FSK transmit and receive is inside radio.py, as the underlying radio.c code
+# does not yet support FSK mode.
 
-#NOTE 1: THIS IS A WORK IN PROGRESS - DO NOT USE
-#It has the same interface as radio.py (intentionally)
-#so that when it is finished, we can just exchange it and all should work
-#as before, but faster and more reliably.
+# NOTE 2: Also there is an idea to do a python wrapper, build the C code
+# for an Arduino and wrap it with a simple serial message handler.
+# This would then make it possible to use the Energenie Radio on a Mac/PC/Linux
+# machine but by still using the same higher level Python code.
+# All you would need is a different radio.py that marshalled data to and from
+# the Arduino via pyserial.
 
-#NOTE 2: Also there is an idea to do a python wrapper, build the C code
-#for an Arduino and wrap it with a simple serial message handler.
-#This would then make it possible to use the Energenie Radio on a Mac/PC/Linux
-#machine but by still using the same higher level Python code.
-#All you would need is a different radio.py that marshalled data to and from
-#the Arduino via pyserial.
+#TODO: Should really add parameter validation here, so that C code doesn't have to.
+#although it will be faster in C (C could be made optional, like an assert?)
 
-LIBNAME = "radio_rpi.so"
-#LIBNAME = "radio_mac.so" # testing
+#LIBNAME = "radio_rpi.so"
+LIBNAME = "drv/radio_mac.so" # testing
 
 import ctypes
 from os import path
@@ -80,28 +79,31 @@ def transmitter(fsk=None, ook=None):
     radio_transmitter_fn(m)
 
 
-def transmit(payload, times=1):
-    """Transmit a single payload using the present modulation scheme"""
-    #Note, this does a mode change before and after
-    #extern void radio_transmit(uint8_t* payload, uint8_t len, uint8_t repeats);
-    framelen = len(payload)
-    Frame    = ctypes.c_ubyte * framelen
-    txframe  = Frame(*payload)
-    repeats  = ctypes.c_ubyte(times)
-    radio_transmit_fn(txframe, framelen, repeats)
+#TODO: Underlying C code is buggy at moment, so disabled temporarily.
+#def transmit(payload, times=1):
+#    """Transmit a single payload using the present modulation scheme"""
+#    #Note, this does a mode change before and after
+#    #extern void radio_transmit(uint8_t* payload, uint8_t len, uint8_t repeats);
+#    framelen = len(payload)
+#    Frame    = ctypes.c_ubyte * framelen
+#    txframe  = Frame(*payload)
+#    repeats  = ctypes.c_ubyte(times)
+#    radio_transmit_fn(txframe, framelen, repeats)
 
 
 def send_payload(payload, times=1):
     """Transmit a payload in present modulation scheme, repeated"""
     #Note, this does not do a mode change before or after,
     #and assumes the mode is already transmit
-    #extern void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t repeats);
+    #extern void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times);
 
+    #TODO: Should really validate parameters here, so that C code doesn't have to.
+    #see note at top of this file.
     framelen = len(payload)
     Frame    = ctypes.c_ubyte * framelen
     txframe  = Frame(*payload)
-    repeats  = ctypes.c_ubyte(times)
-    radio_send_payload_fn(txframe, framelen, repeats)
+    times    = ctypes.c_ubyte(times)
+    radio_send_payload_fn(txframe, framelen, times)
 
 
 #def receiver(fsk=None, ook=None):

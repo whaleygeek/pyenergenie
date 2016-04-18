@@ -33,6 +33,8 @@ static void *gpio_map;
 
 static volatile unsigned *gpio;
 
+const uint8_t gpio_sim=0; /* 0=> not simulated */
+
 
 /****** MACROS *****/
 
