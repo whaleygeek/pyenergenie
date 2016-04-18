@@ -15,9 +15,12 @@ from energenie import radio2 as radio
 # How many times to repeat messages
 # Present version of driver limits to 15
 # but this restriction will be lifted soon
-REPEATS = 15
 # 4800bps, burst transmit time at 15 repeats is 400mS
-# 1 payload takes 26mS
+# 1 payload takes 26ms
+# 75 payloads takes 2s
+TIMES = 15
+
+DELAY = 1
 
 #----- TEST APPLICATION -------------------------------------------------------
 
@@ -63,19 +66,19 @@ def legacy_learn_mode():
             raw_input("press ENTER when LED is flashing")
 
             print("ON")
-            radio.send_payload(ON_MSGS[switch_no], REPEATS)
-            time.sleep(1)
+            radio.transmit(ON_MSGS[switch_no], TIMES)
+            time.sleep(DELAY)
 
             print("Device should now be programmed")
             
             print("Testing....")
             for i in range(4):
-                time.sleep(1)
+                time.sleep(DELAY)
                 print("OFF")
-                radio.send_payload(OFF_MSGS[switch_no], REPEATS)
-                time.sleep(1)
+                radio.transmit(OFF_MSGS[switch_no], TIMES)
+                time.sleep(DELAY)
                 print("ON")
-                radio.send_payload(ON_MSGS[switch_no], REPEATS)
+                radio.transmit(ON_MSGS[switch_no], TIMES)
             print("Test completed")
 
 
@@ -87,24 +90,24 @@ def legacy_switch_loop():
             # switch_no 0 is ALL, then 1=1, 2=2, 3=3, 4=4
             # ON
             print("switch %d ON" % switch_no)
-            radio.send_payload(ON_MSGS[switch_no], REPEATS)
-            time.sleep(2)
+            radio.transmit(ON_MSGS[switch_no], TIMES)
+            time.sleep(DELAY)
 
             # OFF
             print("switch %d OFF" % switch_no)
-            radio.send_payload(OFF_MSGS[switch_no], REPEATS)
-            time.sleep(2)
+            radio.transmit(OFF_MSGS[switch_no], TIMES)
+            time.sleep(DELAY)
         
 def switch1_loop():
     """Repeatedly turn switch 1 ON then OFF"""
     while True:
         print("Switch 1 ON")
-        radio.send_payload(ON_MSGS[1], REPEATS)
-        time.sleep(1)
+        radio.transmit(ON_MSGS[1], TIMES)
+        time.sleep(DELAY)
 
         print("Switch 1 OFF")
-	radio.send_payload(OFF_MSGS[1], REPEATS)
-        time.sleep(1)
+	radio.transmit(OFF_MSGS[1], TIMES)
+        time.sleep(DELAY)
 
 
 def pattern_test():
@@ -114,7 +117,7 @@ def pattern_test():
         p = int(p, 16)
         msg = encoder.build_test_message(p)
         print("pattern %s payload %s" % (str(hex(p)), encoder.ashex(msg)))
-        radio.send_payload(msg, REPEATS)
+        radio.send_payload(msg, TIMES)
             
 
 if __name__ == "__main__":
@@ -127,9 +130,9 @@ if __name__ == "__main__":
 
     try:
         #pattern_test()
-        #legacy_learn_mode()
-        #legacy_switch_loop()
-        switch1_loop()
+        legacy_learn_mode()
+        legacy_switch_loop()
+        #switch1_loop()
     finally:
         radio.finished()
 

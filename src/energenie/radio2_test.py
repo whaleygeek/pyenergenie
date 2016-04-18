@@ -9,12 +9,11 @@ import radio2 as radio
 import time
 
 # How many times to repeat the OOK payload.
-# NOTE: At the moment this is limited to 16*8<256 in the HRF module
-# but that restriction will soon be removed.
-
-
-TIMES = 8
-
+# 4800bps*8*16=26ms per payload
+# 75 payloads is 2 seconds
+# 255 payloads is 6.8 seconds
+TIMES = 75
+DELAY = 0.5
 
 # The 'radio' module knows nothing about the Energenie (HS1527) bit encoding,
 # so this test code manually encodes the bits.
@@ -55,12 +54,12 @@ def radio_test_ook():
             print("Switch 1 ON")
             radio.transmit(enc_1on, TIMES)
             # auto returns to standby
-            time.sleep(1)
+            if DELAY!=0: time.sleep(DELAY)
 
             print("Switch 1 OFF")
             radio.transmit(enc_1off, TIMES)
             # auto returns to standby
-            time.sleep(1)
+            if DELAY!=0: time.sleep(DELAY)
 
     finally:
         radio.finished()

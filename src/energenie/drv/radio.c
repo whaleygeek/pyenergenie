@@ -251,8 +251,6 @@ uint8_t radio_get_ver(void)
 
 void radio_modulation(RADIO_MODULATION mod)
 {
-    if (radio_data.modu == mod) return;
-
     if (mod == RADIO_MODULATION_OOK)
     {
         _config(config_OOK, CONFIG_OOK_COUNT);
@@ -381,12 +379,6 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
     if (len > 32) //TODO: make this an ASSERT()
     {
         TRACE_FAIL("payload length>32\n");
-    }
-    if ((unsigned int)times * (unsigned int)len > 255) //TODO: make this an ASSERT()
-    {
-        // This is a temporary situation until the new 'indefinite transmit'
-        // scheme is implemented using fifolevel only, and ignoring packetsent.
-        TRACE_FAIL("times*payloadlen > 255, can't configure\n");
     }
 
     /* CONFIGURE: Setup the radio for transmit of the correct payload length */
