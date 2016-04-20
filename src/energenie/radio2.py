@@ -19,6 +19,7 @@
 LIBNAME = "radio_rpi.so"
 #LIBNAME = "drv/radio_mac.so" # testing
 
+import time
 import ctypes
 from os import path
 mydir = path.dirname(path.abspath(__file__))
@@ -79,30 +80,51 @@ def transmitter(fsk=None, ook=None):
     radio_transmitter_fn(m)
 
 
-def transmit(payload, times=1):
+def transmit(payload, outer_times=1, inner_times=8, outer_delay=0):
     """Transmit a single payload using the present modulation scheme"""
     #Note, this optionally does a mode change before and after
     #extern void radio_transmit(uint8_t* payload, uint8_t len, uint8_t repeats);
+
     framelen = len(payload)
-    Frame    = ctypes.c_ubyte * framelen
-    txframe  = Frame(*payload)
-    times  = ctypes.c_ubyte(times)
-    radio_transmit_fn(txframe, framelen, times)
+    if framelen < 1 or framelen > 255:
+        raise ValueError("frame len must be 1..255")
+    if outer_times < 1:
+        raise ValueError("outer_times must be >0")
+    if inner_times < 1 or inner_times > 255:
+        raise ValueError("tx times must be 0..255")
+
+    framelen     = len(payload)
+    Frame        = ctypes.c_ubyte * framelen
+    txframe      = Frame(*payload)
+    inner_times  = ctypes.c_ubyte(inner_times)
+    
+    for i in range(outer_times):
+        radio_transmit_fn(txframe, framelen, inner_times)
+        if outer_delay != 0:
+            time.sleep(outer_delay)
 
 
-def send_payload(payload, times=1):
+def send_payload(payload, outer_times=1, inner_times=8, outer_delay=0):
     """Transmit a payload in present modulation scheme, repeated"""
     #Note, this does not do a mode change before or after,
     #and assumes the mode is already transmit
     #extern void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times);
 
-    #TODO: Should really validate parameters here, so that C code doesn't have to.
-    #see note at top of this file.
     framelen = len(payload)
-    Frame    = ctypes.c_ubyte * framelen
-    txframe  = Frame(*payload)
-    times    = ctypes.c_ubyte(times)
-    radio_send_payload_fn(txframe, framelen, times)
+    if framelen < 1 or framelen > 255:
+        raise ValueError("frame len must be 1..255")
+    if outer_times < 1:
+        raise ValueError("outer_times must be >0")
+    if inner_times < 1 or inner_times > 255:
+        raise ValueError("tx times must be 0..255")
+    Frame          = ctypes.c_ubyte * framelen
+    txframe        = Frame(*payload)
+    inner_times    = ctypes.c_ubyte(inner_times)
+
+    for i in range(outer_times):
+        radio_send_payload_fn(txframe, framelen, inner_times)
+        if outer_delay != 0:
+            time.sleep(outer_delay)
 
 
 #def receiver(fsk=None, ook=None):

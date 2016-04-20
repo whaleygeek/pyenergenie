@@ -12,15 +12,21 @@ from energenie import encoder
 # moving over to the new, faster, C radio driver
 from energenie import radio2 as radio
 
-# How many times to repeat messages
+# How many times to send messages in the driver fast loop
 # Present version of driver limits to 15
 # but this restriction will be lifted soon
 # 4800bps, burst transmit time at 15 repeats is 400mS
 # 1 payload takes 26ms
 # 75 payloads takes 2s
-TIMES = 15
+INNER_TIMES = 8
 
-DELAY = 1
+# how many times to send messages in the API slow loop
+# this is slower than using the driver, and will introduce
+# inter-burst delays
+OUTER_TIMES = 1
+
+# delay in seconds between each application switch message
+APP_DELAY = 1
 
 #----- TEST APPLICATION -------------------------------------------------------
 
@@ -66,19 +72,19 @@ def legacy_learn_mode():
             raw_input("press ENTER when LED is flashing")
 
             print("ON")
-            radio.transmit(ON_MSGS[switch_no], TIMES)
-            time.sleep(DELAY)
+            radio.transmit(ON_MSGS[switch_no], OUTER_TIMES, INNER_TIMES)
+            time.sleep(APP_DELAY)
 
             print("Device should now be programmed")
             
             print("Testing....")
             for i in range(4):
-                time.sleep(DELAY)
+                time.sleep(APP_DELAY)
                 print("OFF")
-                radio.transmit(OFF_MSGS[switch_no], TIMES)
-                time.sleep(DELAY)
+                radio.transmit(OFF_MSGS[switch_no], OUTER_TIMES, INNER_TIMES)
+                time.sleep(APP_DELAY)
                 print("ON")
-                radio.transmit(ON_MSGS[switch_no], TIMES)
+                radio.transmit(ON_MSGS[switch_no], OUTER_TIMES, INNER_TIMES)
             print("Test completed")
 
 
@@ -90,24 +96,24 @@ def legacy_switch_loop():
             # switch_no 0 is ALL, then 1=1, 2=2, 3=3, 4=4
             # ON
             print("switch %d ON" % switch_no)
-            radio.transmit(ON_MSGS[switch_no], TIMES)
-            time.sleep(DELAY)
+            radio.transmit(ON_MSGS[switch_no], OUTER_TIMES, INNER_TIMES)
+            time.sleep(APP_DELAY)
 
             # OFF
             print("switch %d OFF" % switch_no)
-            radio.transmit(OFF_MSGS[switch_no], TIMES)
-            time.sleep(DELAY)
+            radio.transmit(OFF_MSGS[switch_no], OUTER_TIMES, INNER_TIMES)
+            time.sleep(APP_DELAY)
         
 def switch1_loop():
     """Repeatedly turn switch 1 ON then OFF"""
     while True:
-        print("Switch 1 ON")
-        radio.transmit(ON_MSGS[1], TIMES)
-        time.sleep(DELAY)
+        print("Switch all ON")
+        radio.transmit(ON_MSGS[0], OUTER_TIMES, INNER_TIMES)
+        time.sleep(APP_DELAY)
 
-        print("Switch 1 OFF")
-	radio.transmit(OFF_MSGS[1], TIMES)
-        time.sleep(DELAY)
+        print("Switch all OFF")
+	radio.transmit(OFF_MSGS[0], OUTER_TIMES, INNER_TIMES)
+        time.sleep(APP_DELAY)
 
 
 def pattern_test():
@@ -117,7 +123,7 @@ def pattern_test():
         p = int(p, 16)
         msg = encoder.build_test_message(p)
         print("pattern %s payload %s" % (str(hex(p)), encoder.ashex(msg)))
-        radio.send_payload(msg, TIMES)
+        radio.send_payload(msg, OUTER_TIMES, INNER_TIMES)
             
 
 if __name__ == "__main__":
@@ -130,9 +136,9 @@ if __name__ == "__main__":
 
     try:
         #pattern_test()
-        legacy_learn_mode()
-        legacy_switch_loop()
-        #switch1_loop()
+        #legacy_learn_mode()
+        #legacy_switch_loop()
+        switch1_loop()
     finally:
         radio.finished()
 
