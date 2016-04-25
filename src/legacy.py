@@ -18,7 +18,7 @@ from energenie import radio2 as radio
 # 4800bps, burst transmit time at 15 repeats is 400mS
 # 1 payload takes 26ms
 # 75 payloads takes 2s
-INNER_TIMES = 8
+INNER_TIMES = 16
 
 # how many times to send messages in the API slow loop
 # this is slower than using the driver, and will introduce
@@ -35,17 +35,17 @@ APP_DELAY = 1
 HOUSE_ADDRESS = None # default
 
 ALL_ON     = encoder.build_switch_msg(True,                    house_address=HOUSE_ADDRESS)
-ONE_ON     = encoder.build_switch_msg(True,  device_address=1, house_address=HOUSE_ADDRESS)
-TWO_ON     = encoder.build_switch_msg(True,  device_address=2, house_address=HOUSE_ADDRESS)
-THREE_ON   = encoder.build_switch_msg(True,  device_address=3, house_address=HOUSE_ADDRESS)
-FOUR_ON    = encoder.build_switch_msg(True,  device_address=4, house_address=HOUSE_ADDRESS)
+ONE_ON     = encoder.build_switch_msg(True,  device_address=1, house_address=0x00001)
+TWO_ON     = encoder.build_switch_msg(True,  device_address=2, house_address=0x00002)
+THREE_ON   = encoder.build_switch_msg(True,  device_address=3, house_address=0x00003)
+FOUR_ON    = encoder.build_switch_msg(True,  device_address=4, house_address=0x00004)
 ON_MSGS    = [ALL_ON, ONE_ON, TWO_ON, THREE_ON, FOUR_ON]
 
 ALL_OFF    = encoder.build_switch_msg(False,                   house_address=HOUSE_ADDRESS)
-ONE_OFF    = encoder.build_switch_msg(False, device_address=1, house_address=HOUSE_ADDRESS)
-TWO_OFF    = encoder.build_switch_msg(False, device_address=2, house_address=HOUSE_ADDRESS)
-THREE_OFF  = encoder.build_switch_msg(False, device_address=3, house_address=HOUSE_ADDRESS)
-FOUR_OFF   = encoder.build_switch_msg(False, device_address=4, house_address=HOUSE_ADDRESS)
+ONE_OFF    = encoder.build_switch_msg(False, device_address=1, house_address=0x00001)
+TWO_OFF    = encoder.build_switch_msg(False, device_address=2, house_address=0x00002)
+THREE_OFF  = encoder.build_switch_msg(False, device_address=3, house_address=0x00003)
+FOUR_OFF   = encoder.build_switch_msg(False, device_address=4, house_address=0x00004)
 OFF_MSGS   = [ALL_OFF, ONE_OFF, TWO_OFF, THREE_OFF, FOUR_OFF]
 
 
@@ -107,12 +107,12 @@ def legacy_switch_loop():
 def switch1_loop():
     """Repeatedly turn switch 1 ON then OFF"""
     while True:
-        print("Switch all ON")
-        radio.transmit(ON_MSGS[0], OUTER_TIMES, INNER_TIMES)
+        print("Switch 1 ON")
+        radio.transmit(ON_MSGS[1], OUTER_TIMES, INNER_TIMES)
         time.sleep(APP_DELAY)
 
-        print("Switch all OFF")
-	radio.transmit(OFF_MSGS[0], OUTER_TIMES, INNER_TIMES)
+        print("Switch 1 OFF")
+	radio.transmit(OFF_MSGS[1], OUTER_TIMES, INNER_TIMES)
         time.sleep(APP_DELAY)
 
 
@@ -136,9 +136,9 @@ if __name__ == "__main__":
 
     try:
         #pattern_test()
-        #legacy_learn_mode()
-        #legacy_switch_loop()
-        switch1_loop()
+        legacy_learn_mode()
+        legacy_switch_loop()
+        #switch1_loop()
     finally:
         radio.finished()
 
