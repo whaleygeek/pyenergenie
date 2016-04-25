@@ -32,20 +32,20 @@ APP_DELAY = 1
 
 # Prebuild all possible message up front, to make switching code faster
 
-HOUSE_ADDRESS = None # default
+HOUSE_ADDRESS = 0xA0170
 
 ALL_ON     = encoder.build_switch_msg(True,                    house_address=HOUSE_ADDRESS)
-ONE_ON     = encoder.build_switch_msg(True,  device_address=1, house_address=0x00001)
-TWO_ON     = encoder.build_switch_msg(True,  device_address=2, house_address=0x00002)
-THREE_ON   = encoder.build_switch_msg(True,  device_address=3, house_address=0x00003)
-FOUR_ON    = encoder.build_switch_msg(True,  device_address=4, house_address=0x00004)
+ONE_ON     = encoder.build_switch_msg(True,  device_address=1, house_address=HOUSE_ADDRESS)
+TWO_ON     = encoder.build_switch_msg(True,  device_address=2, house_address=HOUSE_ADDRESS)
+THREE_ON   = encoder.build_switch_msg(True,  device_address=3, house_address=HOUSE_ADDRESS)
+FOUR_ON    = encoder.build_switch_msg(True,  device_address=4, house_address=HOUSE_ADDRESS)
 ON_MSGS    = [ALL_ON, ONE_ON, TWO_ON, THREE_ON, FOUR_ON]
 
 ALL_OFF    = encoder.build_switch_msg(False,                   house_address=HOUSE_ADDRESS)
-ONE_OFF    = encoder.build_switch_msg(False, device_address=1, house_address=0x00001)
-TWO_OFF    = encoder.build_switch_msg(False, device_address=2, house_address=0x00002)
-THREE_OFF  = encoder.build_switch_msg(False, device_address=3, house_address=0x00003)
-FOUR_OFF   = encoder.build_switch_msg(False, device_address=4, house_address=0x00004)
+ONE_OFF    = encoder.build_switch_msg(False, device_address=1, house_address=HOUSE_ADDRESS)
+TWO_OFF    = encoder.build_switch_msg(False, device_address=2, house_address=HOUSE_ADDRESS)
+THREE_OFF  = encoder.build_switch_msg(False, device_address=3, house_address=HOUSE_ADDRESS)
+FOUR_OFF   = encoder.build_switch_msg(False, device_address=4, house_address=HOUSE_ADDRESS)
 OFF_MSGS   = [ALL_OFF, ONE_OFF, TWO_OFF, THREE_OFF, FOUR_OFF]
 
 
