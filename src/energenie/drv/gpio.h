@@ -8,6 +8,8 @@
 
 #include "system.h"
 
+extern const uint8_t gpio_sim; /* 0=> not simulated */
+
 /***** FUNCTION PROTOTYPES *****/
 
 void    gpio_init(void);

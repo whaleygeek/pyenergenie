@@ -25,9 +25,9 @@ extern void radio_modulation(RADIO_MODULATION mod);
 
 extern void radio_transmitter(RADIO_MODULATION mod);
 
-extern void radio_transmit(uint8_t* payload, uint8_t len, uint8_t repeats);
+extern void radio_transmit(uint8_t* payload, uint8_t len, uint8_t times);
 
-extern void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t repeats);
+extern void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times);
 
 //extern void radio_receiver(RADIO_MODULATION mod);
 

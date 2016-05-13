@@ -13,7 +13,7 @@
 /***** CONFIGURATION *****/
 
 #define GPIO_MAX      20
-#define GPIO_DEBUG
+//#define GPIO_DEBUG
 //#define GPIO_LOOPBACK
 
 
@@ -24,6 +24,7 @@
 static uint8_t gpio_out[GPIO_MAX] = {0};
 static uint8_t gpio_in[GPIO_MAX]  = {0};
 
+const uint8_t gpio_sim=1; /* 1=> is simulated */
 
 void gpio_init()
 {
