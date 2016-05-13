@@ -57,9 +57,42 @@ sudo python legacy.py
 cd src
 sudo python monitor.py
 
-(plug in a MiHome adaptor plus, make sure reports come back)
-(plug in a MiHome house monitor, make sure reports come back)
-(plug in a MiHome eTRV, make sure reports come back)
+(plug in a MiHome adaptor plus)
+(press button to force it to send a report)
+
+("monitor:1463122760.36,4,2,1675,1111100,1,243,49.8984375,0,0,None,None")
+("mfrid:0x4 prodid:0x2 sensorid:0x68b")
+("read  REAL_POWER W = 0")
+("read  REACTIVE_POWER VAR = 0")
+("read  VOLTAGE V = 242")
+("read  FREQUENCY Hz = 49.8984375")
+("read  SWITCH_STATE  = 1")
+("monitor:1463122770.34,4,2,1675,1111100,1,242,49.8984375,0,0,None,None")
+
+
+(plug in a MiHome house monitor)
+(wait a few seconds for a report to come back)
+
+("read  APPARENT_POWER VA = 0")
+("read  VOLTAGE V = 4.65625")
+("read  CURRENT A = 0.0")
+("ADD device:0x1b9 Manufacturer:Energenie Product:MIHO006 HOUSE MONITOR")
+("monitor:1463122944.38,4,5,441,0100011,None,4.65625,None,None,None,0,0.0")
+
+
+(put batteries in a MiHome eTRV)
+(wait a few seconds for a join report to come back)
+
+("mfrid:0x4 prodid:0x3 sensorid:0xc2a")
+("read  VOLTAGE V = 3.05859375")
+("ADD device:0xc2a Manufacturer:Energenie Product:MIHO013 ETRV")
+("monitor:1463123313.37,4,3,3114,0100000,None,3.05859375,None,None,None,None,None")
+("mfrid:0x4 prodid:0x3 sensorid:0xc2a")
+("monitor:1463123315.15,4,3,3114,0000000,None,None,None,None,None,None,None")
+("Empty record:{'header': {'sensorid': 3114, 'productid': 3, 'encryptPIP': 17443, 'mfrid': 4}, 'type': 'OK', 'recs': []}")
+("mfrid:0x4 prodid:0x3 sensorid:0xc2a")
+("read  TEMPERATURE C = 22.0")
+("monitor:1463123323.41,4,3,3114,0000000,None,None,None,None,None,None,None")
 
 
 4. switch.py
@@ -68,6 +101,6 @@ cd src
 sudo python switch.py
 
 (plug in a MiHome adaptor plus, should report)
-(when the report comes in, it should then switch every few seconds)
+(every 10 seconds it should toggle it's on/of state)
 
 END
