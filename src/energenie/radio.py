@@ -1,6 +1,12 @@
-# test1.py  26/09/2015  D.J.Whale
+# radio.py  26/09/2015  D.J.Whale
 #
-# Simple low level test of the HopeRF interface
+# **** DEPRECATED ****
+#
+# NOTE: This is being DEPRECATED.
+# It is only here because the FSK physical layer has not been pushed
+# into the new radio interface module.
+#
+#  Simple low level test of the HopeRF interface
 # Uses direct SPI commands to exercise the interface.
 #
 # Receives and dumps payload buffers.
@@ -8,10 +14,11 @@
 # Eventually a lot of this will be pushed into a separate module,
 # and then pushed back into C once it is proved working.
 
-import spi
+import radio2 as r # A temporary adaptor layer to gain access to SPI directly
 
 def warning(msg):
     print("warning:" + str(msg))
+
 
 def trace(msg):
     print(str(msg))
@@ -120,17 +127,17 @@ VAL_FIFOTHRESH30            = 0x1E	# Condition to start packet transmission: wai
 def HRF_writereg(addr, data):
     """Write an 8 bit value to a register"""
     buf = [addr | MASK_WRITE_DATA, data]
-    spi.select()
-    spi.frame(buf)
-    spi.deselect()
+    r.spi_select()
+    r.spi_frame(buf)
+    r.spi_deselect()
 
 
 def HRF_readreg(addr):
     """Read an 8 bit value from a register"""
     buf = [addr, 0x00]
-    spi.select()
-    res = spi.frame(buf)
-    spi.deselect()
+    r.spi_select()
+    res = r.spi_frame(buf)
+    r.spi_deselect()
     #print(hex(res[1]))
     return res[1] # all registers are 8 bit
 
@@ -143,27 +150,27 @@ def HRF_writefifo_burst(buf):
       txbuf.append(b)
     #print("write FIFO %s" % ashex(txbuf))
 
-    spi.select()
-    spi.frame(txbuf)
-    spi.deselect()
+    r.spi_select()
+    r.spi_frame(txbuf)
+    r.spi_deselect()
 
 
 def HRF_readfifo_burst():
     """Read bytes from the payload FIFO using burst read"""
     #first byte read is the length in remaining bytes
     buf = []
-    spi.select()
-    spi.frame([ADDR_FIFO])
+    r.spi_select()
+    r.spi_frame([ADDR_FIFO])
     count = 1 # read at least the length byte
     while count > 0:
-        rx = spi.frame([ADDR_FIFO])
+        rx = r.spi_frame([ADDR_FIFO])
         data = rx[0]
         if len(buf) == 0:
             count = data
         else:
             count -= 1
         buf.append(data)
-    spi.deselect()
+    r.spi_deselect()
     trace("readfifo:" + str(ashex(buf)))
     return buf
 
@@ -392,22 +399,22 @@ modulation_fsk = None
 
 def init():
     """Initialise the module ready for use"""
-    spi.init_defaults()
+    r.spi_init_defaults()
     trace("RESET")
 
     # Note that if another program left GPIO pins in a different state
     # and did a dirty exit, the reset fails to work and the clear fifo hangs.
-    # Might have to make the spi.init() set everything to inputs first,
+    # Might have to make the r.spi_init() set everything to inputs first,
     # then set to outputs, to make sure that the
     # GPIO registers are in a deterministic start state.
-    spi.reset() # send a hardware reset to ensure radio in clean state
+    r.spi_reset() # send a hardware reset to ensure radio in clean state
 
     HRF_clear_fifo()
 
 
 def reset():
     """Reset the radio chip"""
-    spi.reset()
+    r.spi_reset()
 
 
 def get_ver():
@@ -450,12 +457,12 @@ def transmitter(fsk=None, ook=None):
 
 def transmit(payload):
     """Transmit a single payload using the present modulation scheme"""
-    spi.start_transaction()
+    r.spi_start_transaction()
     if not modulation_fsk:
         HRF_send_OOK_payload(payload)
     else:
         HRF_send_payload(payload)
-    spi.end_transaction()
+    r.spi_end_transaction()
 
 
 def receiver(fsk=None, ook=None):
@@ -471,23 +478,23 @@ def receiver(fsk=None, ook=None):
 
 def isReceiveWaiting():
     """Check to see if a payload is waiting in the receive buffer"""
-    spi.start_transaction()
+    r.spi_start_transaction()
     waiting = HRF_check_payload()
-    spi.end_transaction()
+    r.spi_end_transaction()
     return waiting
 
 
 def receive():
     """Receive a single payload from the buffer using the present modulation scheme"""
-    spi.start_transaction()
+    r.spi_start_transaction()
     payload = HRF_receive_payload()
-    spi.end_transaction()
+    r.spi_end_transaction()
     return payload
 
 
 def finished():
     """Close the library down cleanly when finished"""
-    spi.finished()
+    r.spi_finished()
 
 
 # END

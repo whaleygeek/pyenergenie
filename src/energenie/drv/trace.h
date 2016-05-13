@@ -11,7 +11,7 @@
 #ifndef _TRACE_H
 #define _TRACE_H
 
-//#define TRACE_POSIX
+#define TRACE_POSIX
 
 /* POSIX IMPLEMENTATION */
 /* Printf is not available on some platforms, or not very efficient.

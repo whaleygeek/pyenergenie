@@ -14,6 +14,7 @@
 #include "gpio.h"
 #include "spi.h"
 #include "trace.h"
+#include "delay.h"
 
 
 /***** CONSTANTS *****/

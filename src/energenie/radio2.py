@@ -2,7 +2,7 @@
 #
 # New version of the radio driver, with most of the fast stuff pushed into C.
 #
-# NOTE 1: This is partially tested, and only used for OOK transmit at the moment.
+# NOTE 1: This is only used for OOK transmit at the moment.
 # FSK transmit and receive is inside radio.py, as the underlying radio.c code
 # does not yet support FSK mode.
 
@@ -16,8 +16,8 @@
 #TODO: Should really add parameter validation here, so that C code doesn't have to.
 #although it will be faster in C (C could be made optional, like an assert?)
 
-LIBNAME = "radio_rpi.so"
-#LIBNAME = "drv/radio_mac.so" # testing
+#LIBNAME = "drv/radio_rpi.so"
+LIBNAME = "drv/radio_mac.so" # testing
 
 import time
 import ctypes
@@ -173,5 +173,120 @@ def finished():
     #extern void radio_finished(void);
     radio_finished_fn()
 
+
+#----- TEMPORARILY EXPOSE EMBEDDED SPI MODULE ---------------------------------
+
+# Temporarily expose the embedded spi/gpio interface.
+# This is to allow older version of code to share the .so
+# rather than us having to maintain both spi.so and radio_rpi.so
+#
+# This is a stepping stone towards a single unified radio_rpi.so
+# that does both OOK and FSK physical layer.
+
+spi_init_defaults_fn = libradio["spi_init_defaults"]
+spi_init_fn          = libradio["spi_init"]
+spi_select_fn        = libradio["spi_select"]
+spi_deselect_fn      = libradio["spi_deselect"]
+spi_byte_fn          = libradio["spi_byte"]
+spi_frame_fn         = libradio["spi_frame"]
+spi_finished_fn      = libradio["spi_finished"]
+
+#gpio_init_fn         = libradio["gpio_init"]
+#gpio_setin_fn        = libradio["gpio_setin"]
+gpio_setout_fn       = libradio["gpio_setout"]
+gpio_high_fn         = libradio["gpio_high"]
+gpio_low_fn          = libradio["gpio_low"]
+#gpio_write_fn        = libradio["gpio_write"]
+#gpio_read_fn         = libradio["gpio_read"]
+
+RESET     = 25 # BCM GPIO
+LED_GREEN = 27 # BCM GPIO (not B rev1)
+LED_RED   = 22 # BCM GPIO
+
+
+def spi_trace(msg):
+    print(str(msg))
+
+
+def spi_reset():
+    spi_trace("reset")
+
+    reset = ctypes.c_int(RESET)
+    gpio_setout_fn(reset)
+    gpio_high_fn(reset)
+    time.sleep(0.1)
+    gpio_low_fn(reset)
+    time.sleep(0.1)
+
+    # Put LEDs into known off state
+    led_red = ctypes.c_int(LED_RED)
+    led_green = ctypes.c_int(LED_GREEN)
+    gpio_setout_fn(led_red)
+    gpio_low_fn(led_red)
+    gpio_setout_fn(led_green)
+    gpio_low_fn(led_green)
+
+
+def spi_init_defaults():
+    spi_trace("calling init_defaults")
+    spi_init_defaults_fn()
+
+
+def spi_init():
+    spi_trace("calling init")
+    #TODO build a config structure
+    #TODO pass in pointer to config structure
+    #spi_init_fn()
+
+
+def spi_start_transaction():
+    """Start a transmit or receive, perhaps multiple bursts"""
+    # turn the GREEN LED on
+    led_green = ctypes.c_int(LED_GREEN)
+    gpio_high_fn(led_green)
+
+
+def spi_end_transaction():
+    """End a transmit or receive, perhaps multiple listens"""
+    # turn the GREEN LED off
+    led_green = ctypes.c_int(LED_GREEN)
+    gpio_low_fn(led_green)
+
+
+def spi_select():
+    spi_trace("calling select")
+    spi_select_fn()
+
+
+def spi_deselect():
+    spi_trace("calling deselect")
+    spi_deselect_fn()
+
+
+def spi_byte(tx):
+    txbyte = ctypes.c_ubyte(tx)
+    #spi_trace("calling byte")
+    rxbyte = spi_byte_fn(txbyte)
+    return rxbyte
+
+
+def spi_frame(txlist):
+    spi_trace("calling frame ")
+    framelen = len(txlist)
+    #spi_trace("len:" + str(framelen))
+    Frame = ctypes.c_ubyte * framelen
+    txframe = Frame(*txlist)
+    rxframe = Frame()
+
+    spi_frame_fn(ctypes.byref(txframe), ctypes.byref(rxframe), framelen)
+    rxlist = []
+    for i in range(framelen):
+        rxlist.append(rxframe[i])
+    return rxlist
+
+
+def spi_finished():
+    spi_trace("calling finished")
+    spi_finished_fn()
 
 # END
