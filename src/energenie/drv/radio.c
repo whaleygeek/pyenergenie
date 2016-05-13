@@ -322,30 +322,6 @@ void radio_transmit(uint8_t* payload, uint8_t len, uint8_t times)
 
 /*---------------------------------------------------------------------------*/
 // Send a payload of data
-<<<<<<< HEAD
-//TODO: Rewrite this to use FIFOLEV and FIFOEMPTY with payloadlen=0
-//rather than PACKETSENT, as it will allow any number of repeats.
-//
-
-/* NEW DESIGN
-
-   CONFIGURE
-     set packetlen=0 (arbitrary length)
-     set fifolevel=payloadlen-1
-     set txcondition=fifolevel
-
-   TRANSMIT PAYLOAD
-     fifo burst a single payload into fifo
-
-   WAIT NEXT
-     wait for fifolev interrupt flag to be set
-
-   WAIT FINISHED
-     wait for fifoempty interrupt flag to be set
-     (wait 1 byte * bps to ensure last byte transmitted)
-*/
-=======
->>>>>>> long-tx
 
 /* DESIGN FOR DUTY CYCLE PROTECTION REQUIREMENT (write this later)
  *
