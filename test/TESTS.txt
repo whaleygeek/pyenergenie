@@ -1,0 +1,33 @@
+Manual tests to perform on release:
+
+1. build radio driver on Raspberry Pi
+
+cd energenie/drv
+./build_rpi
+
+2. legacy.py runs on Raspberry Pi
+
+cd src
+sudo python legacy.py
+
+(learn some switches)
+(make sure the switches turn on and off when commanded)
+
+3. monitor.py
+
+cd src
+sudo python monitor.py
+
+(plug in a MiHome adaptor plus, make sure reports come back)
+(plug in a MiHome house monitor, make sure reports come back)
+(plug in a MiHome eTRV, make sure reports come back)
+
+4. switch.py
+
+cd src
+sudo python switch.py
+
+(plug in a MiHome adaptor plus, should report)
+(when the report comes in, it should then switch every few seconds)
+
+END
