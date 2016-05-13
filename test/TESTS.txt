@@ -1,17 +1,56 @@
 Manual tests to perform on release:
 
+0. prepare for testing
+
+git clone https://github.com/whaleygeek/pyenergenie
+cd pyenergenie
+
+
 1. build radio driver on Raspberry Pi
 
 cd energenie/drv
 ./build_rpi
+
+(If you think the code has changed and want to refresh the cached binary)
+git add radio_rpi.so
+
 
 2. legacy.py runs on Raspberry Pi
 
 cd src
 sudo python legacy.py
 
-(learn some switches)
-(make sure the switches turn on and off when commanded)
+("do you want to learn any switches?" Y)
+("Learn switch 1?" Y)
+("Press the LEARN button on any switch 1 for 5 secs until LED flashes")
+("press ENTER when LED is flashing")
+  (hold green button for 10 seconds for fast flash to clear pairing memory)
+  (press ENTER)
+("ON")
+("Device should now be programmed")
+("Testing....")
+("OFF")
+("ON")
+("OFF")
+("ON")
+("OFF")
+("ON")
+  (say no to learn other switches)
+("switch 0 ON")
+  (turns on due to 'all switches on')
+("switch 0 OFF")
+  (turns off due to 'all switches off')
+("switch 1 ON")
+  (turns on)
+("switch 1 OFF")
+  (turns off)
+("switch 2 ON")
+("switch 2 OFF")
+("switch 3 ON")
+("switch 3 OFF")
+("switch 4 ON")
+("switch 4 OFF")
+
 
 3. monitor.py
 
@@ -21,6 +60,7 @@ sudo python monitor.py
 (plug in a MiHome adaptor plus, make sure reports come back)
 (plug in a MiHome house monitor, make sure reports come back)
 (plug in a MiHome eTRV, make sure reports come back)
+
 
 4. switch.py
 

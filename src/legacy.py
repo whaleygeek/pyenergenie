@@ -21,18 +21,20 @@ from energenie import radio2 as radio
 INNER_TIMES = 16
 
 # how many times to send messages in the API slow loop
-# this is slower than using the driver, and will introduce
+# this is slower than using the driver, and will introduce tiny
 # inter-burst delays
 OUTER_TIMES = 1
 
 # delay in seconds between each application switch message
 APP_DELAY = 1
 
+
 #----- TEST APPLICATION -------------------------------------------------------
 
 # Prebuild all possible message up front, to make switching code faster
 
-HOUSE_ADDRESS = 0xA0170
+HOUSE_ADDRESS = None # Use default energenie quasi-random address 0x6C6C6
+#HOUSE_ADDRESS = 0xA0170 # Captured address of David's RF hand controller
 
 ALL_ON     = encoder.build_switch_msg(True,                    house_address=HOUSE_ADDRESS)
 ONE_ON     = encoder.build_switch_msg(True,  device_address=1, house_address=HOUSE_ADDRESS)
@@ -103,7 +105,8 @@ def legacy_switch_loop():
             print("switch %d OFF" % switch_no)
             radio.transmit(OFF_MSGS[switch_no], OUTER_TIMES, INNER_TIMES)
             time.sleep(APP_DELAY)
-        
+
+
 def switch1_loop():
     """Repeatedly turn switch 1 ON then OFF"""
     while True:
@@ -112,7 +115,7 @@ def switch1_loop():
         time.sleep(APP_DELAY)
 
         print("Switch 1 OFF")
-	radio.transmit(OFF_MSGS[1], OUTER_TIMES, INNER_TIMES)
+        radio.transmit(OFF_MSGS[1], OUTER_TIMES, INNER_TIMES)
         time.sleep(APP_DELAY)
 
 
