@@ -11,7 +11,7 @@
 # Consider waiting for me to finish developing the device object interface first.
 
 from energenie import Devices, Messages, Registry, OpenThings
-from energenie import radio
+from energenie import radio2 as radio
 from Timer import Timer
 
 
@@ -67,7 +67,7 @@ def switch_toggle_loop():
 
     global switch_state
 
-    if len(Registry.size()) > 0 and sendSwitchTimer.check():
+    if Registry.size() > 0 and sendSwitchTimer.check():
         print("transmit")
         radio.transmitter()
 
@@ -87,8 +87,8 @@ def switch_toggle_loop():
                 for i in range(4):
                     radio.transmit(p)
 
-        radio.receiver()
-        print("receive")
+        ##radio.receiver()
+        ##print("receive")
         switch_state = (switch_state+1) % 2 # toggle
         
 

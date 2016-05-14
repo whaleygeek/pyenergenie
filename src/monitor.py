@@ -10,7 +10,7 @@
 # to a CSV log file, so could be the basis for a non-controlling energy logging app.
 
 from energenie import Registry, Devices, Messages, OpenThings
-from energenie import radio
+from energenie import radio2 as radio
 
 import Logger
 

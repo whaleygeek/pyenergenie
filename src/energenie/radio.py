@@ -14,6 +14,9 @@
 # Eventually a lot of this will be pushed into a separate module,
 # and then pushed back into C once it is proved working.
 
+raise RuntimeError("DEPRECATED, do not use this module any more")
+
+
 import radio2 as r # A temporary adaptor layer to gain access to SPI directly
 
 def warning(msg):

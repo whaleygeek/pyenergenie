@@ -8,7 +8,7 @@ import OpenThings
 SWITCH = {
     "header": {
         "mfrid":       Devices.MFRID,
-        "productid":   Devices.PRODUCTID_R1_MONITOR_AND_CONTROL,
+        "productid":   Devices.PRODUCTID_MIHO005,
         "encryptPIP":  Devices.CRYPT_PIP,
         "sensorid":    0 # FILL IN
     },

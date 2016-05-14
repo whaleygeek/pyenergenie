@@ -6,19 +6,16 @@
  */
 
 /* TODO
+DONE: push the FSK configuration into radio.c
+DONE: remove radio.py (the old version of the radio interface)
+DONE: contrive a switch.py that only transmits
+DONE: hard code device address into the dictionary
+DONE: disable the call to the receive check
+DONE: radio_modulation fix for FSK
+DONE: implement FSK transmit in radio.c (it's just transmit())
+DONE: move radio.py modulation switcher to radio2.py modulation (as it is written better?)
 
-push the FSK configuration into radio.c
-remove radio.py (the old version of the radio interface)
-implement FSK transmit in radio.c and test with switch.py and hard coded ID number
-radio_modulation fix for FSK
-move radio.py modulation to radio2.py modulation as it is better?
-
-contrive a switch.py that only transmits
-hard code device address into the dictionary
-disable the call to the receive check
-run the code, it should turn the switch on and off repeatedly.
-
-
+TODO: run the code, it should turn the switch on and off repeatedly.
 */
 
 
@@ -39,13 +36,11 @@ run the code, it should turn the switch on and off repeatedly.
 
 
 // Energenie specific radio config values
-//#define RADIO_VAL_SYNCVALUE1FSK          0x2D	// 1st byte of Sync word
-//#define RADIO_VAL_SYNCVALUE2FSK          0xD4	// 2nd byte of Sync word
-//#define RADIO_VAL_SYNCVALUE1OOK          0x80	// 1nd byte of Sync word
+#define RADIO_VAL_SYNCVALUE1FSK          0x2D	// 1st byte of Sync word
+#define RADIO_VAL_SYNCVALUE2FSK          0xD4	// 2nd byte of Sync word
+#define RADIO_VAL_SYNCVALUE1OOK          0x80	// 1nd byte of Sync word
 //#define RADIO_VAL_PACKETCONFIG1FSK       0xA2	// Variable length, Manchester coding, Addr must match NodeAddress
-//#define RADIO_VAL_PACKETCONFIG1FSKNO     0xA0	// Variable length, Manchester coding
-//#define RADIO_VAL_PACKETCONFIG1OOK       0		// Fixed length, no Manchester coding
-//#define RADIO_VAL_PAYLOADLEN_OOK         (13 + 8 * 17)	// Payload Length (WRONG!)
+#define RADIO_VAL_PACKETCONFIG1FSKNO     0xA0	// Variable length, Manchester coding
 
 //TODO: Not sure, might pass this in? What about on Arduino?
 //What about if we have multiple chip selects on same SPI?
@@ -76,28 +71,27 @@ static void _config(HRF_CONFIG_REC* config, uint8_t len);
 
 
 //----- ENERGENIE SPECIFIC CONFIGURATIONS --------------------------------------
-// config_FSK = [
-//     [ADDR_REGDATAMODUL,       VAL_REGDATAMODUL_FSK],         # modulation scheme FSK
-//     [ADDR_FDEVMSB,            VAL_FDEVMSB30],                # frequency deviation 5kHz 0x0052 -> 30kHz 0x01EC
-//     [ADDR_FDEVLSB,            VAL_FDEVLSB30],                # frequency deviation 5kHz 0x0052 -> 30kHz 0x01EC
-//     [ADDR_FRMSB,              VAL_FRMSB434],                 # carrier freq -> 434.3MHz 0x6C9333
-//     [ADDR_FRMID,              VAL_FRMID434],                 # carrier freq -> 434.3MHz 0x6C9333
-//     [ADDR_FRLSB,              VAL_FRLSB434],                 # carrier freq -> 434.3MHz 0x6C9333
-//     [ADDR_AFCCTRL,            VAL_AFCCTRLS],                 # standard AFC routine
-//     [ADDR_LNA,                VAL_LNA50],                    # 200ohms, gain by AGC loop -> 50ohms
-//     [ADDR_RXBW,               VAL_RXBW60],                   # channel filter bandwidth 10kHz -> 60kHz  page:26
-//     [ADDR_BITRATEMSB,         0x1A],                         # 4800b/s
-//     [ADDR_BITRATELSB,         0x0B],                         # 4800b/s
-//     [ADDR_SYNCCONFIG,         VAL_SYNCCONFIG2],              # Size of the Synch word = 2 (SyncSize + 1)
-//     [ADDR_SYNCVALUE1,         VAL_SYNCVALUE1FSK],            # 1st byte of Sync word
-//     [ADDR_SYNCVALUE2,         VAL_SYNCVALUE2FSK],            # 2nd byte of Sync word
-//     [ADDR_PACKETCONFIG1,      VAL_PACKETCONFIG1FSKNO],       # Variable length, Manchester coding
-//     [ADDR_PAYLOADLEN,         VAL_PAYLOADLEN66],             # max Length in RX, not used in Tx
-//     [ADDR_NODEADDRESS,        0x06],                         # Node address used in address filtering TODO???
-//     [ADDR_FIFOTHRESH,         VAL_FIFOTHRESH1],              # Condition to start packet transmission: at least one byte in FIFO
-//     [ADDR_OPMODE,             MODE_RECEIVER]                 # Operating mode to Receiver
-// ]
-//#define CONFIG_FSK_COUNT (sizeof(config_FSK)/sizeof(HRF_CONFIG_REC))
+
+static HRF_CONFIG_REC config_FSK[] = {
+     {HRF_ADDR_REGDATAMODUL,       HRF_VAL_REGDATAMODUL_FSK},         // modulation scheme FSK
+     {HRF_ADDR_FDEVMSB,            HRF_VAL_FDEVMSB30},                // frequency deviation 5kHz 0x0052 -> 30kHz 0x01EC
+     {HRF_ADDR_FDEVLSB,            HRF_VAL_FDEVLSB30},                // frequency deviation 5kHz 0x0052 -> 30kHz 0x01EC
+     {HRF_ADDR_FRMSB,              HRF_VAL_FRMSB434},                 // carrier freq -> 434.3MHz 0x6C9333
+     {HRF_ADDR_FRMID,              HRF_VAL_FRMID434},                 // carrier freq -> 434.3MHz 0x6C9333
+     {HRF_ADDR_FRLSB,              HRF_VAL_FRLSB434},                 // carrier freq -> 434.3MHz 0x6C9333
+     {HRF_ADDR_AFCCTRL,            HRF_VAL_AFCCTRLS},                 // standard AFC routine
+     {HRF_ADDR_LNA,                HRF_VAL_LNA50},                    // 200ohms, gain by AGC loop -> 50ohms
+     {HRF_ADDR_RXBW,               HRF_VAL_RXBW60},                   // channel filter bandwidth 10kHz -> 60kHz  page:26
+     {HRF_ADDR_BITRATEMSB,         0x1A},                             // 4800b/s
+     {HRF_ADDR_BITRATELSB,         0x0B},                             // 4800b/s
+     {HRF_ADDR_SYNCCONFIG,         HRF_VAL_SYNCCONFIG2},              // Size of the Synch word = 2 (SyncSize + 1)
+     {HRF_ADDR_SYNCVALUE1,         RADIO_VAL_SYNCVALUE1FSK},            // 1st byte of Sync word
+     {HRF_ADDR_SYNCVALUE2,         RADIO_VAL_SYNCVALUE2FSK},            // 2nd byte of Sync word
+     {HRF_ADDR_PACKETCONFIG1,      RADIO_VAL_PACKETCONFIG1FSKNO},       // Variable length, Manchester coding
+     //{HRF_ADDR_PAYLOADLEN,         HRF_VAL_PAYLOADLEN66},             // max Length in RX, not used in Tx
+     //{HRF_ADDR_NODEADDRESS,        0x06},                             // Node address used in address filtering (not used)
+};
+#define CONFIG_FSK_COUNT (sizeof(config_FSK)/sizeof(HRF_CONFIG_REC))
 
 
 static HRF_CONFIG_REC config_OOK[] = {
@@ -272,11 +266,11 @@ void radio_modulation(RADIO_MODULATION mod)
         _config(config_OOK, CONFIG_OOK_COUNT);
         radio_data.modu = mod;
     }
-    //else if (mod == RADIO_MODULATION_FSK)
-    //{
-    //    _config(config_FSK, CONFIG_FSK_COUNT);
-    //    radio_data.modu = mod;
-    //}
+    else if (mod == RADIO_MODULATION_FSK)
+    {
+        _config(config_FSK, CONFIG_FSK_COUNT);
+        radio_data.modu = mod;
+    }
     else //TODO: make this ASSERT()
     {
         TRACE_FAIL("Unknown modulation\n");

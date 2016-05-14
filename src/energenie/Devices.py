@@ -84,8 +84,8 @@ def getDescription(mfrid, productid):
 
 
 def hasSwitch(mfrid, productid):
-    if mfrid != MFRID:                                return False
-    if productid == PRODUCTID_R1_MONITOR_AND_CONTROL: return True
+    if mfrid != MFRID:                  return False
+    if productid == PRODUCTID_MIHO005:  return True
     return False
 
 

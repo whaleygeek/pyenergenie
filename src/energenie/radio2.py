@@ -16,8 +16,8 @@
 #TODO: Should really add parameter validation here, so that C code doesn't have to.
 #although it will be faster in C (C could be made optional, like an assert?)
 
-LIBNAME = "drv/radio_rpi.so"
-#LIBNAME = "drv/radio_mac.so" # testing
+##LIBNAME = "drv/radio_rpi.so"
+LIBNAME = "drv/radio_mac.so" # testing
 
 import time
 import ctypes
@@ -67,6 +67,8 @@ def modulation(fsk=None, ook=None):
         m = ctypes.c_int(RADIO_MODULATION_OOK)
     elif fsk:
         m = ctypes.c_int(RADIO_MODULATION_FSK)
+    else:
+        raise RuntimeError("Must choose fsk or ook mode")
     radio_modulation_fn(m)
 
 
@@ -76,6 +78,8 @@ def transmitter(fsk=None, ook=None):
     if ook:
         m = ctypes.c_int(RADIO_MODULATION_OOK)
     elif fsk:
+        m = ctypes.c_int(RADIO_MODULATION_FSK)
+    else: # defaults to FSK
         m = ctypes.c_int(RADIO_MODULATION_FSK)
     radio_transmitter_fn(m)
 
