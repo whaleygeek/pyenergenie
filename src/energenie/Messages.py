@@ -42,6 +42,16 @@ JOIN_ACK = {
 }
 
 
+REGISTERED_SENSOR = {
+    "header": {
+        "mfrid":       0, # FILL IN
+        "productid":   0, # FILL IN
+        "encryptPIP":  Devices.CRYPT_PIP,
+        "sensorid":    0 # FILL IN
+    }
+}
+
+
 def send_join_ack(radio, mfrid, productid, sensorid):
     # send back a JOIN ACK, so that join light stops flashing
     response = OpenThings.alterMessage(JOIN_ACK,

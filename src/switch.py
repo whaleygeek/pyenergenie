@@ -18,7 +18,7 @@ from Timer import Timer
 # Increase this if you have lots of switches, so that the receiver has enough
 # time to receive update messages, otherwise your devices won't make it into
 # the device directory.
-TX_RATE = 10 # seconds between each switch change cycle
+TX_RATE = 2 # seconds between each switch change cycle
 
 
 def warning(msg):
@@ -36,7 +36,7 @@ def switch_sniff_loop():
 
     # See if there is a payload, and if there is, process it
     if radio.isReceiveWaiting():
-        #trace("receiving payload")
+        ##trace("receiving payload")
         payload = radio.receive()
         try:
             decoded = OpenThings.decode(payload)
@@ -47,7 +47,7 @@ def switch_sniff_loop():
         OpenThings.showMessage(decoded)
         # Any device that reports will be added to the non-persistent directory
         Registry.update(decoded)
-        #trace(decoded)
+        ##trace(decoded)
 
         # Process any JOIN messages by sending back a JOIN-ACK to turn the LED off
         if len(decoded["recs"]) == 0:
@@ -55,12 +55,10 @@ def switch_sniff_loop():
             print("Empty record:%s" % decoded)
         else:
             # assume only 1 rec in a join, for now
-            #TODO: use OpenThings.getFromMessage("header_mfrid")
             if decoded["recs"][0]["paramid"] == OpenThings.PARAM_JOIN:
-                header    = decoded["header"]
-                mfrid     = header["mfrid"]
-                productid = header["productid"]
-                sensorid  = header["sensorid"]
+                mfrid     = OpenThings.getFromMessage(decoded, "header_mfrid")
+                productid = OpenThings.getFromMessage(decoded, "header_productid")
+                sensorid  = OpenThings.getFromMessage(decoded, "header_sensorid")
                 Messages.send_join_ack(radio, mfrid, productid, sensorid)
 
 
@@ -96,17 +94,27 @@ def switch_toggle_loop():
 
 if __name__ == "__main__":
     
-    trace("starting switch tester")
+    trace("starting switch tester - (in TX-only mode)")
     radio.init()
     OpenThings.init(Devices.CRYPT_PID)
 
+    # Seed the registry with a known device, to simplify tx-only testing
+    SENSOR_ID = 0x6AB # TODO capture this from a known device before testing
+    device_header = OpenThings.alterMessage(Messages.REGISTERED_SENSOR,
+        header_mfrid     = Devices.MFRID,
+        header_productid = Devices.PRODUCTID_MIHO005, # adaptor plus
+        header_sensorid  = SENSOR_ID)
+    Registry.updateDirectory(device_header)
+
+
     sendSwitchTimer    = Timer(TX_RATE, 1)   # every n seconds offset by initial 1
     switch_state       = 0 # OFF
-    radio.receiver()
+    ##radio.receiver()
+    radio.transmitter()
 
     try:
         while True:
-            switch_sniff_loop()
+            ##switch_sniff_loop()
             switch_toggle_loop()
 
     finally:

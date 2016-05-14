@@ -45,7 +45,7 @@ def logMessage(msg):
     current = None
 
     # capture any data that we want
-    #print(msg)
+    ##trace(msg)
     for rec in msg['recs']:
         paramid = rec['paramid']
         try:
@@ -80,6 +80,6 @@ def logMessage(msg):
     csv = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s" % (timestamp, mfrid, productid, sensorid, flags, switch, voltage, freq, reactive, real, apparent, current)
     log_file.write(csv + '\n')
     log_file.flush()
-    #trace(csv) # testing
+    ##trace(csv) # testing
 
 # END

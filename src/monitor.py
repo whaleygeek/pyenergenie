@@ -32,7 +32,7 @@ def monitor_loop():
     while True:
         # See if there is a payload, and if there is, process it
         if radio.isReceiveWaiting():
-            #trace("receiving payload")
+            ##trace("receiving payload")
             payload = radio.receive()
             try:
                 decoded = OpenThings.decode(payload)
@@ -43,7 +43,7 @@ def monitor_loop():
             OpenThings.showMessage(decoded)
             # Any device that reports will be added to the non-persistent directory
             Registry.update(decoded)
-            #trace(decoded)
+            ##trace(decoded)
             Logger.logMessage(decoded)
 
             # Process any JOIN messages by sending back a JOIN-ACK to turn the LED off
@@ -52,12 +52,10 @@ def monitor_loop():
                 print("Empty record:%s" % decoded)
             else:
                 # assume only 1 rec in a join, for now
-                #TODO: use OpenThings.getFromMessage("header_mfrid")
                 if decoded["recs"][0]["paramid"] == OpenThings.PARAM_JOIN:
-                    header    = decoded["header"]
-                    mfrid     = header["mfrid"]
-                    productid = header["productid"]
-                    sensorid  = header["sensorid"]
+                    mfrid     = OpenThings.getFromMessage(decoded, "header_mfrid")
+                    productid = OpenThings.getFromMessage(decoded, "header_productid")
+                    sensorid  = OpenThings.getFromMessage(decoded, "header_sensorid")
                     Messages.send_join_ack(radio, mfrid, productid, sensorid)
 
 

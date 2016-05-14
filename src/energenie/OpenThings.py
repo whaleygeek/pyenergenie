@@ -622,7 +622,7 @@ def alterMessage(message, **kwargs):
 
 
 def getFromMessage(message, keypath):
-	"""Get a field from a message, given a keypath to the item"""
+	"""Get a field from a message, given an underscored keypath to the item"""
 	path = keypath.split("_")
 
 	for p in path[:-1]:
@@ -630,8 +630,8 @@ def getFromMessage(message, keypath):
 			p = int(p)
 		except:
 			pass
-		m = m[p]
-	return m[path[-1]]
+		message = message[p]
+	return message[path[-1]]
 
 
 #----- TEST HARNESS -----------------------------------------------------------
