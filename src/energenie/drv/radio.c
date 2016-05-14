@@ -5,6 +5,22 @@
  * https://energenie4u.co.uk/index.phpcatalogue/product/ENER314-RT
  */
 
+/* TODO
+
+push the FSK configuration into radio.c
+remove radio.py (the old version of the radio interface)
+implement FSK transmit in radio.c and test with switch.py and hard coded ID number
+radio_modulation fix for FSK
+move radio.py modulation to radio2.py modulation as it is better?
+
+contrive a switch.py that only transmits
+hard code device address into the dictionary
+disable the call to the receive check
+run the code, it should turn the switch on and off repeatedly.
+
+
+*/
+
 
 /***** INCLUDES *****/
 

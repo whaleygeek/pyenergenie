@@ -42,4 +42,16 @@ JOIN_ACK = {
 }
 
 
+def send_join_ack(radio, mfrid, productid, sensorid):
+    # send back a JOIN ACK, so that join light stops flashing
+    response = OpenThings.alterMessage(JOIN_ACK,
+        header_mfrid=mfrid,
+        header_productid=productid,
+        header_sensorid=sensorid)
+    p = OpenThings.encode(response)
+    radio.transmitter()
+    radio.transmit(p)
+    radio.receiver()
+
+
 # END
