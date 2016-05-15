@@ -60,53 +60,71 @@ void HRF_writefifo_burst(uint8_t* buf, uint8_t len)
 /*---------------------------------------------------------------------------*/
 // Read bytes from FIFO in burst mode.
 // Never reads more than buflen bytes
-// If rxlen != NULL, assumes payload is count byte preceded
-// and will read that number of bytes following it,
-// and report actual bytes read in *rxlen.
-// count byte is always returned as first byte of buffer
+// First received byte is the count of remaining bytes
+// That byte is also returned in the user buffer.
+// Note the user buffer can be > FIFO_MAX, but there is no flow control
+// in the HRF driver yet, so you might get an underflow error if data is read
+// quicker than it comes in on-air. You might get an overflow error if
+// data comes in quicker than it is read.
 
-HRF_RESULT HRF_readfifo_burst(uint8_t* buf, uint8_t buflen, uint8_t* rxlen)
+
+HRF_RESULT HRF_readfifo_burst_cbp(uint8_t* buf, uint8_t buflen)
 {
     uint8_t data;
-    uint8_t count;
 
     spi_select();
 
-    /* Read the first byte, and then decide how to do byte counting */
+    /* Read the first byte, and then decide how many remaining bytes to receive */
     data = spi_byte(ADDR_FIFO);
-    count = 1; /* Already received 1 byte */
-    *(buf++) = data; /* always return to user, regardless of if count byte */
+    *(buf++) = data; /* the count byte is always returned as first byte of user buffer */
 
-    /* Decide byte-counting strategy */
-    if (rxlen != NULL)
-    { /* count-byte preceeded */
-        if (data > buflen)
-        { /* Payload won't fit into user buffer */
-            spi_deselect();
-            return HRF_RESULT_ERR_BUFFER_TOO_SMALL;
-        }
-        /* else, first byte is count byte, reduce buflen and use as count */
-        buflen = data;
-    }
-    else
-    { /* buflen is expected length of payload */
-        buflen--; /* Have already received one byte */
+    /* Validate the payload len against the supplied user buffer */
+    if (data > buflen)
+    {
+        spi_deselect();
+        return HRF_RESULT_ERR_BUFFER_TOO_SMALL;
     }
 
-    /* buflen is now expected length, count is byte received counter */
+    buflen = data; /* now the expected payload length */
+
     while (buflen != 0)
     {
         data = spi_byte(ADDR_FIFO);
         *(buf++) = data;
         buflen--;
-        count++;
     }
     spi_deselect();
 
-    if (rxlen != NULL)
-    { /* Record count of actual bytes received */
-        *rxlen = count;
+    //TODO: Read irqflags
+    //if underflow, this is an error (reading out too quick)
+    //if overflow, this is an error (not reading out quick enough)
+    //if not empty at end, this is a warning (might be ok, but user might want to clear_fifo after)
+    return HRF_RESULT_OK;
+}
+
+
+/*---------------------------------------------------------------------------*/
+// Read bytes from FIFO in burst mode.
+// Tries to read exactly buflen bytes
+
+HRF_RESULT HRF_readfifo_burst_len(uint8_t* buf, uint8_t buflen)
+{
+    uint8_t data;
+
+    spi_select();
+
+    while (buflen != 0)
+    {
+        data = spi_byte(ADDR_FIFO);
+        *(buf++) = data;
+        buflen--;
     }
+    spi_deselect();
+
+    //TODO: Read irqflags
+    //if underflow, this is an error (reading out too quick)
+    //if overflow, this is an error (not reading out quick enough)
+    //if not empty at end, this is a warning (might be ok, but user might want to clear_fifo after)
     return HRF_RESULT_OK;
 }
 

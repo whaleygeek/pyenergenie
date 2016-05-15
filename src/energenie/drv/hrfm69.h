@@ -118,7 +118,9 @@ extern uint8_t HRF_readreg(uint8_t addr);
 
 extern void HRF_writefifo_burst(uint8_t* buf, uint8_t len);
 
-extern HRF_RESULT HRF_readfifo_burst(uint8_t* buf, uint8_t buflen, uint8_t* rxlen);
+extern HRF_RESULT HRF_readfifo_burst_cbp(uint8_t* buf, uint8_t buflen);
+
+extern HRF_RESULT HRF_readfifo_burst_len(uint8_t* buf, uint8_t buflen);
 
 extern HRF_RESULT HRF_checkreg(uint8_t addr, uint8_t mask, uint8_t value);
 

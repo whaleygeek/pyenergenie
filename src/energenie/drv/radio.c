@@ -468,16 +468,39 @@ RADIO_RESULT radio_is_receive_waiting(void)
 
 /*---------------------------------------------------------------------------*/
 // read a single payload from the payload buffer
+// this reads a fixed length payload
 
-RADIO_RESULT radio_get_payload(uint8_t* buf, uint8_t buflen, uint8_t* rxlen)
+RADIO_RESULT radio_get_payload_len(uint8_t* buf, uint8_t buflen)
 {
     if (buflen > MAX_FIFO_BUFFER)
-    {  /* At the moment, the receiver cannot cope with payloads > 1 FIFO buffer.
+    {  /* At the moment, the receiver cannot reliably cope with payloads > 1 FIFO buffer.
         * It *might* be able to in the future.
         */
         return RADIO_RESULT_ERR_LONG_PAYLOAD;
     }
-    HRF_RESULT r = HFR_readfifo_burst(buf, buflen, rxlen);
+    HRF_RESULT r = HFR_readfifo_burst_len(buf, buflen);
+    if (r != HRF_RESULT_OK)
+    {
+        return RADIO_RESULT_ERR_READ_FAILED;
+    }
+    return RADIO_RESULT_OK;
+}
+
+/*---------------------------------------------------------------------------*/
+// read a single payload from the payload buffer
+// this reads count byte preceeded payloads.
+// The CBP payload always has the count byte in the first byte
+// and this is returned in the user buffer too.
+
+RADIO_RESULT radio_get_payload_cbp(uint8_t* buf, uint8_t buflen)
+{
+    if (buflen > MAX_FIFO_BUFFER)
+    {  /* At the moment, the receiver cannot reliably cope with payloads > 1 FIFO buffer.
+        * It *might* be able to in the future.
+        */
+        return RADIO_RESULT_ERR_LONG_PAYLOAD;
+    }
+    HRF_RESULT r = HFR_readfifo_burst_cbp(buf, buflen);
     if (r != HRF_RESULT_OK)
     {
         return RADIO_RESULT_ERR_READ_FAILED;

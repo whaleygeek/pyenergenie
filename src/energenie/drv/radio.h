@@ -39,7 +39,9 @@ extern void radio_receiver(RADIO_MODULATION mod);
 
 extern RADIO_RESULT radio_is_receive_waiting(void);
 
-extern RADIO_RESULT radio_get_payload(uint8_t* buf, uint8_t buflen, uint8_t* rxlen)
+extern RADIO_RESULT radio_get_payload_len(uint8_t* buf, uint8_t buflen);
+
+extern RADIO_RESULT radio_get_payload_cbp(uint8_t* buf, uint8_t buflen);
 
 extern void radio_standby(void);
 

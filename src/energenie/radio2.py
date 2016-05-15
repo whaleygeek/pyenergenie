@@ -33,7 +33,8 @@ radio_transmit_fn            = libradio["radio_transmit"]
 radio_send_payload_fn        = libradio["radio_send_payload"]
 radio_receiver_fn            = libradio["radio_receiver"]
 radio_is_receive_waiting_fn  = libradio["radio_is_receive_waiting"]
-radio_get_payload_fn         = libradio["radio_get_payload"]
+radio_get_payload_len_fn     = libradio["radio_get_payload_len"]
+radio_get_payload_cbp_fn     = libradio["radio_get_payload_cbp"]
 radio_standby_fn             = libradio["radio_standby"]
 radio_finished_fn            = libradio["radio_finished"]
 
@@ -186,24 +187,54 @@ def is_receive_waiting():
 @untested
 def receive(size=None):
     """Receive a single payload"""
-    #NOTE for OOK, need to put in expected size of 16 bytes (includes preamble)
 
-    if size == None: # count byte preceeded
-        size = MAX_RX_SIZE
-        rxsize = ctypes.byref(size)
+    if size == None:
+        return receive_cbp()
+    else:
+        return receive_len(size)
 
-    else: # fixed size receive
-        rxsize = ctypes.c_ubyte(None)
 
-    Buffer = ctypes.c_ubyte * size
+@untested
+def receive_cbp():
+    """Receive a count byte preceded payload"""
+
+    bufsize = MAX_RX_SIZE
+
+    Buffer = ctypes.c_ubyte * bufsize
     rxbuf  = Buffer()
-    buflen = ctypes.c_ubyte(size)
+    buflen = ctypes.c_ubyte(bufsize)
+    #RADIO_RESULT radio_get_payload_cbp(uint8_t* buf, uint8_t buflen)
 
-    #RADIO_RESULT radio_get_payload(uint8_t* buf, uint8_t buflen, uint8_t* rxlen)
+    result = radio_get_payload_cbp_fn(rxbuf, buflen)
 
-    result = radio_get_payload_fn(rxbuf, buflen, rxsize)
     if result != 0: # RADIO_RESULT_OK
-        raise RuntimeError("Receive failed, error code %d" % result)
+        raise RuntimeError("Receive failed, error code %s" % hex(result))
+
+    size = 1+rxbuf[0] # The count byte in the payload
+
+    # turn buffer into a list of bytes, using 'size' as the counter
+    rxlist = []
+    for i in range(size):
+        rxlist.append(rxbuf[i])
+
+    return rxlist # Python len(rxlist) tells us how many bytes including length byte if present
+
+
+@untested
+def receive_len(size):
+    """Receive a fixed payload size"""
+
+    bufsize = size
+
+    Buffer = ctypes.c_ubyte * bufsize
+    rxbuf  = Buffer()
+    buflen = ctypes.c_ubyte(bufsize)
+    #RADIO_RESULT radio_get_payload_len(uint8_t* buf, uint8_t buflen)
+
+    result = radio_get_payload_len_fn(rxbuf, buflen)
+
+    if result != 0: # RADIO_RESULT_OK
+        raise RuntimeError("Receive failed, error code %s" % hex(result))
 
     # turn buffer into a list of bytes, using 'size' as the counter
     rxlist = []
