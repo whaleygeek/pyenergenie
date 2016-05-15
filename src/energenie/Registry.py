@@ -18,7 +18,7 @@ def allkeys(d):
     return result
 
 
-def updateDirectory(message):
+def update(message):
     """Update the local directory with information about this device"""
     now      = time.time()
     header   = message["header"]

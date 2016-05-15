@@ -35,7 +35,7 @@ def switch_sniff_loop():
     """Listen to sensor messages and add them to the Registry"""
 
     # See if there is a payload, and if there is, process it
-    if radio.isReceiveWaiting():
+    if radio.is_receive_waiting():
         ##trace("receiving payload")
         payload = radio.receive()
         try:
@@ -87,7 +87,7 @@ def switch_toggle_loop():
                 for i in range(4):
                     radio.transmit(p)
 
-        ##radio.receiver()
+        radio.receiver()
         ##print("receive")
         switch_state = (switch_state+1) % 2 # toggle
         
@@ -104,17 +104,17 @@ if __name__ == "__main__":
         header_mfrid     = Devices.MFRID,
         header_productid = Devices.PRODUCTID_MIHO005, # adaptor plus
         header_sensorid  = SENSOR_ID)
-    Registry.updateDirectory(device_header)
+    Registry.update(device_header)
 
 
     sendSwitchTimer    = Timer(TX_RATE, 1)   # every n seconds offset by initial 1
     switch_state       = 0 # OFF
-    ##radio.receiver()
-    radio.transmitter()
+    radio.receiver()
+    ##radio.transmitter()
 
     try:
         while True:
-            ##switch_sniff_loop()
+            switch_sniff_loop()
             switch_toggle_loop()
 
     finally:

@@ -83,6 +83,9 @@ HRF_RESULT HRF_readfifo_burst_cbp(uint8_t* buf, uint8_t buflen)
     if (data > buflen)
     {
         spi_deselect();
+        TRACE_OUTS("buffer too small for payload len=");
+        TRACE_OUTN(data);
+        TRACE_NL();
         return HRF_RESULT_ERR_BUFFER_TOO_SMALL;
     }
 
