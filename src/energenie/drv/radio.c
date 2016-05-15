@@ -7,28 +7,50 @@
 
 
 /* TODO (rx)
-TODO: decide interface for: HRF_readfifo_burst(uint8_t* buf, uint8_t len)
+DONE: decide interface for: HRF_readfifo_burst(uint8_t* buf, uint8_t len)
 
-HRF_readfifo_burst(uint8_t* buf, uint8_t buflen, uint8_t* actuallen)
+TODO: Knit in the payload check
+TODO: Knit in the get_payload
+TODO: test with monitor.py (receive only mode)
 
-  - how is user buffer len communicated?
-  - how is actual receive len communicated?
 
-  - note, OpenThings has a length byte as first byte.
-  - note, OOK has fixed sized messages
-  (we want to use OOK receiver to read in the RF hand remote codes)
-
-  So, we probably want a way to configure HRF_readfifo_burst
-  so that it can use either method.
-
-  Also, if there is a corrupted packet in the fifo, the first byte
+TODO: Harden up the payload receiver
+  1. If there is a corrupted packet in the fifo, the first byte
   might not be the length byte, and the read might fail or leave
   bytes in the buffer. So, the receiver needs to be hardended up
-  to cope with these cases.
+  to cope with these cases. HRF_readfifo_burst returns an error
+  if the length byte is longer than buflen, but need to check this
+  error code.
 
+  2. if we are in fixed length, or count byte, and more data
+  is in the fifo than we expect, this will be read next time.
+  Perhaps we need to clear the fifo at the end of each read operation,
+  and also report if there is junk in the buffer (i.e. would always
+  expect a read to leave an empty fifo).
 
-TODO: test with monitor.py (receive only mode)
+  3. We should check the fifo underrun bit at the end of a read,
+  this would mean that some of the bytes we read are not real bytes
+  and should not be interpreted, that packet should be junked.
 */
+
+/* TODO: DUTY CYCLE PROTECTION REQUIREMENT
+ *
+ * See page 3 of this app note: http://www.ti.com/lit/an/swra090/swra090.pdf
+ *
+ * At OOK 4800bps, 1 bit is 20uS, 1 byte is 1.6ms, 16 bytes is 26.6ms
+ * 15 times (old design limit) is 400ms
+ * 255 times (new design limit) is 6.8s
+ *
+ * Transmitter duty cycle
+ * The transmitter duty cycle is defined as the ratio of the maximum ”on” time,
+ * relative to a onehour period. If message acknowledgement is required, the
+ * additional ”on” time shall be included. Advisory limits are:
+ *
+ * Duty cycle  Maximum “on” time [sec]   Minimum “off” time [sec]
+ * 0.1 %       0.72                      0.72
+ * 1 %         3.6                       1.8
+ * 10 %        36                        3.6
+ */
 
 
 /***** INCLUDES *****/
@@ -45,6 +67,7 @@ TODO: test with monitor.py (receive only mode)
 /***** CONFIGURATION *****/
 
 #define EXPECTED_RADIOVER 36
+#define MAX_FIFO_BUFFER   66
 
 
 // Energenie specific radio config values
@@ -345,38 +368,6 @@ void radio_transmit(uint8_t* payload, uint8_t len, uint8_t times)
 /*---------------------------------------------------------------------------*/
 // Send a payload of data
 
-/* DESIGN FOR DUTY CYCLE PROTECTION REQUIREMENT (write this later)
- *
- * At OOK 4800bps, 1 bit is 20uS, 1 byte is 1.6ms, 16 bytes is 26.6ms
- * 15 times (old design limit) is 400ms
- * 255 times (new design limit) is 6.8s
-
- * See page 3 of this app note: http://www.ti.com/lit/an/swra090/swra090.pdf
- *
- * Transmitter duty cycle
- * The transmitter duty cycle is defined as the ratio of the maximum ”on” time, relative to a onehour period.
- * If message acknowledgement is required, the additional ”on” time shall be included. Advisory limits are:
- *
- * Duty cycle  Maximum “on” time [sec]   Minimum “off” time [sec]
- * 0.1 %       0.72                      0.72
- * 1 %         3.6                       1.8
- * 10 %        36                        3.6
- */
-
-/* DESIGN FOR >255 payload len (write this later)
-
-   will need to set fifolevel as a proportion of payload len
-   and load that proportion.
-   i.e. inside the payload repeat loop
-     load the fifo up in non integral payload portions
-   also, txstart condition would need to start before whole payload loaded in FIFO
-   that is probably ok, but fifolev is more to do with fill rate and transmit rate,
-   and less to do with the actual payload length.
-   Note that FIFO empties at a rate proportional to the bitrate,
-   and also adding on manchester coding will slow the emptying rate.
- */
-
-
 void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
 {
     TRACE_OUTS("radio_send_payload\n");
@@ -439,7 +430,7 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
     TRACE_OUTN(irqflags2);
     TRACE_NL();
 
-    //TODO: make this ASSERT()??
+    //TODO: make this TRACE_ASSERT()
     if (((irqflags2 & HRF_MASK_FIFONOTEMPTY) != 0) || ((irqflags2 & HRF_MASK_FIFOOVERRUN) != 0))
     {
         TRACE_FAIL("FIFO not empty or overrun at end of burst");
@@ -455,26 +446,29 @@ RADIO_RESULT radio_is_receive_waiting(void)
 {
     if (_payload_waiting())
     {
-        return RADIO_RESULT_OK_PAYLOAD_READY;
+        return RADIO_RESULT_OK_TRUE;
     }
-    return RADIO_RESULT_OK_NO_PAYLOAD;
+    return RADIO_RESULT_OK_FALSE;
 }
 
 
 /*---------------------------------------------------------------------------*/
 // read a single payload from the payload buffer
 
-//HERE ####
-
-RADIO_RESULT radio_get_payload(uint8_t* buf, uint8_t len)
+RADIO_RESULT radio_get_payload(uint8_t* buf, uint8_t buflen, uint8_t* rxlen)
 {
-    //TODO len should be maxlen (i.e. length of user buffer)
-    //TODO how is actual length communicated back?
-    //TODO what if nothing came back (payload length 0)
-
-    HRF_readfifo_burst(buf, len);
-    //TODO how do we communicate actual length of buffer back to caller?
-    return RADIO_RESULT_ERR_UNIMPLEMENTED; // TODO
+    if (buflen > MAX_FIFO_BUFFER)
+    {  /* At the moment, the receiver cannot cope with payloads > 1 FIFO buffer.
+        * It *might* be able to in the future.
+        */
+        return RADIO_RESULT_ERR_LONG_PAYLOAD;
+    }
+    HRF_RESULT r = HFR_readfifo_burst(buf, buflen, rxlen);
+    if (r != HRF_RESULT_OK)
+    {
+        return RADIO_RESULT_ERR_READ_FAILED;
+    }
+    return RADIO_RESULT_OK;
 }
 
 

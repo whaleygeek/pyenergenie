@@ -8,9 +8,13 @@
 #define _RADIO_H
 
 typedef uint8_t RADIO_RESULT;
-#define RADIO_RESULT_OK_NO_PAYLOAD     0x01
-#define RADIO_RESULT_OK_PAYLOAD_READY  0x02
-#define RADIO_RESULT_ERR_UNIMPLEMENTED 0x81
+#define RADIO_RESULT_IS_ERR(R)         (((R) & 0x80) != 0)
+#define RADIO_RESULT_OK                0x00
+#define RADIO_RESULT_OK_FALSE          0x00
+#define RADIO_RESULT_OK_TRUE           0x01
+#define RADIO_RESULT_ERR_UNIMPLEMENTED 0x80
+#define RADIO_RESULT_ERR_LONG_PAYLOAD  0x81
+#define RADIO_RESULT_ERR_READ_FAILED   0x82
 
 typedef uint8_t RADIO_MODULATION;
 #define RADIO_MODULATION_OOK 0
@@ -35,7 +39,7 @@ extern void radio_receiver(RADIO_MODULATION mod);
 
 extern RADIO_RESULT radio_is_receive_waiting(void);
 
-extern RADIO_RESULT radio_get_payload(uint8_t* buf, uint8_t len);
+extern RADIO_RESULT radio_get_payload(uint8_t* buf, uint8_t buflen, uint8_t* rxlen)
 
 extern void radio_standby(void);
 

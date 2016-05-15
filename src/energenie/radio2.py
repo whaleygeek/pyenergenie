@@ -40,6 +40,11 @@ radio_finished_fn            = libradio["radio_finished"]
 RADIO_MODULATION_OOK = 0
 RADIO_MODULATION_FSK = 1
 
+# A temporary limit, the receiver will only receive 1 FIFO worth of data maximul
+# This includes the length byte at the start of an OpenThings message
+MAX_RX_SIZE = 66
+
+
 #TODO RADIO_RESULT_XX
 
 def unimplemented(m):
@@ -168,32 +173,44 @@ def receiver(fsk=None, ook=None):
     radio_receiver_fn(m)
 
 
-@unimplemented
+@untested
 def is_receive_waiting():
     """Check to see if a payload is waiting in the receive buffer"""
     #extern RADIO_RESULT radio_is_receive_waiting(void);
-#    ##res = radio_isReceiveWaitingFn()
-#   turn from result into bool
-#   return bool
-    return False #TODO
+    res = radio_is_receive_waiting_fn()
+    # this is RADIO_RESULT_OK_TRUE or RADIO_RESULT_OK_FALSE
+    # so it is safe to evaluate it as a boolean number.
+    return (res != 0)
 
 
-@unimplemented
-def receive():
+@untested
+def receive(size=None):
     """Receive a single payload"""
+    #NOTE for OOK, need to put in expected size of 16 bytes (includes preamble)
 
-    #TODO pass in length of user buffer
-    #TODO get back actual length of buffer used
-    #extern RADIO_RESULT radio_get_payload(uint8_t* buf, uint8_t len);
-    pass # TODO
-    #build a user buffer of a maximum size (need to decide max size, prob 66 which is FIFO size)
-    #note that the receiver cannot yet receive more than one FIFO worth of data
-    #although it might be able to in the future if we wrote better buffer handling in hrfm69.c
+    if size == None: # count byte preceeded
+        size = MAX_RX_SIZE
+        rxsize = ctypes.byref(size)
 
-    ##radio_receive_payload_fn(buf, len)
-    # turn buffer into a list of bytes
-    # returns list of bytes
-    return [] #TODO
+    else: # fixed size receive
+        rxsize = ctypes.c_ubyte(None)
+
+    Buffer = ctypes.c_ubyte * size
+    rxbuf  = Buffer()
+    buflen = ctypes.c_ubyte(size)
+
+    #RADIO_RESULT radio_get_payload(uint8_t* buf, uint8_t buflen, uint8_t* rxlen)
+
+    result = radio_get_payload_fn(rxbuf, buflen, rxsize)
+    if result != 0: # RADIO_RESULT_OK
+        raise RuntimeError("Receive failed, error code %d" % result)
+
+    # turn buffer into a list of bytes, using 'size' as the counter
+    rxlist = []
+    for i in range(size):
+        rxlist.append(rxbuf[i])
+
+    return rxlist # Python len(rxlist) tells us how many bytes including length byte if present
 
 
 def standby():
