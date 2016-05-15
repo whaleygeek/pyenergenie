@@ -478,7 +478,7 @@ RADIO_RESULT radio_get_payload_len(uint8_t* buf, uint8_t buflen)
         */
         return RADIO_RESULT_ERR_LONG_PAYLOAD;
     }
-    HRF_RESULT r = HFR_readfifo_burst_len(buf, buflen);
+    HRF_RESULT r = HRF_readfifo_burst_len(buf, buflen);
     if (r != HRF_RESULT_OK)
     {
         return RADIO_RESULT_ERR_READ_FAILED;
@@ -500,7 +500,7 @@ RADIO_RESULT radio_get_payload_cbp(uint8_t* buf, uint8_t buflen)
         */
         return RADIO_RESULT_ERR_LONG_PAYLOAD;
     }
-    HRF_RESULT r = HFR_readfifo_burst_cbp(buf, buflen);
+    HRF_RESULT r = HRF_readfifo_burst_cbp(buf, buflen);
     if (r != HRF_RESULT_OK)
     {
         return RADIO_RESULT_ERR_READ_FAILED;

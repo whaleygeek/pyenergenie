@@ -75,7 +75,7 @@ HRF_RESULT HRF_readfifo_burst_cbp(uint8_t* buf, uint8_t buflen)
     spi_select();
 
     /* Read the first byte, and then decide how many remaining bytes to receive */
-    data = spi_byte(ADDR_FIFO);
+    data = spi_byte(HRF_ADDR_FIFO);
     *(buf++) = data; /* the count byte is always returned as first byte of user buffer */
 
     /* Validate the payload len against the supplied user buffer */
@@ -89,7 +89,7 @@ HRF_RESULT HRF_readfifo_burst_cbp(uint8_t* buf, uint8_t buflen)
 
     while (buflen != 0)
     {
-        data = spi_byte(ADDR_FIFO);
+        data = spi_byte(HRF_ADDR_FIFO);
         *(buf++) = data;
         buflen--;
     }
@@ -115,7 +115,7 @@ HRF_RESULT HRF_readfifo_burst_len(uint8_t* buf, uint8_t buflen)
 
     while (buflen != 0)
     {
-        data = spi_byte(ADDR_FIFO);
+        data = spi_byte(HRF_ADDR_FIFO);
         *(buf++) = data;
         buflen--;
     }
