@@ -15,8 +15,8 @@
 #TODO: Should really add parameter validation here, so that C code doesn't have to.
 #although it will be faster in C (C could be made optional, like an assert?)
 
-##LIBNAME = "drv/radio_rpi.so"
-LIBNAME = "drv/radio_mac.so" # testing
+LIBNAME = "drv/radio_rpi.so"
+##LIBNAME = "drv/radio_mac.so" # testing
 
 import time
 import ctypes
@@ -47,6 +47,17 @@ MAX_RX_SIZE = 66
 
 
 #TODO RADIO_RESULT_XX
+
+def trace(msg):
+    print(str(msg))
+
+
+def tohex(l):
+    line = ""
+    for item in l:
+        line += hex(item) + " "
+    return line
+
 
 def unimplemented(m):
     print("warning: method is not implemented:%s" % m)
@@ -160,7 +171,6 @@ def send_payload(payload, outer_times=1, inner_times=8, outer_delay=0):
             time.sleep(outer_delay)
 
 
-@untested
 def receiver(fsk=None, ook=None):
     """Change into receiver mode"""
     #extern void radio_receiver(RADIO_MODULATION mod);
@@ -174,7 +184,6 @@ def receiver(fsk=None, ook=None):
     radio_receiver_fn(m)
 
 
-@untested
 def is_receive_waiting():
     """Check to see if a payload is waiting in the receive buffer"""
     #extern RADIO_RESULT radio_is_receive_waiting(void);
@@ -184,7 +193,6 @@ def is_receive_waiting():
     return (res != 0)
 
 
-@untested
 def receive(size=None):
     """Receive a single payload"""
 
@@ -194,12 +202,12 @@ def receive(size=None):
         return receive_len(size)
 
 
-@untested
 def receive_cbp():
     """Receive a count byte preceded payload"""
+    ##trace("receive_cbp")
 
-    bufsize = MAX_RX_SIZE
-
+    ##bufsize = MAX_RX_SIZE
+    bufsize = 255 # testing
     Buffer = ctypes.c_ubyte * bufsize
     rxbuf  = Buffer()
     buflen = ctypes.c_ubyte(bufsize)
@@ -208,7 +216,7 @@ def receive_cbp():
     result = radio_get_payload_cbp_fn(rxbuf, buflen)
 
     if result != 0: # RADIO_RESULT_OK
-        raise RuntimeError("Receive failed, error code %s" % hex(result))
+        raise RuntimeError("Receive failed, radio.c error code %s" % hex(result))
 
     size = 1+rxbuf[0] # The count byte in the payload
 
@@ -217,6 +225,7 @@ def receive_cbp():
     for i in range(size):
         rxlist.append(rxbuf[i])
 
+    ##trace("receive_cbp returhs %s" % tohex(rxlist))
     return rxlist # Python len(rxlist) tells us how many bytes including length byte if present
 
 
@@ -291,7 +300,7 @@ def spi_trace(msg):
     print(str(msg))
 
 
-@deprecated
+@disabled
 def spi_reset():
     spi_trace("reset")
 
@@ -310,13 +319,14 @@ def spi_reset():
     gpio_setout_fn(led_green)
     gpio_low_fn(led_green)
 
-@deprecated
+
+@disabled
 def spi_init_defaults():
     spi_trace("calling init_defaults")
     spi_init_defaults_fn()
 
 
-@deprecated
+@disabled
 def spi_init():
     spi_trace("calling init")
     #TODO build a config structure
@@ -324,7 +334,7 @@ def spi_init():
     #spi_init_fn()
 
 
-@deprecated
+@disabled
 def spi_start_transaction():
     """Start a transmit or receive, perhaps multiple bursts"""
     # turn the GREEN LED on
@@ -332,7 +342,7 @@ def spi_start_transaction():
     gpio_high_fn(led_green)
 
 
-@deprecated
+@disabled
 def spi_end_transaction():
     """End a transmit or receive, perhaps multiple listens"""
     # turn the GREEN LED off
@@ -340,19 +350,19 @@ def spi_end_transaction():
     gpio_low_fn(led_green)
 
 
-@deprecated
+@disabled
 def spi_select():
     spi_trace("calling select")
     spi_select_fn()
 
 
-@deprecated
+@disabled
 def spi_deselect():
     spi_trace("calling deselect")
     spi_deselect_fn()
 
 
-@deprecated
+@disabled
 def spi_byte(tx):
     txbyte = ctypes.c_ubyte(tx)
     #spi_trace("calling byte")
@@ -360,7 +370,7 @@ def spi_byte(tx):
     return rxbyte
 
 
-@deprecated
+@disabled
 def spi_frame(txlist):
     spi_trace("calling frame ")
     framelen = len(txlist)
@@ -376,7 +386,7 @@ def spi_frame(txlist):
     return rxlist
 
 
-@deprecated
+@disabled
 def spi_finished():
     spi_trace("calling finished")
     spi_finished_fn()

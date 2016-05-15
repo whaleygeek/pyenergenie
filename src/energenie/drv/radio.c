@@ -134,11 +134,11 @@ static HRF_CONFIG_REC config_FSK[] = {
      {HRF_ADDR_BITRATEMSB,         0x1A},                             // 4800b/s
      {HRF_ADDR_BITRATELSB,         0x0B},                             // 4800b/s
      {HRF_ADDR_SYNCCONFIG,         HRF_VAL_SYNCCONFIG2},              // Size of the Synch word = 2 (SyncSize + 1)
-     {HRF_ADDR_SYNCVALUE1,         RADIO_VAL_SYNCVALUE1FSK},            // 1st byte of Sync word
-     {HRF_ADDR_SYNCVALUE2,         RADIO_VAL_SYNCVALUE2FSK},            // 2nd byte of Sync word
-     {HRF_ADDR_PACKETCONFIG1,      RADIO_VAL_PACKETCONFIG1FSKNO},       // Variable length, Manchester coding
-     //{HRF_ADDR_PAYLOADLEN,         HRF_VAL_PAYLOADLEN66},             // max Length in RX, not used in Tx
-     //{HRF_ADDR_NODEADDRESS,        0x06},                             // Node address used in address filtering (not used)
+     {HRF_ADDR_SYNCVALUE1,         RADIO_VAL_SYNCVALUE1FSK},          // 1st byte of Sync word
+     {HRF_ADDR_SYNCVALUE2,         RADIO_VAL_SYNCVALUE2FSK},          // 2nd byte of Sync word
+     {HRF_ADDR_PACKETCONFIG1,      RADIO_VAL_PACKETCONFIG1FSKNO},     // Variable length, Manchester coding
+     {HRF_ADDR_PAYLOADLEN,         HRF_VAL_PAYLOADLEN66},             // max Length in RX, not used in Tx
+     {HRF_ADDR_NODEADDRESS,        0x06},                             // Node address used in address filtering (not used)
 };
 #define CONFIG_FSK_COUNT (sizeof(config_FSK)/sizeof(HRF_CONFIG_REC))
 
@@ -494,15 +494,18 @@ RADIO_RESULT radio_get_payload_len(uint8_t* buf, uint8_t buflen)
 
 RADIO_RESULT radio_get_payload_cbp(uint8_t* buf, uint8_t buflen)
 {
-    if (buflen > MAX_FIFO_BUFFER)
-    {  /* At the moment, the receiver cannot reliably cope with payloads > 1 FIFO buffer.
-        * It *might* be able to in the future.
-        */
-        return RADIO_RESULT_ERR_LONG_PAYLOAD;
-    }
+    ////if (buflen > MAX_FIFO_BUFFER)
+    ////{  /* At the moment, the receiver cannot reliably cope with payloads > 1 FIFO buffer.
+    ////    * It *might* be able to in the future.
+    ////    */
+    ////    return RADIO_RESULT_ERR_LONG_PAYLOAD;
+    ////}
     HRF_RESULT r = HRF_readfifo_burst_cbp(buf, buflen);
     if (r != HRF_RESULT_OK)
     {
+        TRACE_OUTS("radio_get_payload_cbp failed, error=");
+        TRACE_OUTN(r);
+        TRACE_NL();
         return RADIO_RESULT_ERR_READ_FAILED;
     }
     return RADIO_RESULT_OK;
