@@ -58,26 +58,56 @@ void HRF_writefifo_burst(uint8_t* buf, uint8_t len)
 
 
 /*---------------------------------------------------------------------------*/
+// Read bytes from FIFO in burst mode.
+// Never reads more than buflen bytes
+// If rxlen != NULL, assumes payload is count byte preceded
+// and will read that number of bytes following it,
+// and report actual bytes read in *rxlen.
+// count byte is always returned as first byte of buffer
 
-void HRF_readfifo_burst(uint8_t* buf, uint8_t len)
+HRF_RESULT HRF_readfifo_burst(uint8_t* buf, uint8_t buflen, uint8_t* rxlen)
 {
-//def HRF_readfifo_burst():
-//    """Read bytes from the payload FIFO using burst read"""
-//    #first byte read is the length in remaining bytes
-//    buf = []
-//    spi.select()
-//    spi.frame([ADDR_FIFO])
-//    count = 1 # read at least the length byte
-//    while count > 0:
-//        rx = spi.frame([ADDR_FIFO])
-//        data = rx[0]
-//        if len(buf) == 0:
-//            count = data
-//        else:
-//            count -= 1
-//        buf.append(data)
-//    spi.deselect()
-//    return buf
+    uint8_t data;
+    uint8_t count;
+
+    spi_select();
+
+    /* Read the first byte, and then decide how to do byte counting */
+    data = spi_byte(ADDR_FIFO);
+    count = 1; /* Already received 1 byte */
+    *(buf++) = data; /* always return to user, regardless of if count byte */
+
+    /* Decide byte-counting strategy */
+    if (rxlen != NULL)
+    { /* count-byte preceeded */
+        if (data > buflen)
+        { /* Payload won't fit into user buffer */
+            spi_deselect();
+            return HRF_RESULT_ERR_BUFFER_TOO_SMALL;
+        }
+        /* else, first byte is count byte, reduce buflen and use as count */
+        buflen = data;
+    }
+    else
+    { /* buflen is expected length of payload */
+        buflen--; /* Have already received one byte */
+    }
+
+    /* buflen is now expected length, count is byte received counter */
+    while (buflen != 0)
+    {
+        data = spi_byte(ADDR_FIFO);
+        *(buf++) = data;
+        buflen--;
+        count++;
+    }
+    spi_deselect();
+
+    if (rxlen != NULL)
+    { /* Record count of actual bytes received */
+        *rxlen = count;
+    }
+    return HRF_RESULT_OK;
 }
 
 
@@ -87,7 +117,11 @@ void HRF_readfifo_burst(uint8_t* buf, uint8_t len)
 HRF_RESULT HRF_checkreg(uint8_t addr, uint8_t mask, uint8_t value)
 {
     uint8_t regval = HRF_readreg(addr);
-    return (regval & mask) == value;
+    if ((regval & mask) == value)
+    {
+        return HRF_RESULT_OK_TRUE;
+    }
+    return HRF_RESULT_OK_FALSE;
 }
 
 
@@ -104,7 +138,8 @@ void HRF_pollreg(uint8_t addr, uint8_t mask, uint8_t value)
 
     while (! HRF_checkreg(addr, mask, value))
     {
-      // busy wait (TODO:with no timeout & error recovery?)
+      // busy wait
+      //TODO: No timeout or error recovery? Can cause permanent lockup
     }
 }
 
@@ -115,6 +150,7 @@ void HRF_pollreg(uint8_t addr, uint8_t mask, uint8_t value)
 void HRF_clear_fifo(void)
 {
     //TODO: max fifolen is 66, should bail after that to prevent lockup
+    //especially if radio crashed and SPI always returns stuck flag bit
     while ((HRF_readreg(HRF_ADDR_IRQFLAGS2) & HRF_MASK_FIFONOTEMPTY) == HRF_MASK_FIFONOTEMPTY)
     {
         HRF_readreg(HRF_ADDR_FIFO);

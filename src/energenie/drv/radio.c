@@ -8,8 +8,25 @@
 
 /* TODO (rx)
 TODO: decide interface for: HRF_readfifo_burst(uint8_t* buf, uint8_t len)
+
+HRF_readfifo_burst(uint8_t* buf, uint8_t buflen, uint8_t* actuallen)
+
   - how is user buffer len communicated?
   - how is actual receive len communicated?
+
+  - note, OpenThings has a length byte as first byte.
+  - note, OOK has fixed sized messages
+  (we want to use OOK receiver to read in the RF hand remote codes)
+
+  So, we probably want a way to configure HRF_readfifo_burst
+  so that it can use either method.
+
+  Also, if there is a corrupted packet in the fifo, the first byte
+  might not be the length byte, and the read might fail or leave
+  bytes in the buffer. So, the receiver needs to be hardended up
+  to cope with these cases.
+
+
 TODO: test with monitor.py (receive only mode)
 */
 
