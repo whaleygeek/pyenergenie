@@ -5,17 +5,12 @@
  * https://energenie4u.co.uk/index.phpcatalogue/product/ENER314-RT
  */
 
-/* TODO
-DONE: push the FSK configuration into radio.c
-DONE: remove radio.py (the old version of the radio interface)
-DONE: contrive a switch.py that only transmits
-DONE: hard code device address into the dictionary
-DONE: disable the call to the receive check
-DONE: radio_modulation fix for FSK
-DONE: implement FSK transmit in radio.c (it's just transmit())
-DONE: move radio.py modulation switcher to radio2.py modulation (as it is written better?)
 
-TODO: run the code, it should turn the switch on and off repeatedly.
+/* TODO (rx)
+TODO: decide interface for: HRF_readfifo_burst(uint8_t* buf, uint8_t len)
+  - how is user buffer len communicated?
+  - how is actual receive len communicated?
+TODO: test with monitor.py (receive only mode)
 */
 
 
@@ -67,7 +62,7 @@ static void _change_mode(uint8_t mode);
 static void _wait_ready(void);
 static void _wait_txready(void);
 static void _config(HRF_CONFIG_REC* config, uint8_t len);
-//static int _payload_waiting(void);
+static int _payload_waiting(void);
 
 
 //----- ENERGENIE SPECIFIC CONFIGURATIONS --------------------------------------
@@ -187,15 +182,11 @@ static void _wait_txready(void)
 /*---------------------------------------------------------------------------*/
 // Check if there is a payload in the FIFO waiting to be processed
 
-//static int _payload_waiting(void)
-//{
-//    //TODO: First read might be superflous, but left in just in case
-//    //uint8_t irqflags1 =
-//    HRF_readreg(HRF_ADDR_IRQFLAGS1);
-//
-//    uint8_t irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
-//    return (irqflags2 & HRF_MASK_PAYLOADRDY) == HRF_MASK_PAYLOADRDY;
-//}
+static int _payload_waiting(void)
+{
+    uint8_t irqflags2 = HRF_readreg(HRF_ADDR_IRQFLAGS2);
+    return (irqflags2 & HRF_MASK_PAYLOADRDY) == HRF_MASK_PAYLOADRDY;
+}
 
 
 /***** PUBLIC ****************************************************************/
@@ -279,6 +270,7 @@ void radio_modulation(RADIO_MODULATION mod)
 
 
 /*---------------------------------------------------------------------------*/
+// Put radio into transmit mode for chosen modulation scheme
 
 void radio_transmitter(RADIO_MODULATION mod)
 {
@@ -290,6 +282,9 @@ void radio_transmitter(RADIO_MODULATION mod)
 
 
 /*---------------------------------------------------------------------------*/
+// Put radio into receive mode for chosen modulation scheme
+// This will open up the receive window, so that a packet can come in
+// and be detected later by radio_isReceiveWaiting
 
 void radio_receiver(RADIO_MODULATION mod)
 {
@@ -437,39 +432,33 @@ void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times)
 
 
 /*---------------------------------------------------------------------------*/
+// Check to see if a payload is waiting in the receive buffer
 
-//RADIO_RESULT radio_isReceiveWaiting(void)
-//{
-// def isReceiveWaiting():
-//     """Check to see if a payload is waiting in the receive buffer"""
-//     return check_payload()
-//    return RADIO_RESULT_ERR_UNIMPLEMENTED;
-//}
-
-
-/*---------------------------------------------------------------------------*/
-//TODO: high level receive, put into receive, receive a payload, back to standby
-
-//RADIO_RESULT radio_receive(uint8_t* buf, uint8_t len)
-//{
-// def receive():
-//     """Receive a single payload from the buffer using the present modulation scheme"""
-// change into receive mode if not already there
-// receive payload
-// if was not in receive mode, change back to previous mode
-//}
+RADIO_RESULT radio_is_receive_waiting(void)
+{
+    if (_payload_waiting())
+    {
+        return RADIO_RESULT_OK_PAYLOAD_READY;
+    }
+    return RADIO_RESULT_OK_NO_PAYLOAD;
+}
 
 
 /*---------------------------------------------------------------------------*/
-//TODO: low level receive, just receive a payload
-//
-//RADIO_RESULT radio_receive_payload(uint8_t* buf, uint8_t len)
-//{
-// def receive():
-//     """Receive a single payload from the buffer using the present modulation scheme"""
-//     return HRF_receive_payload()
-//    return RADIO_RESULT_ERR_UNIMPLEMENTED;
-//}
+// read a single payload from the payload buffer
+
+//HERE ####
+
+RADIO_RESULT radio_get_payload(uint8_t* buf, uint8_t len)
+{
+    //TODO len should be maxlen (i.e. length of user buffer)
+    //TODO how is actual length communicated back?
+    //TODO what if nothing came back (payload length 0)
+
+    HRF_readfifo_burst(buf, len);
+    //TODO how do we communicate actual length of buffer back to caller?
+    return RADIO_RESULT_ERR_UNIMPLEMENTED; // TODO
+}
 
 
 /*---------------------------------------------------------------------------*/
