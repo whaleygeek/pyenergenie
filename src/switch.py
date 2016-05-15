@@ -99,7 +99,7 @@ if __name__ == "__main__":
     OpenThings.init(Devices.CRYPT_PID)
 
     # Seed the registry with a known device, to simplify tx-only testing
-    SENSOR_ID = 0x6AB # TODO capture this from a known device before testing
+    SENSOR_ID = 0x68B # captured from a real device
     device_header = OpenThings.alterMessage(Messages.REGISTERED_SENSOR,
         header_mfrid     = Devices.MFRID,
         header_productid = Devices.PRODUCTID_MIHO005, # adaptor plus
