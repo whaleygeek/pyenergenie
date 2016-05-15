@@ -8,9 +8,7 @@
 
 import time
 
-from energenie import encoder
-# moving over to the new, faster, C radio driver
-from energenie import radio2 as radio
+from energenie import encoder, radio
 
 # How many times to send messages in the driver fast loop
 # Present version of driver limits to 15
