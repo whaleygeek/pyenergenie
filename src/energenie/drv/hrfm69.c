@@ -73,6 +73,7 @@ HRF_RESULT HRF_readfifo_burst_cbp(uint8_t* buf, uint8_t buflen)
     uint8_t data;
 
     spi_select();
+    spi_byte(HRF_ADDR_FIFO); /* prime the fifo burst reader */
 
     /* Read the first byte, and then decide how many remaining bytes to receive */
     data = spi_byte(HRF_ADDR_FIFO);
@@ -112,6 +113,7 @@ HRF_RESULT HRF_readfifo_burst_len(uint8_t* buf, uint8_t buflen)
     uint8_t data;
 
     spi_select();
+    spi_byte(HRF_ADDR_FIFO); /* prime the fifo burst reader */
 
     while (buflen != 0)
     {
