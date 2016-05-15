@@ -2,9 +2,8 @@
 #
 # New version of the radio driver, with most of the fast stuff pushed into C.
 #
-# NOTE 1: This is only used for OOK transmit at the moment.
-# FSK transmit and receive is inside radio.py, as the underlying radio.c code
-# does not yet support FSK mode.
+# NOTE 1: This is only used for OOK transmit & FSK transmit at the moment.
+# FSK receive is currently being re-implemented in radio.c
 
 # NOTE 2: Also there is an idea to do a python wrapper, build the C code
 # for an Arduino and wrap it with a simple serial message handler.
@@ -16,31 +15,55 @@
 #TODO: Should really add parameter validation here, so that C code doesn't have to.
 #although it will be faster in C (C could be made optional, like an assert?)
 
-LIBNAME = "drv/radio_rpi.so"
-##LIBNAME = "drv/radio_mac.so" # testing
+##LIBNAME = "drv/radio_rpi.so"
+LIBNAME = "drv/radio_mac.so" # testing
 
 import time
 import ctypes
 from os import path
 mydir = path.dirname(path.abspath(__file__))
 
-libradio                   = ctypes.cdll.LoadLibrary(mydir + "/" + LIBNAME)
-radio_init_fn              = libradio["radio_init"]
-radio_reset_fn             = libradio["radio_reset"]
-radio_get_ver_fn           = libradio["radio_get_ver"]
-radio_modulation_fn        = libradio["radio_modulation"]
-radio_transmitter_fn       = libradio["radio_transmitter"]
-radio_transmit_fn          = libradio["radio_transmit"]
-radio_send_payload_fn      = libradio["radio_send_payload"]
-#radio_receiver_fn          = libradio["radio_receiver"]
-#radio_isReceiveWaiting_fn  = libradio["radio_isReceiveWaiting"]
-#radio_receive_fn           = libradio["radio_receive"]
-#radio_receive_payload_fn   = libradio["radio_receive_payload"]
-radio_standby_fn           = libradio["radio_standby"]
-radio_finished_fn          = libradio["radio_finished"]
+libradio                     = ctypes.cdll.LoadLibrary(mydir + "/" + LIBNAME)
+radio_init_fn                = libradio["radio_init"]
+radio_reset_fn               = libradio["radio_reset"]
+radio_get_ver_fn             = libradio["radio_get_ver"]
+radio_modulation_fn          = libradio["radio_modulation"]
+radio_transmitter_fn         = libradio["radio_transmitter"]
+radio_transmit_fn            = libradio["radio_transmit"]
+radio_send_payload_fn        = libradio["radio_send_payload"]
+radio_receiver_fn            = libradio["radio_receiver"]
+radio_is_receive_waiting_fn  = libradio["radio_is_receive_waiting"]
+radio_get_payload_fn         = libradio["radio_get_payload"]
+radio_standby_fn             = libradio["radio_standby"]
+radio_finished_fn            = libradio["radio_finished"]
 
 RADIO_MODULATION_OOK = 0
 RADIO_MODULATION_FSK = 1
+
+#TODO RADIO_RESULT_XX
+
+def unimplemented(m):
+    print("warning: method is not implemented:%s" % m)
+    return m
+
+
+def deprecated(m):
+    """Load-time warning about deprecated method"""
+    print("warning: method is deprecated:%s" % m)
+    return m
+
+
+def untested(m):
+    """Load-time warning about untested function"""
+    print("warning: method is untested:%s" % m)
+    return m
+
+
+def disabled(m):
+    """Load-time waring about disabled function"""
+    print("warning: method is disabled:%s" % m)
+    def nothing(*args, **kwargs):pass
+    return nothing
 
 
 def init():
@@ -131,39 +154,46 @@ def send_payload(payload, outer_times=1, inner_times=8, outer_delay=0):
             time.sleep(outer_delay)
 
 
-#def receiver(fsk=None, ook=None):
-#    """Change into receiver mode"""
-#    #extern void radio_receiver(RADIO_MODULATION mod);
-#    if ook:
-#        m = ctypes.c_int(RADIO_MODULATION_OOK)
-#    elif fsk:
-#        m = ctypes.c_int(RADIO_MODULATION_FSK)
-#
-#    radio_receiver_fn(m)
+@untested
+def receiver(fsk=None, ook=None):
+    """Change into receiver mode"""
+    #extern void radio_receiver(RADIO_MODULATION mod);
+    if ook:
+        m = ctypes.c_int(RADIO_MODULATION_OOK)
+    elif fsk:
+        m = ctypes.c_int(RADIO_MODULATION_FSK)
+    else: # defaults to FSK
+        m = ctypes.c_int(RADIO_MODULATION_FSK)
+
+    radio_receiver_fn(m)
 
 
-#def isReceiveWaiting():
-#    """Check to see if a payload is waiting in the receive buffer"""
-#    #extern RADIO_RESULT radio_isReceiveWaiting(void);
-#    pass # TODO
-#    # returns bool
+@unimplemented
+def is_receive_waiting():
+    """Check to see if a payload is waiting in the receive buffer"""
+    #extern RADIO_RESULT radio_is_receive_waiting(void);
 #    ##res = radio_isReceiveWaitingFn()
+#   turn from result into bool
+#   return bool
+    return False #TODO
 
 
-#def receive():
-#    """Put radio into receive mode and receive"""
-#    #extern RADIO_RESULT radio_receive(uint8_t* buf, uint8_t len)
-#    pass # TODO
-#    ##radio_receive_fn(buf, len)
-#    # returns list of bytes
+@unimplemented
+def receive():
+    """Receive a single payload"""
 
+    #TODO pass in length of user buffer
+    #TODO get back actual length of buffer used
+    #extern RADIO_RESULT radio_get_payload(uint8_t* buf, uint8_t len);
+    pass # TODO
+    #build a user buffer of a maximum size (need to decide max size, prob 66 which is FIFO size)
+    #note that the receiver cannot yet receive more than one FIFO worth of data
+    #although it might be able to in the future if we wrote better buffer handling in hrfm69.c
 
-#def radio_receive_payload():
-#    """Receive a single payload"""
-#    #extern RADIO_RESULT radio_receive_payload(uint8_t* buf, uint8_t len);
-#    pass # TODO
-#    ##radio_receive_payload_fn(buf, len)
-#    # returns list of bytes
+    ##radio_receive_payload_fn(buf, len)
+    # turn buffer into a list of bytes
+    # returns list of bytes
+    return [] #TODO
 
 
 def standby():
@@ -208,10 +238,12 @@ LED_GREEN = 27 # BCM GPIO (not B rev1)
 LED_RED   = 22 # BCM GPIO
 
 
+@disabled
 def spi_trace(msg):
-    pass #print(str(msg))
+    print(str(msg))
 
 
+@deprecated
 def spi_reset():
     spi_trace("reset")
 
@@ -230,12 +262,13 @@ def spi_reset():
     gpio_setout_fn(led_green)
     gpio_low_fn(led_green)
 
-
+@deprecated
 def spi_init_defaults():
     spi_trace("calling init_defaults")
     spi_init_defaults_fn()
 
 
+@deprecated
 def spi_init():
     spi_trace("calling init")
     #TODO build a config structure
@@ -243,6 +276,7 @@ def spi_init():
     #spi_init_fn()
 
 
+@deprecated
 def spi_start_transaction():
     """Start a transmit or receive, perhaps multiple bursts"""
     # turn the GREEN LED on
@@ -250,6 +284,7 @@ def spi_start_transaction():
     gpio_high_fn(led_green)
 
 
+@deprecated
 def spi_end_transaction():
     """End a transmit or receive, perhaps multiple listens"""
     # turn the GREEN LED off
@@ -257,16 +292,19 @@ def spi_end_transaction():
     gpio_low_fn(led_green)
 
 
+@deprecated
 def spi_select():
     spi_trace("calling select")
     spi_select_fn()
 
 
+@deprecated
 def spi_deselect():
     spi_trace("calling deselect")
     spi_deselect_fn()
 
 
+@deprecated
 def spi_byte(tx):
     txbyte = ctypes.c_ubyte(tx)
     #spi_trace("calling byte")
@@ -274,6 +312,7 @@ def spi_byte(tx):
     return rxbyte
 
 
+@deprecated
 def spi_frame(txlist):
     spi_trace("calling frame ")
     framelen = len(txlist)
@@ -289,6 +328,7 @@ def spi_frame(txlist):
     return rxlist
 
 
+@deprecated
 def spi_finished():
     spi_trace("calling finished")
     spi_finished_fn()
