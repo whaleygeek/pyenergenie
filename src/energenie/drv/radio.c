@@ -8,12 +8,25 @@
 
 /* TODO (rx)
 DONE: decide interface for: HRF_readfifo_burst(uint8_t* buf, uint8_t len)
+DONE: Knit in the payload check
+DONE: Knit in the get_payload
 
-TODO: Knit in the payload check
-TODO: Knit in the get_payload
-TODO: test with monitor.py (receive only mode)
+TODO: test with monitor.py (receive only mode, FSK)
+*/
 
 
+/* TODO (OOK rx)
+TODO: Write a tester legacy_rx.py to exercise 16 byte OOK receive
+TODO: See if we can receive from RF hand transmiter
+TODO: See how much 'noise bytes' we get
+TODO: Might need to set the sync bytes on OOK receive to prevent false trigger
+  This will mean loading a different configuration for OOK receive to transmit
+  But we don't want to be manually looking for sync bits, and we don't want
+  to use the preamble generator on tx as it doesn't work too well.
+*/
+
+
+/*
 TODO: Harden up the payload receiver
   1. If there is a corrupted packet in the fifo, the first byte
   might not be the length byte, and the read might fail or leave
@@ -32,6 +45,7 @@ TODO: Harden up the payload receiver
   this would mean that some of the bytes we read are not real bytes
   and should not be interpreted, that packet should be junked.
 */
+
 
 /* TODO: DUTY CYCLE PROTECTION REQUIREMENT
  *
