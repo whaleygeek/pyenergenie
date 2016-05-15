@@ -8,9 +8,11 @@
 # will be much nicer to use.
 
 import time
-from energenie import Messages, OpenThings, radio, encoder
+from energenie import Messages, OpenThings, radio, encoder, Devices
 
 # build FSK messages for MiHome purple
+
+OpenThings.init(Devices.CRYPT_PID)
 
 PURPLE_ID = 0x68B # captured from a real device using Monitor.py
 m = OpenThings.alterMessage(
@@ -32,17 +34,23 @@ GREEN_OFF = encoder.build_switch_msg(False, device_address=1)
 
 
 def switch_loop():
-    print("Turning both ON")
-    radio.transmitter(ook=True)
+    print("Turning green ON")
+    radio.modulation(ook=True)
     radio.transmit(GREEN_ON)
-    radio.transmitter(fsk=True)
+    time.sleep(0.5)
+
+    print("Turning purple ON")
+    radio.modulation(fsk=True)
     radio.transmit(purple_on)
     time.sleep(2)
 
-    print("Turning both OFF")
-    radio.transmitter(ook=True)
+    print("Turning green OFF")
+    radio.modulation(ook=True)
     radio.transmit(GREEN_OFF)
-    radio.transmitter(fsk=True)
+    time.sleep(0.5)
+
+    print("Turning purple OFF")
+    radio.modulation(fsk=True)
     radio.transmit(purple_off)
     time.sleep(2)
 
