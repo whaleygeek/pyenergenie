@@ -1,493 +1,271 @@
-# test1.py  26/09/2015  D.J.Whale
+# radio2.py  15/04/2015  D.J.Whale
 #
-# Simple low level test of the HopeRF interface
-# Uses direct SPI commands to exercise the interface.
+# New version of the radio driver, with most of the fast stuff pushed into C.
 #
-# Receives and dumps payload buffers.
-#
-# Eventually a lot of this will be pushed into a separate module,
-# and then pushed back into C once it is proved working.
+# NOTE 1: This is only used for OOK transmit & FSK transmit at the moment.
+# FSK receive is currently being re-implemented in radio.c
 
-import spi
+# NOTE 2: Also there is an idea to do a python wrapper, build the C code
+# for an Arduino and wrap it with a simple serial message handler.
+# This would then make it possible to use the Energenie Radio on a Mac/PC/Linux
+# machine but by still using the same higher level Python code.
+# All you would need is a different radio.py that marshalled data to and from
+# the Arduino via pyserial.
 
-def warning(msg):
-    print("warning:" + str(msg))
+#TODO: Should really add parameter validation here, so that C code doesn't have to.
+#although it will be faster in C (C could be made optional, like an assert?)
+
+LIBNAME = "drv/radio_rpi.so"
+##LIBNAME = "drv/radio_mac.so" # testing
+
+import time
+import ctypes
+from os import path
+mydir = path.dirname(path.abspath(__file__))
+
+libradio                     = ctypes.cdll.LoadLibrary(mydir + "/" + LIBNAME)
+radio_init_fn                = libradio["radio_init"]
+radio_reset_fn               = libradio["radio_reset"]
+radio_get_ver_fn             = libradio["radio_get_ver"]
+radio_modulation_fn          = libradio["radio_modulation"]
+radio_transmitter_fn         = libradio["radio_transmitter"]
+radio_transmit_fn            = libradio["radio_transmit"]
+radio_send_payload_fn        = libradio["radio_send_payload"]
+radio_receiver_fn            = libradio["radio_receiver"]
+radio_is_receive_waiting_fn  = libradio["radio_is_receive_waiting"]
+radio_get_payload_len_fn     = libradio["radio_get_payload_len"]
+radio_get_payload_cbp_fn     = libradio["radio_get_payload_cbp"]
+radio_standby_fn             = libradio["radio_standby"]
+radio_finished_fn            = libradio["radio_finished"]
+
+RADIO_MODULATION_OOK = 0
+RADIO_MODULATION_FSK = 1
+
+# A temporary limit, the receiver will only receive 1 FIFO worth of data maximul
+# This includes the length byte at the start of an OpenThings message
+MAX_RX_SIZE = 66
+
+
+#TODO RADIO_RESULT_XX
 
 def trace(msg):
     print(str(msg))
 
 
-def ashex(p):
+def tohex(l):
     line = ""
-    for b in p:
-        line += str(hex(b)) + " "
+    for item in l:
+        line += hex(item) + " "
     return line
 
 
-#----- HOPERF REGISTER INTERFACE ----------------------------------------------
-# Precise register descriptions can be found in:
-# www.hoperf.com/upload/rf/RFM69W-V1.3.pdf
-# on page 63 - 74
-
-ADDR_FIFO                   = 0x00
-ADDR_OPMODE                 = 0x01
-ADDR_REGDATAMODUL           = 0x02
-ADDR_BITRATEMSB             = 0x03
-ADDR_BITRATELSB             = 0x04
-ADDR_FDEVMSB                = 0x05
-ADDR_FDEVLSB                = 0x06
-ADDR_FRMSB                  = 0x07
-ADDR_FRMID                  = 0x08
-ADDR_FRLSB                  = 0x09
-ADDR_AFCCTRL                = 0x0B
-ADDR_VERSION               =  0x10
-ADDR_LNA                    = 0x18
-ADDR_RXBW                   = 0x19
-ADDR_AFCFEI                 = 0x1E
-ADDR_IRQFLAGS1              = 0x27
-ADDR_IRQFLAGS2              = 0x28
-ADDR_RSSITHRESH             = 0x29
-ADDR_PREAMBLELSB            = 0x2D
-ADDR_SYNCCONFIG             = 0x2E
-ADDR_SYNCVALUE1             = 0x2F
-ADDR_SYNCVALUE2             = 0x30
-ADDR_SYNCVALUE3             = 0x31
-ADDR_SYNCVALUE4             = 0x32
-ADDR_PACKETCONFIG1          = 0x37
-ADDR_PAYLOADLEN             = 0x38
-ADDR_NODEADDRESS            = 0x39
-ADDR_FIFOTHRESH             = 0x3C
-
-# HopeRF masks to set and clear bits
-MASK_REGDATAMODUL_OOK       = 0x08
-MASK_REGDATAMODUL_FSK       = 0x00
-MASK_WRITE_DATA             = 0x80
-MASK_MODEREADY              = 0x80
-MASK_FIFONOTEMPTY           = 0x40
-MASK_FIFOLEVEL              = 0x20
-MASK_FIFOOVERRUN            = 0x10
-MASK_PACKETSENT             = 0x08
-MASK_TXREADY                = 0x20
-MASK_PACKETMODE             = 0x60
-MASK_MODULATION             = 0x18
-MASK_PAYLOADRDY             = 0x04
-
-MODE_STANDBY                = 0x04	# Standby
-MODE_TRANSMITER             = 0x0C	# Transmiter
-MODE_RECEIVER               = 0x10	# Receiver
-VAL_REGDATAMODUL_FSK        = 0x00	# Modulation scheme FSK
-VAL_REGDATAMODUL_OOK        = 0x08	# Modulation scheme OOK
-VAL_FDEVMSB30               = 0x01	# frequency deviation 5kHz 0x0052 -> 30kHz 0x01EC
-VAL_FDEVLSB30               = 0xEC	# frequency deviation 5kHz 0x0052 -> 30kHz 0x01EC
-VAL_FRMSB434                = 0x6C	# carrier freq -> 434.3MHz 0x6C9333
-VAL_FRMID434                = 0x93	# carrier freq -> 434.3MHz 0x6C9333
-VAL_FRLSB434                = 0x33	# carrier freq -> 434.3MHz 0x6C9333
-VAL_FRMSB433                = 0x6C	# carrier freq -> 433.92MHz 0x6C7AE1
-VAL_FRMID433                = 0x7A	# carrier freq -> 433.92MHz 0x6C7AE1
-VAL_FRLSB433                = 0xE1	# carrier freq -> 433.92MHz 0x6C7AE1
-VAL_AFCCTRLS                = 0x00	# standard AFC routine
-VAL_AFCCTRLI                = 0x20	# improved AFC routine
-VAL_LNA50                   = 0x08	# LNA input impedance 50 ohms
-VAL_LNA50G                  = 0x0E	# LNA input impedance 50 ohms, LNA gain -> 48db
-VAL_LNA200                  = 0x88	# LNA input impedance 200 ohms
-VAL_RXBW60                  = 0x43	# channel filter bandwidth 10kHz -> 60kHz  page:26
-VAL_RXBW120                 = 0x41	# channel filter bandwidth 120kHz
-VAL_AFCFEIRX                = 0x04	# AFC is performed each time RX mode is entered
-VAL_RSSITHRESH220           = 0xDC	# RSSI threshold 0xE4 -> 0xDC (220)
-VAL_PREAMBLELSB3            = 0x03	# preamble size LSB 3
-VAL_PREAMBLELSB5            = 0x05	# preamble size LSB 5
-VAL_SYNCCONFIG2             = 0x88	# Size of the Synch word = 2 (SyncSize + 1)
-VAL_SYNCCONFIG4             = 0x98	# Size of the Synch word = 4 (SyncSize + 1)
-VAL_SYNCVALUE1FSK           = 0x2D	# 1st byte of Sync word
-VAL_SYNCVALUE2FSK           = 0xD4	# 2nd byte of Sync word
-VAL_SYNCVALUE1OOK           = 0x80	# 1nd byte of Sync word
-VAL_PACKETCONFIG1FSK        = 0xA2	# Variable length, Manchester coding, Addr must match NodeAddress
-VAL_PACKETCONFIG1FSKNO      = 0xA0	# Variable length, Manchester coding
-VAL_PACKETCONFIG1OOK        = 0		# Fixed length, no Manchester coding
-VAL_PAYLOADLEN255           = 0xFF	# max Length in RX, not used in Tx
-VAL_PAYLOADLEN66            = 66	# max Length in RX, not used in Tx
-##TODO: This calculation looks wrong, inherited from the original C code.
-#It accounts for the 'magic' byte that C used for the SPI address.
-VAL_PAYLOADLEN_OOK          = (13 + 8 * 17)	# Payload Length
-VAL_NODEADDRESS01           = 0x01	# Node address used in address filtering
-VAL_NODEADDRESS04           = 0x04	# Node address used in address filtering
-VAL_FIFOTHRESH1             = 0x81	# Condition to start packet transmission: at least two? bytes in FIFO
-VAL_FIFOTHRESH30            = 0x1E	# Condition to start packet transmission: wait for >30 bytes in FIFO
+def unimplemented(m):
+    print("warning: method is not implemented:%s" % m)
+    return m
 
 
-#----- HOPERF RADIO INTERFACE -------------------------------------------------
-
-def HRF_writereg(addr, data):
-    """Write an 8 bit value to a register"""
-    buf = [addr | MASK_WRITE_DATA, data]
-    spi.select()
-    spi.frame(buf)
-    spi.deselect()
+def deprecated(m):
+    """Load-time warning about deprecated method"""
+    print("warning: method is deprecated:%s" % m)
+    return m
 
 
-def HRF_readreg(addr):
-    """Read an 8 bit value from a register"""
-    buf = [addr, 0x00]
-    spi.select()
-    res = spi.frame(buf)
-    spi.deselect()
-    #print(hex(res[1]))
-    return res[1] # all registers are 8 bit
+def untested(m):
+    """Load-time warning about untested function"""
+    print("warning: method is untested:%s" % m)
+    return m
 
 
-def HRF_writefifo_burst(buf):
-    """Write all bytes in buf to the payload FIFO, in a single burst"""
-    # Don't modify buf, in case caller reuses it
-    txbuf = [ADDR_FIFO | MASK_WRITE_DATA]
-    for b in buf:
-      txbuf.append(b)
-    #print("write FIFO %s" % ashex(txbuf))
+def disabled(m):
+    """Load-time waring about disabled function"""
+    print("warning: method is disabled:%s" % m)
+    def nothing(*args, **kwargs):pass
+    return nothing
 
-    spi.select()
-    spi.frame(txbuf)
-    spi.deselect()
-
-
-def HRF_readfifo_burst():
-    """Read bytes from the payload FIFO using burst read"""
-    #first byte read is the length in remaining bytes
-    buf = []
-    spi.select()
-    spi.frame([ADDR_FIFO])
-    count = 1 # read at least the length byte
-    while count > 0:
-        rx = spi.frame([ADDR_FIFO])
-        data = rx[0]
-        if len(buf) == 0:
-            count = data
-        else:
-            count -= 1
-        buf.append(data)
-    spi.deselect()
-    trace("readfifo:" + str(ashex(buf)))
-    return buf
-
-
-def HRF_checkreg(addr, mask, value):
-    """Check to see if a register matches a specific value or not"""
-    regval = HRF_readreg(addr)
-    #print("addr %d mask %d wanted %d actual %d" % (addr,mask,value,regval))
-    return (regval & mask) == value
-
-
-def HRF_pollreg(addr, mask, value):
-    """Poll a register until it meet some criteria"""
-    while not HRF_checkreg(addr, mask, value):
-        pass
-
-
-def HRF_wait_ready():
-    """Wait for HRF to be ready after last command"""
-    HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY, MASK_MODEREADY)
-
-
-def HRF_wait_txready():
-    """Wait for HRF to be ready and ready for tx, after last command"""
-    trace("waiting for transmit ready...")
-    HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY|MASK_TXREADY, MASK_MODEREADY|MASK_TXREADY)
-    trace("transmit ready")
-
-
-def HRF_change_mode(mode):
-    HRF_writereg(ADDR_OPMODE, mode)
-
-
-def HRF_clear_fifo():
-    """Clear any data in the HRF payload FIFO by reading until empty"""
-    while (HRF_readreg(ADDR_IRQFLAGS2) & MASK_FIFONOTEMPTY) == MASK_FIFONOTEMPTY:
-        HRF_readreg(ADDR_FIFO)
-
-
-def HRF_check_payload():
-    """Check if there is a payload in the FIFO waiting to be processed"""
-    irqflags1 = HRF_readreg(ADDR_IRQFLAGS1)
-    irqflags2 = HRF_readreg(ADDR_IRQFLAGS2)
-    #trace("irq1 %s   irq2 %s" % (hex(irqflags1), hex(irqflags2)))
-
-    return (irqflags2 & MASK_PAYLOADRDY) == MASK_PAYLOADRDY
-
-
-def HRF_receive_payload():
-    """Receive the whole payload"""
-    return HRF_readfifo_burst()
-
-
-def HRF_send_payload(payload):
-    trace("send_payload")
-    #trace("payload:%s" % ashex(payload))
-    HRF_writefifo_burst(payload)
-    trace("  waiting for sent...")
-    HRF_pollreg(ADDR_IRQFLAGS2, MASK_PACKETSENT, MASK_PACKETSENT)
-    trace("  sent")
-    reg = HRF_readreg(ADDR_IRQFLAGS2)
-    trace("  irqflags2=%s" % hex(reg))
-    if ((reg & MASK_FIFONOTEMPTY) != 0) or ((reg & MASK_FIFOOVERRUN) != 0):
-        warning("Failed to send payload to HRF")
-
-
-
-#----- ENERGENIE SPECIFIC CONFIGURATIONS --------------------------------------
-
-config_FSK = [
-    [ADDR_REGDATAMODUL,       VAL_REGDATAMODUL_FSK],         # modulation scheme FSK
-    [ADDR_FDEVMSB,            VAL_FDEVMSB30],                # frequency deviation 5kHz 0x0052 -> 30kHz 0x01EC
-    [ADDR_FDEVLSB,            VAL_FDEVLSB30],                # frequency deviation 5kHz 0x0052 -> 30kHz 0x01EC
-    [ADDR_FRMSB,              VAL_FRMSB434],                 # carrier freq -> 434.3MHz 0x6C9333
-    [ADDR_FRMID,              VAL_FRMID434],                 # carrier freq -> 434.3MHz 0x6C9333
-    [ADDR_FRLSB,              VAL_FRLSB434],                 # carrier freq -> 434.3MHz 0x6C9333
-    [ADDR_AFCCTRL,            VAL_AFCCTRLS],                 # standard AFC routine
-    [ADDR_LNA,                VAL_LNA50],                    # 200ohms, gain by AGC loop -> 50ohms
-    [ADDR_RXBW,               VAL_RXBW60],                   # channel filter bandwidth 10kHz -> 60kHz  page:26
-    [ADDR_BITRATEMSB,         0x1A],                         # 4800b/s
-    [ADDR_BITRATELSB,         0x0B],                         # 4800b/s
-    #[ADDR_AFCFEI,             VAL_AFCFEIRX],                 # AFC is performed each time rx mode is entered
-    #[ADDR_RSSITHRESH,         VAL_RSSITHRESH220],            # RSSI threshold 0xE4 -> 0xDC (220)
-    #[ADDR_PREAMBLELSB,        VAL_PREAMBLELSB5],             # preamble size LSB set to 5
-    [ADDR_SYNCCONFIG,         VAL_SYNCCONFIG2],              # Size of the Synch word = 2 (SyncSize + 1)
-    [ADDR_SYNCVALUE1,         VAL_SYNCVALUE1FSK],            # 1st byte of Sync word
-    [ADDR_SYNCVALUE2,         VAL_SYNCVALUE2FSK],            # 2nd byte of Sync word
-    #[ADDR_PACKETCONFIG1,     VAL_PACKETCONFIG1FSK],          # Variable length, Manchester coding, Addr must match NodeAddress
-    [ADDR_PACKETCONFIG1,      VAL_PACKETCONFIG1FSKNO],       # Variable length, Manchester coding
-    [ADDR_PAYLOADLEN,         VAL_PAYLOADLEN66],             # max Length in RX, not used in Tx
-    #[ADDR_NODEADDRESS,       VAL_NODEADDRESS01],            # Node address used in address filtering
-    [ADDR_NODEADDRESS,        0x06],                         # Node address used in address filtering
-    [ADDR_FIFOTHRESH,         VAL_FIFOTHRESH1],              # Condition to start packet transmission: at least one byte in FIFO
-    [ADDR_OPMODE,             MODE_RECEIVER]                 # Operating mode to Receiver
-]
-
-config_OOK = [
-    [ADDR_REGDATAMODUL,       VAL_REGDATAMODUL_OOK],	     # modulation scheme OOK
-    [ADDR_FDEVMSB,            0],                            # frequency deviation -> 0kHz
-    [ADDR_FDEVLSB,            0],                            # frequency deviation -> 0kHz
-    [ADDR_FRMSB,              VAL_FRMSB433],                 # carrier freq -> 433.92MHz 0x6C7AE1
-    [ADDR_FRMID,              VAL_FRMID433],                 # carrier freq -> 433.92MHz 0x6C7AE1
-    [ADDR_FRLSB,              VAL_FRLSB433],                 # carrier freq -> 433.92MHz 0x6C7AE1
-    [ADDR_RXBW,               VAL_RXBW120],                  # channel filter bandwidth 120kHz
-    [ADDR_BITRATEMSB, 	      0x1A],                         # 4800b/s
-    [ADDR_BITRATELSB,         0x0B],                         # 4800b/s
-    [ADDR_PREAMBLELSB, 	      0],                            # preamble size LSB 3
-    [ADDR_SYNCCONFIG, 	      VAL_SYNCCONFIG4],		         # Size of the Sync word = 4 (SyncSize + 1)
-    [ADDR_SYNCVALUE1, 	      VAL_SYNCVALUE1OOK],            # sync value 1
-    [ADDR_SYNCVALUE2, 	      0],                            # sync value 2
-    [ADDR_SYNCVALUE3, 	      0],                            # sync value 3
-    [ADDR_SYNCVALUE4, 	      0],                            # sync value 4
-    [ADDR_PACKETCONFIG1,      VAL_PACKETCONFIG1OOK],	     # Fixed length, no Manchester coding, OOK
-    [ADDR_PAYLOADLEN, 	      VAL_PAYLOADLEN_OOK],	         # Payload Length
-    [ADDR_FIFOTHRESH, 	      VAL_FIFOTHRESH30],             # Condition to start packet transmission: wait for 30 bytes in FIFO
-]
-
-
-def HRF_config(config):
-    """Load a table of configuration values into HRF registers"""
-    for cmd in config:
-        HRF_writereg(cmd[0], cmd[1])
-        HRF_wait_ready()
-
-
-#ORIGINAL C CODE
-#void HRF_send_OOK_msg(uint8_t relayState)
-#{
-#	uint8_t buf[17];
-#	uint8_t i;
-#
-#	HRF_config_OOK();
-#
-#	buf[1] = 0x80;										// Preambule 32b enclosed in sync words
-#	buf[2] = 0x00;
-#	buf[3] = 0x00;
-#	buf[4] = 0x00;
-#
-#	for (i = 5; i <= 14; ++i){
-#		buf[i] = 8 + (i&1) * 6 + 128 + (i&2) * 48;		// address 20b * 4 = 10 Bytes
-#	}
-#
-#	if (relayState == 1)
-#	{
-#		printf("relay ON\n\n");
-#		buf[15] = 0xEE;		// D0-high, D1-h		// S1 on
-#		buf[16] = 0xEE;		// D2-h, D3-h
-#	}
-#	else
-#	{
-#		printf("relay OFF\n\n");
-#		buf[15] = 0xEE;		// D0-high, D1-h		// S1 off
-#		buf[16] = 0xE8;		// D2-h, D3-l
-#	}
-#
-#	HRF_wait_for (ADDR_IRQFLAGS1, MASK_MODEREADY | MASK_TXREADY, true);		// wait for ModeReady + TX ready
-#	HRF_reg_Wn(buf + 4, 0, 12);						// don't include sync word (4 bytes) into data buffer
-#
-#	for (i = 0; i < 8; ++i)							// Send the same message few more times
-#	{
-#		HRF_wait_for(ADDR_IRQFLAGS2, MASK_FIFOLEVEL, false);
-#		HRF_reg_Wn(buf, 0, 16);						// with sync word
-#	}
-#
-#	HRF_wait_for (ADDR_IRQFLAGS2, MASK_PACKETSENT, true);		// wait for Packet sent
-#	HRF_assert_reg_val(ADDR_IRQFLAGS2, MASK_FIFONOTEMPTY | MASK_FIFOOVERRUN, false, "are all bytes sent?");
-#	HRF_config_FSK();
-#	HRF_wait_for (ADDR_IRQFLAGS1, MASK_MODEREADY, true);		// wait for ModeReady
-#}
-
-
-# first payload
-# (radio sync 4 bytes, not counted)
-# address 10 bytes
-# command 2 bytes
-# i.e. 12 bytes
-# so, >30 is 2 and a bit payloads loaded.
-# 66 byte FIFO size
-# so that means FIFO roughly half full before starts tx,
-# FIFO at or below half full before another payload will be added
-
-# packetsent is based on the fixed payload length
-# which is (13 + 8 * 17) = 149
-# This maths looks wrong.
-# 10 bytes of address, two bytes of command = 12
-# 13 includes the dummy byte at the start, but that is for the SPI address and not counted
-
-def HRF_send_OOK_payload(payload):
-    """Send a payload multiple times"""
-
-    #TODO: note the zero at the start was the C method of reserving space for address byte
-    p1 = [0x00] + payload
-    # This sync pattern does not match C code, but it works.
-    # The sync pattern from the C code does not work here
-    # Note that buf[0] in the C is undefined due to being uninitialised
-    # but it is a space for the address byte in the C fifo burst routine
-    pn = [0x00,0x80,0x00,0x00,0x00] + payload # from the C
-    #TODO: note the zero at the start was the C method of reserving space for address byte
-    # which is not needed here in this python.
-    # This is old test data due to wrong baud rate - deprecated
-    #pn = [0x80,0x80,0x80,0x80,0x80] + payload
-
-    HRF_pollreg(ADDR_IRQFLAGS1, MASK_MODEREADY|MASK_TXREADY, MASK_MODEREADY|MASK_TXREADY)
-    HRF_writefifo_burst(p1)
-    
-    for i in range(8):
-        # waits for <31 bytes in FIFO
-        HRF_pollreg(ADDR_IRQFLAGS2, MASK_FIFOLEVEL, 0)
-        HRF_writefifo_burst(pn)
-
-    HRF_pollreg(ADDR_IRQFLAGS2, MASK_PACKETSENT, MASK_PACKETSENT) # wait for Packet sent
-
-    reg = HRF_readreg(ADDR_IRQFLAGS2)
-    #trace("  irqflags2=%s" % hex(reg))
-    if (reg & (MASK_FIFONOTEMPTY) != 0) or ((reg & MASK_FIFOOVERRUN) != 0):
-        warning("Failed to send repeated payload to HRF")
-
-    # Note: packetsent is only cleared on exit from TX (i.e to STANDBY or RECEIVE)
-
-
-
-#----- RADIO API --------------------------------------------------------------
-
-mode = None
-modulation_fsk = None
 
 def init():
     """Initialise the module ready for use"""
-    spi.init_defaults()
-    trace("RESET")
-
-    # Note that if another program left GPIO pins in a different state
-    # and did a dirty exit, the reset fails to work and the clear fifo hangs.
-    # Might have to make the spi.init() set everything to inputs first,
-    # then set to outputs, to make sure that the
-    # GPIO registers are in a deterministic start state.
-    spi.reset() # send a hardware reset to ensure radio in clean state
-
-    HRF_clear_fifo()
+    #extern void radio_init(void);
+    radio_init_fn()
 
 
 def reset():
-    """Reset the radio chip"""
-    spi.reset()
+    """Reset the radio device"""
+    #extern void radio_reset(void);
+    radio_reset_fn()
 
 
 def get_ver():
-    """Get the version number of the radio chip"""
-    return HRF_readreg(ADDR_VERSION)
+    """Read out the version number of the radio"""
+    return radio_get_ver_fn()
 
 
 def modulation(fsk=None, ook=None):
     """Switch modulation, if needed"""
-    global modulation_fsk
-
-    # Handle sensible module defaults for earlier versions of user code
-    if fsk == None and ook == None:
-        # Force FSK mode
-        fsk = True
-
-    if fsk != None and fsk:
-        if modulation_fsk == None or modulation_fsk == False:
-            trace("switch to FSK")
-            HRF_config(config_FSK)
-            modulation_fsk = True
-
-    elif ook != None and ook:
-        if modulation_fsk == None or modulation_fsk == True:
-            trace("switch to OOK")
-            HRF_config(config_OOK)
-            modulation_fsk = False
+    #extern void radio_modulation(RADIO_MODULATION mod);
+    if ook:
+        m = ctypes.c_int(RADIO_MODULATION_OOK)
+    elif fsk:
+        m = ctypes.c_int(RADIO_MODULATION_FSK)
+    else:
+        raise RuntimeError("Must choose fsk or ook mode")
+    radio_modulation_fn(m)
 
 
 def transmitter(fsk=None, ook=None):
     """Change into transmitter mode"""
-    global mode
+    #extern void radio_transmitter(RADIO_MODULATION mod);
+    if ook:
+        m = ctypes.c_int(RADIO_MODULATION_OOK)
+    elif fsk:
+        m = ctypes.c_int(RADIO_MODULATION_FSK)
+    else: # defaults to FSK
+        m = ctypes.c_int(RADIO_MODULATION_FSK)
+    radio_transmitter_fn(m)
 
-    trace("transmitter mode")
-    modulation(fsk, ook)
-    HRF_change_mode(MODE_TRANSMITER)
-    mode = "TRANSMITTER"
-    HRF_wait_txready()
 
-
-def transmit(payload):
+def transmit(payload, outer_times=1, inner_times=8, outer_delay=0):
     """Transmit a single payload using the present modulation scheme"""
-    spi.start_transaction()
-    if not modulation_fsk:
-        HRF_send_OOK_payload(payload)
-    else:
-        HRF_send_payload(payload)
-    spi.end_transaction()
+    #Note, this optionally does a mode change before and after
+    #extern void radio_transmit(uint8_t* payload, uint8_t len, uint8_t repeats);
+
+    framelen = len(payload)
+    if framelen < 1 or framelen > 255:
+        raise ValueError("frame len must be 1..255")
+    if outer_times < 1:
+        raise ValueError("outer_times must be >0")
+    if inner_times < 1 or inner_times > 255:
+        raise ValueError("tx times must be 0..255")
+
+    framelen     = len(payload)
+    Frame        = ctypes.c_ubyte * framelen
+    txframe      = Frame(*payload)
+    inner_times  = ctypes.c_ubyte(inner_times)
+    
+    for i in range(outer_times):
+        #TODO: transmit() will mode change if required
+        #this means that outer_times will keep popping and pushing the mode
+        #that might be ok, as it will force all the flags to clear?
+        radio_transmit_fn(txframe, framelen, inner_times)
+        if outer_delay != 0:
+            time.sleep(outer_delay)
+
+
+def send_payload(payload, outer_times=1, inner_times=8, outer_delay=0):
+    """Transmit a payload in present modulation scheme, repeated"""
+    #Note, this does not do a mode change before or after,
+    #and assumes the mode is already transmit
+    #extern void radio_send_payload(uint8_t* payload, uint8_t len, uint8_t times);
+
+    framelen = len(payload)
+    if framelen < 1 or framelen > 255:
+        raise ValueError("frame len must be 1..255")
+    if outer_times < 1:
+        raise ValueError("outer_times must be >0")
+    if inner_times < 1 or inner_times > 255:
+        raise ValueError("tx times must be 0..255")
+    Frame          = ctypes.c_ubyte * framelen
+    txframe        = Frame(*payload)
+    inner_times    = ctypes.c_ubyte(inner_times)
+
+    for i in range(outer_times):
+        radio_send_payload_fn(txframe, framelen, inner_times)
+        if outer_delay != 0:
+            time.sleep(outer_delay)
 
 
 def receiver(fsk=None, ook=None):
     """Change into receiver mode"""
-    global mode
+    #extern void radio_receiver(RADIO_MODULATION mod);
+    if ook:
+        m = ctypes.c_int(RADIO_MODULATION_OOK)
+    elif fsk:
+        m = ctypes.c_int(RADIO_MODULATION_FSK)
+    else: # defaults to FSK
+        m = ctypes.c_int(RADIO_MODULATION_FSK)
 
-    trace("receiver mode")
-    modulation(fsk, ook)
-    HRF_change_mode(MODE_RECEIVER)
-    HRF_wait_ready()
-    mode = "RECEIVER"
+    radio_receiver_fn(m)
 
 
-def isReceiveWaiting():
+def is_receive_waiting():
     """Check to see if a payload is waiting in the receive buffer"""
-    spi.start_transaction()
-    waiting = HRF_check_payload()
-    spi.end_transaction()
-    return waiting
+    #extern RADIO_RESULT radio_is_receive_waiting(void);
+    res = radio_is_receive_waiting_fn()
+    # this is RADIO_RESULT_OK_TRUE or RADIO_RESULT_OK_FALSE
+    # so it is safe to evaluate it as a boolean number.
+    return (res != 0)
 
 
-def receive():
-    """Receive a single payload from the buffer using the present modulation scheme"""
-    spi.start_transaction()
-    payload = HRF_receive_payload()
-    spi.end_transaction()
-    return payload
+def receive(size=None):
+    """Receive a single payload"""
+
+    if size == None:
+        return receive_cbp()
+    else:
+        return receive_len(size)
+
+
+def receive_cbp():
+    """Receive a count byte preceded payload"""
+    ##trace("receive_cbp")
+
+    ##bufsize = MAX_RX_SIZE
+    bufsize = 255 # testing
+    Buffer = ctypes.c_ubyte * bufsize
+    rxbuf  = Buffer()
+    buflen = ctypes.c_ubyte(bufsize)
+    #RADIO_RESULT radio_get_payload_cbp(uint8_t* buf, uint8_t buflen)
+
+    result = radio_get_payload_cbp_fn(rxbuf, buflen)
+
+    if result != 0: # RADIO_RESULT_OK
+        raise RuntimeError("Receive failed, radio.c error code %s" % hex(result))
+
+    size = 1+rxbuf[0] # The count byte in the payload
+
+    # turn buffer into a list of bytes, using 'size' as the counter
+    rxlist = []
+    for i in range(size):
+        rxlist.append(rxbuf[i])
+
+    ##trace("receive_cbp returhs %s" % tohex(rxlist))
+    return rxlist # Python len(rxlist) tells us how many bytes including length byte if present
+
+
+@untested
+def receive_len(size):
+    """Receive a fixed payload size"""
+
+    bufsize = size
+
+    Buffer = ctypes.c_ubyte * bufsize
+    rxbuf  = Buffer()
+    buflen = ctypes.c_ubyte(bufsize)
+    #RADIO_RESULT radio_get_payload_len(uint8_t* buf, uint8_t buflen)
+
+    result = radio_get_payload_len_fn(rxbuf, buflen)
+
+    if result != 0: # RADIO_RESULT_OK
+        raise RuntimeError("Receive failed, error code %s" % hex(result))
+
+    # turn buffer into a list of bytes, using 'size' as the counter
+    rxlist = []
+    for i in range(size):
+        rxlist.append(rxbuf[i])
+
+    return rxlist # Python len(rxlist) tells us how many bytes including length byte if present
+
+
+def standby():
+    """Put radio into standby mode"""
+    #extern void radio_standby(void);
+    radio_standby_fn()
 
 
 def finished():
     """Close the library down cleanly when finished"""
-    spi.finished()
+    #extern void radio_finished(void);
+    radio_finished_fn()
 
 
 # END

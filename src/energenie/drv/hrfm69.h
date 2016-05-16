@@ -13,6 +13,11 @@
 #include "system.h"
 
 typedef uint8_t HRF_RESULT;
+//consider these, so we can easily pass back a boolean too
+#define HRF_RESULT_OK                   0x00
+#define HRF_RESULT_OK_FALSE             0x00
+#define HRF_RESULT_OK_TRUE              0x01
+#define HRF_RESULT_ERR_BUFFER_TOO_SMALL 0x81
 
 typedef struct
 {
@@ -113,7 +118,9 @@ extern uint8_t HRF_readreg(uint8_t addr);
 
 extern void HRF_writefifo_burst(uint8_t* buf, uint8_t len);
 
-extern void HRF_readfifo_burst(uint8_t* buf, uint8_t len);
+extern HRF_RESULT HRF_readfifo_burst_cbp(uint8_t* buf, uint8_t buflen);
+
+extern HRF_RESULT HRF_readfifo_burst_len(uint8_t* buf, uint8_t buflen);
 
 extern HRF_RESULT HRF_checkreg(uint8_t addr, uint8_t mask, uint8_t value);
 

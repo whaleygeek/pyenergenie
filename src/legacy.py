@@ -8,9 +8,7 @@
 
 import time
 
-from energenie import encoder
-# moving over to the new, faster, C radio driver
-from energenie import radio2 as radio
+from energenie import encoder, radio
 
 # How many times to send messages in the driver fast loop
 # Present version of driver limits to 15
@@ -34,7 +32,7 @@ APP_DELAY = 1
 # Prebuild all possible message up front, to make switching code faster
 
 HOUSE_ADDRESS = None # Use default energenie quasi-random address 0x6C6C6
-#HOUSE_ADDRESS = 0xA0170 # Captured address of David's RF hand controller
+##HOUSE_ADDRESS = 0xA0170 # Captured address of David's RF hand controller
 
 ALL_ON     = encoder.build_switch_msg(True,                    house_address=HOUSE_ADDRESS)
 ONE_ON     = encoder.build_switch_msg(True,  device_address=1, house_address=HOUSE_ADDRESS)
@@ -138,13 +136,12 @@ if __name__ == "__main__":
     radio.modulation(ook=True)
 
     try:
-        #pattern_test()
+        ##pattern_test()
         legacy_learn_mode()
         legacy_switch_loop()
-        #switch1_loop()
+        ##switch1_loop()
     finally:
         radio.finished()
-
 
 # END
 

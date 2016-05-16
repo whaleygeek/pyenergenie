@@ -106,6 +106,16 @@ messages get reported. Construct new template messages as pydict initialisers
 and encode and send those in to make the device do something in response.
 
 
+Experimental
+====
+
+You can try combined.py which is an example of how to switch both the
+purple MiHome plugs, and the green button legacy plugs in the same
+application (at the moment you have to use the unified_radio branch
+to do this, as I haven't merged this to master), but I tried it here
+and it works.
+
+
 Plans
 ====
 

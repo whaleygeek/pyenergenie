@@ -31,15 +31,9 @@ gcc radio_test.c radio.c hrfm69.c spis.c gpio_rpi.c delay_posix.c
 mv a.out radio_test
 chmod u+x radio_test
 
-# build spi .so library on Raspberry Pi
-##gcc -Wall -shared -o spi_rpi.so -fPIC spis_rpi.c gpio_rpi.c
-# nm -D spi_rpi.so
-##cp spi_rpi.so ..
 
-
-# radio spi .so library on Raspberry Pi
+# radio .so library on Raspberry Pi
 gcc -Wall -shared -o radio_rpi.so -fPIC radio.c hrfm69.c spis.c gpio_rpi.c delay_posix.c
 ##nm -D radio_rpi.so
-cp radio_rpi.so ..
 
 # END

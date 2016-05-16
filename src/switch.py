@@ -10,19 +10,19 @@
 # Don't expect this to be a good starting point for an application.
 # Consider waiting for me to finish developing the device object interface first.
 
-import time
-
-from energenie import OpenThings
-from energenie import Devices, Messages, radio
+from energenie import Devices, Messages, Registry, OpenThings, radio
 from Timer import Timer
+
 
 # Increase this if you have lots of switches, so that the receiver has enough
 # time to receive update messages, otherwise your devices won't make it into
 # the device directory.
-TX_RATE = 10 # seconds between each switch change cycle
+TX_RATE = 2 # seconds between each switch change cycle
+
 
 def warning(msg):
     print("warning:%s" % str(msg))
+
 
 def trace(msg):
     print("monitor:%s" % str(msg))
@@ -30,110 +30,63 @@ def trace(msg):
 
 #----- TEST APPLICATION -------------------------------------------------------
 
-directory = {}
+def switch_sniff_loop():
+    """Listen to sensor messages and add them to the Registry"""
 
-def allkeys(d):
-    result = ""
-    for k in d:
-        if len(result) != 0:
-            result += ','
-        result += str(k)
-    return result
+    # See if there is a payload, and if there is, process it
+    if radio.is_receive_waiting():
+        ##trace("receiving payload")
+        payload = radio.receive()
+        try:
+            decoded = OpenThings.decode(payload)
+        except OpenThings.OpenThingsException as e:
+            warning("Can't decode payload:" + str(e))
+            return
 
-        
-def updateDirectory(message):
-    """Update the local directory with information about this device"""
-    now      = time.time()
-    header   = message["header"]
-    sensorId = header["sensorid"]
+        OpenThings.showMessage(decoded)
+        # Any device that reports will be added to the non-persistent directory
+        Registry.update(decoded)
+        ##trace(decoded)
 
-    if not directory.has_key(sensorId):
-        # new device discovered
-        desc = Devices.getDescription(header["mfrid"], header["productid"])
-        print("ADD device:%s %s" % (hex(sensorId), desc))
-        directory[sensorId] = {"header": message["header"]}
-        #trace(allkeys(directory))
-
-    directory[sensorId]["time"] = now
-    #TODO would be good to keep recs, but need to iterate through all and key by paramid,
-    #not as a list index, else merging will be hard.
-
-
-def send_join_ack(mfrid, productid, sensorid):
-    # send back a JOIN ACK, so that join light stops flashing
-    response = OpenThings.alterMessage(Messages.JOIN_ACK,
-        header_mfrid=mfrid,
-        header_productid=productid,
-        header_sensorid=sensorid)
-    p = OpenThings.encode(response)
-    radio.transmitter()
-    radio.transmit(p)
-    radio.receiver()
+        # Process any JOIN messages by sending back a JOIN-ACK to turn the LED off
+        if len(decoded["recs"]) == 0:
+            # handle messages with zero recs in them silently
+            print("Empty record:%s" % decoded)
+        else:
+            # assume only 1 rec in a join, for now
+            if decoded["recs"][0]["paramid"] == OpenThings.PARAM_JOIN:
+                mfrid     = OpenThings.getFromMessage(decoded, "header_mfrid")
+                productid = OpenThings.getFromMessage(decoded, "header_productid")
+                sensorid  = OpenThings.getFromMessage(decoded, "header_sensorid")
+                Messages.send_join_ack(radio, mfrid, productid, sensorid)
 
 
-def switch_loop():
-    """Listen to sensor messages, and turn switches on and off every few seconds"""
+def switch_toggle_loop():
+    """Toggle the switch on all devices in the directory"""
 
-    # Define the schedule of message polling
-    sendSwitchTimer    = Timer(TX_RATE, 1)   # every n seconds offset by initial 1
-    switch_state       = 0             # OFF
-    radio.receiver()
+    global switch_state
 
-    while True:
-        # See if there is a payload, and if there is, process it
-        if radio.isReceiveWaiting():
-            #trace("receiving payload")
-            payload = radio.receive()
-            try:
-                decoded = OpenThings.decode(payload)
-            except OpenThings.OpenThingsException as e:
-                warning("Can't decode payload:" + str(e))
-                continue
-                      
-            OpenThings.showMessage(decoded)
-            # Any device that reports will be added to the non-persistent directory
-            updateDirectory(decoded)
-            #trace(decoded)
+    if Registry.size() > 0 and sendSwitchTimer.check():
+        print("transmit")
+        radio.transmitter()
 
-            # Process any JOIN messages by sending back a JOIN-ACK to turn the LED off
-            if len(decoded["recs"]) == 0:
-                # handle messages with zero recs in them silently
-                print("Empty record:%s" % decoded)
-            else:
-                # assume only 1 rec in a join, for now
-                #TODO: use OpenThings.getFromMessage("header_mfrid")
-                if decoded["recs"][0]["paramid"] == OpenThings.PARAM_JOIN:
-                    header    = decoded["header"]
-                    mfrid     = header["mfrid"]
-                    productid = header["productid"]
-                    sensorid  = header["sensorid"]
-                    send_join_ack(mfrid, productid, sensorid)
+        for sensorid in Registry.get_sensorids():
+            # Only try to toggle the switch for devices that actually have a switch
+            header = Registry.get_info(sensorid)["header"]
+            mfrid = header["mfrid"]
+            productid = header["productid"]
 
+            if Devices.hasSwitch(mfrid, productid):
+                request = OpenThings.alterMessage(Messages.SWITCH,
+                    header_sensorid=sensorid,
+                    recs_0_value=switch_state)
+                p = OpenThings.encode(request)
+                print("Sending switch message to %s %s" % (hex(productid), hex(sensorid)))
+                # Transmit multiple times, hope one of them gets through
+                radio.transmit(p, inner_times=2)
 
-        # Toggle the switch on all devices in the directory
-        if len(directory) > 0 and sendSwitchTimer.check():
-            print("transmit")
-            radio.transmitter()
-
-            for sensorid in directory.keys():
-                # Only try to toggle the switch for devices that actually have a switch
-                header = directory[sensorid]["header"]
-                mfrid = header["mfrid"]
-                productid = header["productid"]
-
-                if Devices.hasSwitch(mfrid, productid):
-                    request = OpenThings.alterMessage(Messages.SWITCH,
-                        header_sensorid=sensorid,
-                        recs_0_value=switch_state)
-                    p = OpenThings.encode(request)
-                    print("Sending switch message to %s %s" % (hex(productid), hex(sensorid)))
-                    # Transmit multiple times, hope one of them gets through
-                    for i in range(4):
-                        radio.transmit(p)
-
-            radio.receiver()
-            print("receive")
-            switch_state = (switch_state+1) % 2 # toggle
+        radio.receiver()
+        switch_state = (switch_state+1) % 2 # toggle
         
 
 if __name__ == "__main__":
@@ -142,8 +95,23 @@ if __name__ == "__main__":
     radio.init()
     OpenThings.init(Devices.CRYPT_PID)
 
+    # Seed the registry with a known device, to simplify tx-only testing
+    SENSOR_ID = 0x68B # captured from a real device
+    device_header = OpenThings.alterMessage(Messages.REGISTERED_SENSOR,
+        header_mfrid     = Devices.MFRID,
+        header_productid = Devices.PRODUCTID_MIHO005, # adaptor plus
+        header_sensorid  = SENSOR_ID)
+    Registry.update(device_header)
+
+
+    sendSwitchTimer    = Timer(TX_RATE, 1)   # every n seconds offset by initial 1
+    switch_state       = 0 # OFF
+    radio.receiver()
+
     try:
-        switch_loop()
+        while True:
+            switch_sniff_loop()
+            switch_toggle_loop()
 
     finally:
         radio.finished()

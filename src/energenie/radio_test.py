@@ -1,11 +1,11 @@
-# radio2_test.py  15/04/2016  D.J.Whale
+# radio_test.py  15/04/2016  D.J.Whale
 #
 # A simple Energenie radio exerciser
 #
 # Repeatedly transmits OOK packets to turn switch 1 on and off.
 #
 
-import radio2 as radio
+import radio
 import time
 
 # How many times to repeat the OOK payload.
