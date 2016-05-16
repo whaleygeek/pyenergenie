@@ -41,7 +41,7 @@ def switch_loop():
 
     print("Turning purple ON")
     radio.modulation(fsk=True)
-    radio.transmit(purple_on)
+    radio.transmit(purple_on, inner_times=2)
     time.sleep(2)
 
     print("Turning green OFF")
@@ -51,7 +51,7 @@ def switch_loop():
 
     print("Turning purple OFF")
     radio.modulation(fsk=True)
-    radio.transmit(purple_off)
+    radio.transmit(purple_off, inner_times=2)
     time.sleep(2)
 
 
