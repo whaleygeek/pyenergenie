@@ -26,6 +26,11 @@ OUTER_TIMES = 1
 # delay in seconds between each application switch message
 APP_DELAY = 1
 
+try:
+    readin = raw_input # python 2
+except NameError:
+    readin = input # python 3
+
 
 #----- TEST APPLICATION -------------------------------------------------------
 
@@ -51,7 +56,7 @@ OFF_MSGS   = [ALL_OFF, ONE_OFF, TWO_OFF, THREE_OFF, FOUR_OFF]
 
 def get_yes_no():
     """Get a simple yes or no answer"""
-    answer = raw_input() # python2
+    answer = readin()
     if answer.upper() in ['Y', 'YES']:
         return True
     return False
@@ -69,7 +74,7 @@ def legacy_learn_mode():
         y = get_yes_no()
         if y:
             print("Press the LEARN button on any switch %d for 5 secs until LED flashes" % switch_no)
-            raw_input("press ENTER when LED is flashing")
+            readin("press ENTER when LED is flashing")
 
             print("ON")
             radio.transmit(ON_MSGS[switch_no], OUTER_TIMES, INNER_TIMES)
@@ -120,7 +125,7 @@ def switch1_loop():
 def pattern_test():
     """Test all patterns"""
     while True:
-        p = raw_input("number 0..F")
+        p = readin("number 0..F")
         p = int(p, 16)
         msg = encoder.build_test_message(p)
         print("pattern %s payload %s" % (str(hex(p)), encoder.ashex(msg)))
