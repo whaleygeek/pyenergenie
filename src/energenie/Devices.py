@@ -9,8 +9,8 @@ MFRID                            = 0x04
 #PRODUCTID_C1_MONITOR             = 0x01   # MIHO004 Monitor
 #PRODUCTID_R1_MONITOR_AND_CONTROL = 0x02   # MIHO005 Adaptor Plus
 
-#PRODUCTID_MIHO001               = 0x0?   #         Home Hub
-#PRODUCTID_MIHO002               = 0x0?   #         Control only
+#PRODUCTID_MIHO001               =        #         Home Hub
+#PRODUCTID_MIHO002               =        #         Control only (Uses Legacy OOK protocol)
 #PRODUCTID_MIHO003               = 0x0?   #         Hand Controller
 PRODUCTID_MIHO004                = 0x01   #         Monitor only
 PRODUCTID_MIHO005                = 0x02   #         Adaptor Plus
