@@ -10,6 +10,7 @@
 # Don't expect this to be a good starting point for an application.
 # Consider waiting for me to finish developing the device object interface first.
 
+import time
 from energenie import Devices, Messages, Registry, OpenThings, radio
 from Timer import Timer
 
@@ -39,11 +40,12 @@ def switch_sniff_loop():
         payload = radio.receive()
         try:
             decoded = OpenThings.decode(payload)
+            now = time.time()
         except OpenThings.OpenThingsException as e:
             warning("Can't decode payload:" + str(e))
             return
 
-        OpenThings.showMessage(decoded)
+        OpenThings.showMessage(decoded, timestamp=now)
         # Any device that reports will be added to the non-persistent directory
         Registry.update(decoded)
         ##trace(decoded)

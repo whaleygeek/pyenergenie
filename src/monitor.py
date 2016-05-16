@@ -10,7 +10,7 @@
 # to a CSV log file, so could be the basis for a non-controlling energy logging app.
 
 from energenie import Registry, Devices, Messages, OpenThings, radio
-
+import time
 import Logger
 
 def warning(msg):
@@ -35,11 +35,12 @@ def monitor_loop():
             payload = radio.receive()
             try:
                 decoded = OpenThings.decode(payload)
+                now = time.time()
             except OpenThings.OpenThingsException as e:
                 warning("Can't decode payload:" + str(e))
                 continue
                       
-            OpenThings.showMessage(decoded)
+            OpenThings.showMessage(decoded, timestamp=now)
             # Any device that reports will be added to the non-persistent directory
             Registry.update(decoded)
             ##trace(decoded)

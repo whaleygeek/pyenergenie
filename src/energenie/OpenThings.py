@@ -3,6 +3,7 @@
 # Implement OpenThings message encoding and decoding
 
 import crypto
+import time
 
 class OpenThingsException(Exception):
 	def __init__(self, value):
@@ -570,7 +571,7 @@ def calcCRC(payload, start, length):
 	return rem
 
 
-def showMessage(msg):
+def showMessage(msg, timestamp=None):
 	"""Show the message in a friendly format"""
 
 	# HEADER
@@ -578,6 +579,8 @@ def showMessage(msg):
 	mfrid     = header["mfrid"]
 	productid = header["productid"]
 	sensorid  = header["sensorid"]
+        if timestamp != None:
+            print("receive-time:%s" % time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)))
 	print("mfrid:%s prodid:%s sensorid:%s" % (hex(mfrid), hex(productid), hex(sensorid)))
 
 	# RECORDS
