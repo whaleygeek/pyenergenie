@@ -60,7 +60,7 @@ def send_join_ack(radio, mfrid, productid, sensorid):
         header_sensorid=sensorid)
     p = OpenThings.encode(response)
     radio.transmitter()
-    radio.transmit(p)
+    radio.transmit(p, inner_times=2)
     radio.receiver()
 
 

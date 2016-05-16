@@ -83,11 +83,9 @@ def switch_toggle_loop():
                 p = OpenThings.encode(request)
                 print("Sending switch message to %s %s" % (hex(productid), hex(sensorid)))
                 # Transmit multiple times, hope one of them gets through
-                for i in range(4):
-                    radio.transmit(p)
+                radio.transmit(p, inner_times=2)
 
         radio.receiver()
-        ##print("receive")
         switch_state = (switch_state+1) % 2 # toggle
         
 
@@ -109,7 +107,6 @@ if __name__ == "__main__":
     sendSwitchTimer    = Timer(TX_RATE, 1)   # every n seconds offset by initial 1
     switch_state       = 0 # OFF
     radio.receiver()
-    ##radio.transmitter()
 
     try:
         while True:
