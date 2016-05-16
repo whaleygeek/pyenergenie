@@ -2,8 +2,12 @@
 #
 # pydict formatted message structures for OpenThings
 
-import Devices
-import OpenThings
+try: # python 2
+    import Devices
+    import OpenThings
+except ImportError:
+    from . import Devices
+    from . import OpenThings
 
 SWITCH = {
     "header": {

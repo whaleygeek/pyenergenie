@@ -5,7 +5,10 @@
 # NOTE: This is an initial, non persisted implementation only
 
 import time
-import Devices
+try:
+    import Devices # python 2
+except ImportError:
+    from . import Devices # python 3
 
 directory = {}
 
@@ -24,7 +27,7 @@ def update(message):
     header   = message["header"]
     sensorId = header["sensorid"]
 
-    if not directory.has_key(sensorId):
+    if not (sensorId in directory):
         # new device discovered
         desc = Devices.getDescription(header["mfrid"], header["productid"])
         print("ADD device:%s %s" % (hex(sensorId), desc))

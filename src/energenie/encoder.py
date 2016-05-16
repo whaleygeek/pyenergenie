@@ -156,7 +156,7 @@ def encode_bits(data, number):
 
     shift = number-2
     encoded = []
-    for i in range(number/2):
+    for i in range(int(number/2)):
         bits = (data >> shift) & 0x03
         #print("    shift %d bits %d" % (shift, bits))
         encoded.append(ENCODER[bits])

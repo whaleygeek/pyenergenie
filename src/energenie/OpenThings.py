@@ -2,8 +2,11 @@
 #
 # Implement OpenThings message encoding and decoding
 
-import crypto
 import time
+try:
+	import crypto # python 2
+except ImportError:
+	from . import crypto # python 3
 
 class OpenThingsException(Exception):
 	def __init__(self, value):
@@ -192,7 +195,7 @@ def decode(payload, decrypt=True):
 		param = payload[i]
 		wr = ((param & 0x80) == 0x80)
 		paramid = param & 0x7F
-		if param_info.has_key(paramid):
+		if paramid in param_info:
 			paramname = (param_info[paramid])["n"] # name
 			paramunit = (param_info[paramid])["u"] # unit
 		else:
@@ -254,7 +257,7 @@ def encode(spec, encrypt=True):
 	payload.append(header["mfrid"])
 	payload.append(header["productid"])
 
-	if not header.has_key("encryptPIP"):
+	if not ("encryptPIP" in header):
 		if encrypt:
 			warning("no encryptPIP in header, assuming 0x0100")
 		encryptPIP = 0x0100
@@ -273,7 +276,7 @@ def encode(spec, encrypt=True):
 		wr      = rec["wr"]
 		paramid = rec["paramid"]
 		typeid  = rec["typeid"]
-		if rec.has_key("length"):
+		if "length" in rec:
 			length  = rec["length"]
 		else:
 			length = None # auto detect
@@ -290,7 +293,7 @@ def encode(spec, encrypt=True):
 
 		# VALUE
 		valueenc = [] # in case of no value
-		if rec.has_key("value"):
+		if "value" in rec:
 			value = rec["value"]
 			valueenc = Value.encode(value, typeid, length)
 			if len(valueenc) > 15:
@@ -579,8 +582,8 @@ def showMessage(msg, timestamp=None):
 	mfrid     = header["mfrid"]
 	productid = header["productid"]
 	sensorid  = header["sensorid"]
-        if timestamp != None:
-            print("receive-time:%s" % time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)))
+	if timestamp != None:
+		print("receive-time:%s" % time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)))
 	print("mfrid:%s prodid:%s sensorid:%s" % (hex(mfrid), hex(productid), hex(sensorid)))
 
 	# RECORDS
@@ -594,7 +597,7 @@ def showMessage(msg, timestamp=None):
 		paramid   = rec["paramid"]
 		paramname = rec["paramname"]
 		paramunit = rec["paramunit"]
-		if rec.has_key("value"):
+		if "value" in rec:
 				value = rec["value"]
 		else:
 				value = None
