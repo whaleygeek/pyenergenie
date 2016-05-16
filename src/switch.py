@@ -91,7 +91,7 @@ def switch_toggle_loop():
 
 if __name__ == "__main__":
     
-    trace("starting switch tester - (in TX-only mode)")
+    trace("starting switch tester")
     radio.init()
     OpenThings.init(Devices.CRYPT_PID)
 
