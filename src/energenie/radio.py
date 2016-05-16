@@ -143,6 +143,9 @@ def transmit(payload, outer_times=1, inner_times=8, outer_delay=0):
     inner_times  = ctypes.c_ubyte(inner_times)
     
     for i in range(outer_times):
+        #TODO: transmit() will mode change if required
+        #this means that outer_times will keep popping and pushing the mode
+        #that might be ok, as it will force all the flags to clear?
         radio_transmit_fn(txframe, framelen, inner_times)
         if outer_delay != 0:
             time.sleep(outer_delay)
