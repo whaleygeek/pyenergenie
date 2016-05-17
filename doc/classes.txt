@@ -1,64 +1,170 @@
-Initial Proposal for modelling devices as classes.
+DEVICE CLASSES
 
-The purpose is to be able to write expressive and compact applications that talk in the land of physical devices such as
-'myRadiator' and 'myPlug' or even second level names such as 'myKettle' (which is plugged into 'myPlug'). Thus hiding
-the detail of how messages get encoded and transported, and focusing an application more on it's intents than on it's
-implementation.
+A device class is a scheme where user devices plugged into Energenie
+product, can be referred to as objects within a user application.
 
-each different device has a class 'cookie cutter' (e.g. Energenie.MiHomeAdaptorPlus(),Energenie.eTRV())
-
-each instance of a device is an object (e.g. plug, rad...)
-
-each device instance can be named and abstracted as appropriate to it's purpose (e.g. kitchenKettle(plug),
-hallwayRad(rad))
-
-Outgoing command messages modelled by function calls and/or properties (e.g. kitchenPlug.turnOn() or even
-kettle.turnOn()...)
-
-Incoming data modelled by function call getters and/or properties, perhaps with a cache of the last received value
-(e.g. hallRad.getTemperature(), hallRad.temperature)
-
-meta-model driven proxy classes for device types not in the device dictionary (e.g. an unknown device sends it's
-temperature, so you can still say unknownDevice.getTemperature() or unknownDevice.temperature)
-
-a low dependency link from the device object instances to the transport that sends and receives messages on their
-behalf (e.g. kitchenPlug = Energenie.MiHomeAdaptorPlus(OpenHEMS(myRadio))
-
-an outwards link via OpenHEMS(radio) for queueing transmit messages. An inwards link from OpenHEMS(radio) back to
-the object, so that when a message is received from a specific (mfrid, prodid, sensorid) the data is routed to the
-correct object instance.
-
-perhaps a catch-all object that receives messages from unknown or unregistered devices, with a way to later morph
-those into real device instances (e.g. this could be how the discovery service is created, by all messages for
-unknown sensorid's going to a catch all, and later the app constructing appropriate object abstractions around
-them and them being removed from 'unknown'
+It is a way of abstracting the on-air radio interface and Energenie
+device specifics from a user application, such that the user can
+code 'in the land of their devices'.
 
 
+--------------------------------------------------------------------------------
+REQUIREMENTS
+
+1. To be able to write expressive and compact applications,
+   that talk in the vocabulary of physical devices.
+
+   a. All known Energenie devices to be modelled as classes inside a
+      device database, and the capabilities and operations on those devices
+      pre-written so they can be reused by a user application.
+
+   b. An easy way for users to map energenie device intents to user
+      device intents (such as by wrapping custom object vocabulary around
+      the standard energenie device vocabulary) - e.g. room.heat() rather
+      than plug.on()
+
+  e.g. first level device names such as my_radiator or my_plug,
+  or second level device names such as bedroom_radiator and kitchen_kettle
+  (things plugged into devices)
+
+  This will hide the detail of how messages get encoded and transported,
+  and allows users to focus ore on the intents of the application, rather
+  than the implementation details.
+
+
+2. To be able to build a local registry of devices and their configurations,
+   and refer to devices by name inside the application.
+
+   a. to be configurable by learning (e.g. listen for messages such as
+      a join message, and add the device to the registry)
+
+   b. to be configurable by hand (e.g. hand entering the sensor id of
+      a known device into the registry)
+
+   c. to automatically build variables for the user program from the
+      registry, so that users don't have to bother with lots of
+      wiring up code every time their app starts.
+
+   d. this registry must be persistable, e.g. save and restore to a disk file,
+      so that on application startup, the device database is automatically loaded
+      and objects created.
+
+   e. the registry can be queried, such as 'find me all devices that are of
+      type x' or 'find me all devices in location kitchen'.
+
+
+3. To be able to command and query devices in a way that represents
+   meaningful device-based intents (such as tv.on() and tv.get_power())
+
+   a. received data values to be cached for deferred query, such as get_power()
+
+   b. the last receipt time of data from a transmitting device to be known
+
+   c. the next expected receipt time of data from a transmitting device to be known
+
+   d. the last known state of a transmitting device to be known (e.g. switch state
+      both by commanded state and retrieved state)
+
+
+4. To be able to refer to user devices in an Energenie device agnostic way.
+
+   e.g. it doesn't matter if the TV is plugged into a green button device,
+   or a MiHome device. It is always tv.on() in the code.
+
+
+5. To be able to instigate and manage learn mode from within an app
+
+   a. To send specific commands to green button devices so they can
+      learn the pattern
+
+   b. To sniff for any messages from MiHome devices and capture them
+      for later analysis and turning into device objects
+
+   c. To process MiHome join requests, and send MiHome join acks
+
+
+6. To completely hide the user from the on-air radio interface
+
+   a. choosing the correct radio frequency and modulation automatically
+
+   b. choosing the correct physical layer configuration automatically,
+      such as message repeats for certain devices
+
+
+Not as part of this work, but this should at least be enabled
+by the design
+
+7. To be able to build a well performing system
+   with very few message collisions and message losses
+
+   a. by dynamically learning report patterns of MiHome devices
+
+   b. by intelligently deferring and schedulling transmit messages
+      to avoid transmit slots of reporting devices
+
+   c. to query device characteristics such as modulation scheme and msg repeats.
+      also to estimate the transmit time of a particular message to help
+      with message scheduling.
+
+
+--------------------------------------------------------------------------------
+DESIGN Devices.py
+
+  to have a device class for each supported Energenie product.
+
+  These classes to define the operations on that device, such as on() off()
+  get_power().
+
+  Radio interface configuration parameters to be associated with each
+  device class, such as the modulation scheme and message repeat requirements.
+
+  commands modelled by function calls such as turn_on()
+
+  commanded state? (did we ask it to be on, when did we ask?)
+  reported state? (did it tell us it is on, when did we learn it?)
+
+  overall device state
+    can this device receive commands?
+    can this device transmit reports?
+    have we seen this device this run?
+    when did we last hear from it?
+    when did we last talk to it?
+    when do we expect to next hear from it?
+
+  common device features
+    it's manufacturer id
+    it's product id
+    it's sensor id
+
+  yet unmodelled devices still to be usable to some degree
+    for MiHome devices, a proxy class generated dynamically based on received message parameters.
+    e.g. if it reports a TEMPERATURE field, then there should be an automatic get_temperature() method
+    generated.
+
+  an incoming message callback
+    this already knows it is for the device, but it is up to the device to decode and action
+
+  an outgoing message sender
+    to be knitted to the on air interface proxy, but no radio handler code in the device class or instance.
+
+  TODO
+    possibly add callbacks such as when_turned_on() when_turned_off() etc.
+
+    Where do unknown incoming messages get routed to? Need to at least log them somewhere.
+    Although they won't necessarily route to a device class. But useful for learning semantics.
+    Perhaps there is a single 'UnknownDevice' that is just a Device() base class, that
+    captures all of these messages? But there might be multiple devices, so perhaps
+    we could generate UnknownDevice instances (optionally) when we receive messages
+    from something that we don't know what it is yet?
+
+
+--------------------------------------------------------------------------------
+DESIGN Registry.py
 
 
 
-
-Also note that I intend this design to work directly with the (to be coded) message sequencer to ensure that
-messages are transmitted at 'quiet' times in the schedule to prevent collisions with reports from other devices.
-I also plan to completely abstract away in the device classes used by app whether the device is a MiHome (FSK) or
-Legacy (OOK) and automatically switch the radio modulation configuration and safely schedule outgoing messages.
-
-This will allow building systems combined with both MiHome and Legacy devices, and treating them all as first class
-citizens in any user app.
-
-I won't be starting work on this until I have finished the hardening of the physical layer.
-
-
-
-
-I'm thinking of a device-agnostic interface, so you can just have python variables for any connected device
-(green button or purple), with a simple device registry. Then instigate methods on them. This will knit up to the
-radio interface under the bonnet for you, and switch between OOK and FSK mode automatically - mostly leaving the
-radio idling in FSK receive mode to increase the chances of hearing a report. Later I will add a message scheduler
-that learns the reporting schedule, and defers FSK or OOK transmits to 'free timeslots' to improve the performance
-of the overall system.
-
-So something a bit like this maybe:
+--------------------------------------------------------------------------------
+GENERAL NOTES
 
 (when configuring the system)
 print("Press the learn button on the TV device")
@@ -88,58 +194,6 @@ device.on()
 aquarium.when_turned_off(just_turned_off)
 
 
+--------------------------------------------------------------------------------
 
-
-
-
-
-This is four separate pieces of work:
-
-1) a persistent device registry
-To allow device types and modulation (ENER, MIHO) and (FSK, OOK) plus addressing information, to be associated with a
-friendly name 'tv', and persisted to a disk version of a registry database. This database to be queryable so that
-runtime device classes can be reconstructed from their name in this database.
-
-2) a device class for every supported device
-To allow device specific intents to be mapped onto on air messages, and for incoming data to be cached locally in RAM
-to allow simple on demand query semantics.
-
-3) device class to radio interface
-To allow device classes to be controlled by intents such as tv.turn_on() and for that intent to trigger some on-air
-activity in the radio driver. Also, for received messages from the on-air interface to be routed to the device class
-that handles that device, so that when the MiHome adaptor plus address 0x123 reports it's energy, that energy report
-is cached inside the 'tv' object, allowing deferred queries like tv.is_on() and tv.get_power()
-
-4) A dynamic message scheduler that intelligently switches the radio between transmit and receive and OOK and FSK modes.
-It will learn the reporting times of each device that is in earshot, build a timing plan, and use that timing plan to
-defer later transits to timeslots that are not already occupied by a regular report for a device, and thus decreasing
-the probability of missing a rx due to being in tx, and therefore improving the performance of the overall system.
-
-
-
-
-
-One of the other things about this, is that the registry record for a device instance can relate it to a device class
-(in Devices.py). Classes in Devices.py could then define the radio parameters needed in order to communicate with that
-type of device (e.g. a purple mihome could be (FSK, repeats=1) and a green button could be (OOK, repeats=8) etc).
-
-Then when the app tries to use tv.on() it really consults the parameters in it's parent class, a MIHO005, which
-configures the radio as FSK,repeats=1 and sends the message. When the app tries to use fan.on() it consults the parent
-class, gets an ENER002 which configures the radio as OOK,repeats=8 and sends the message.
-
-These device classes could also estimate based on the message you are sending, how long it will take to send that
-message, and it can use that when (later) consulting an intelligent message scheduler to work out a timeslot that it
-can use that will be long enough to not collide with a known report time from another MiHome device that is known to
-be sending regular reports.
-
-Also, the device instance (tv, fan) can then store 'last heard from time' to work out if the device is working or not,
-and also 'last values' such as to service any requests such as get_power() and get_voltage() and get_frequency() - i.e.
-these accessors will read the last known value (or raise an error if no value is known) rather than trying to request
-it on demand - many devices do not support request on demand, so they have to be cached. They can be cached with a
-receipt timestamp, so that the app can always put an expectation on how up to date the data is that it requires.
-
-
-
-
-
-
+END
