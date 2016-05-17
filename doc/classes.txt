@@ -11,7 +11,7 @@ code 'in the land of their devices'.
 --------------------------------------------------------------------------------
 REQUIREMENTS
 
-1. To be able to write expressive and compact applications,
+1. EXPRESSIVE: To be able to write expressive and compact applications,
    that talk in the vocabulary of physical devices.
 
    a. All known Energenie devices to be modelled as classes inside a
@@ -32,7 +32,7 @@ REQUIREMENTS
   than the implementation details.
 
 
-2. To be able to build a local registry of devices and their configurations,
+2. NAME REGISTRY: To be able to build a local registry of devices and their configurations,
    and refer to devices by name inside the application.
 
    a. to be configurable by learning (e.g. listen for messages such as
@@ -53,7 +53,7 @@ REQUIREMENTS
       type x' or 'find me all devices in location kitchen'.
 
 
-3. To be able to command and query devices in a way that represents
+3. INTENTS: To be able to command and query devices in a way that represents
    meaningful device-based intents (such as tv.on() and tv.get_power())
 
    a. received data values to be cached for deferred query, such as get_power()
@@ -66,13 +66,13 @@ REQUIREMENTS
       both by commanded state and retrieved state)
 
 
-4. To be able to refer to user devices in an Energenie device agnostic way.
+4. AGNOSTIC: To be able to refer to user devices in an Energenie device agnostic way.
 
    e.g. it doesn't matter if the TV is plugged into a green button device,
    or a MiHome device. It is always tv.on() in the code.
 
 
-5. To be able to instigate and manage learn mode from within an app
+5. LEARN/DISCOVER: To be able to instigate and manage learn mode from within an app
 
    a. To send specific commands to green button devices so they can
       learn the pattern
@@ -83,7 +83,7 @@ REQUIREMENTS
    c. To process MiHome join requests, and send MiHome join acks
 
 
-6. To completely hide the user from the on-air radio interface
+6. ABSTRACTED RADIO: To completely hide the user from the on-air radio interface
 
    a. choosing the correct radio frequency and modulation automatically
 
@@ -94,7 +94,7 @@ REQUIREMENTS
 Not as part of this work, but this should at least be enabled
 by the design
 
-7. To be able to build a well performing system
+7. PERFORMING: To be able to build a well performing system
    with very few message collisions and message losses
 
    a. by dynamically learning report patterns of MiHome devices

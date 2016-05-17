@@ -89,4 +89,85 @@ def hasSwitch(mfrid, productid):
     return False
 
 
+#----- NEW DEVICE CLASSES -----------------------------------------------------
+
+class Device():
+    pass
+    # get_manufacturer_id
+    # get_product_id
+    # get_sensor_id
+
+    # get_last_receive_time
+    # get_last_send_time
+    # get_next_receive_time
+    # get_next_send_time
+
+    # incoming_message (OOK or OpenThings as appropriate, stripped of header? decrypted, decoded to pydict)
+    # send_message (a link out to the transport, could be mocked, for example)
+
+
+class EnergenieDevice(Device):
+    pass
+    # get_radio_config -> config_selector? (freq, modulation) config_parameters? (inner_repeats, delay, outer_repeats)
+    # has_switch
+    # can_send
+    # can_receive
+
+
+class LegacyDevice(EnergenieDevice):
+    pass
+    # modulation = OOK
+    # freq = 433.92MHz
+    # codec = 4bit
+
+
+class ENER002(LegacyDevice):
+    pass
+    # turn_on
+    # turn_off
+
+
+class MiHomeDevice(EnergenieDevice):
+    pass
+    # modulation = FSK
+    # freq = 433.92MHz
+    # codec = OpenThings
+
+
+class MIHO005(MiHomeDevice): # Adaptor Plus
+    pass
+    # tx_repeats = 4
+    # turn_on
+    # turn_off
+    # is_on
+    # is_off
+    # get_switch
+    # get_voltage
+    # get_frequency
+    # get_apparent
+    # get_reactive
+    # get_real
+
+
+class MIHO006(MiHomeDevice): # Home Monitor
+    pass
+    # get_battery_voltage
+    # get_current
+
+
+class MIHO012(MiHomeDevice): # eTRV
+    pass
+    # tx_repeats = 10
+    # get_battery_voltage
+    # get_ambient_temperature
+    # get_pipe_temperature
+    # get_setpoint_temperature
+    # set_setpoint_temperature
+    # get_valve_position
+    # set_valve_position
+    # turn_on
+    # turn_off
+    # is_on
+    # is_off
+
 # END
