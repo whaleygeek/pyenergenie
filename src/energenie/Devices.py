@@ -404,7 +404,7 @@ def test():
     # on next boot
     # Registry.add(tv)
     # Registry.add(fan)
-    
+
     # Note, when adding registry, all of this data will be stored in the persisted
     # registry, just start the registry and it creates all your object variables
     # for you from it's metadata.

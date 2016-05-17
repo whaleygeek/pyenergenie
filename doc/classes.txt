@@ -225,9 +225,43 @@ Device
         ?get_valve_position ?is_on ?is_off
         ?set_valve_position ?turn_on ?turn_off
 
+
 --------------------------------------------------------------------------------
 DESIGN Registry.py
 
+file format? platform dependent database format, like dbm but there is
+a platform dependent one - but need the licence to be MIT so we can
+just embed it here to have zero dependencies.
+
+persist the registry to disk and/or writeback new entries
+
+load the registry from disk and/or parse it
+
+add a device class instance to the registry with a friendly name
+- could be from a discovery or learn process
+- could be from a hand rolled object
+
+get a device by name from the registry
+
+delete a device from the registry
+
+create a new device class instance from a name
+
+auto-create variables in a given scope, for all persisted registry entries
+
+list the registry in some printable format (like a configuration record)
+
+
+--------------------------------------------------------------------------------
+DESIGN NOTES - discovery process
+
+a way to sequence transmit messages to allow legacy devices to learn a code.
+
+a way to listen (for a long time) for any devices that transmit, and add them
+(optionally?) to the device registry.
+
+a way to listen (in the background) during normal operation for unknown devices,
+and optionally add them to the device registry.
 
 
 --------------------------------------------------------------------------------
