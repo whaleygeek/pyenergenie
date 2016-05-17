@@ -356,4 +356,71 @@ class DeviceFactory():
         return c()
 
 
+#----- TEMPORARY TEST HARNESS -------------------------------------------------
+
+import time
+
+# Getting devices, without a registry yet
+def test():
+    #hmm: need two addresses for legacy
+    #unless we have an adaptor class for air_interface which represents the
+    #collective house address for a house code. So if you use more than one
+    #house address, you create multiple air interface adaptors with different
+    #house codes, that just delegate to the same actual radio air interface?
+    #bit like a little local router?
+
+    #legacy1 = AirInterface.create("OOK", address=0xC8C8C, energenie_radio)
+
+    # Could also consider this a local network, with common parameters shared
+    # by all devices that use it.
+    #air2    = AirInterface.create("FSK", energenie_radio)
+
+    # scheduling would then become
+    # scheduler = Scheduler(energenie_radio)
+    # legacy1 = AirInterface.create("OOK", address=0xC8C8C, scheduler)
+    # air2    = AirInterface.create("FSK", scheduler
+    # so that when a device tries to transmit, it gets air interface specific
+    # settings added to it as appropriate, then the scheduler decides when
+    # to send and receive
+
+    # Somehow we need to associate devices with an air interface
+    # This might allow us to support multiple radios in the future too?
+    #legacy1.add(tv)
+
+    # auto knitting?
+    # DeviceFactory.set_air_interface(energenie_radio)
+    # future get_device causes the air interface to be knitted up to the device
+    # along with receive callbacks for asynchronous receive and update.
+
+    # cooperative loop could be energenie_radio.loop()
+    # or wrap a thread around it with start() but beware of thread context
+    # and thread safety.
+
+
+    tv  = DeviceFactory.get_device("GreenButton", address=(0xC8C8C, 1))
+    fan = DeviceFactory.get_device("AdaptorPlus", address=0x68b)
+
+    # With the registry, these would be added, so that they could be auto restored
+    # on next boot
+    # Registry.add(tv)
+    # Registry.add(fan)
+    
+    # Note, when adding registry, all of this data will be stored in the persisted
+    # registry, just start the registry and it creates all your object variables
+    # for you from it's metadata.
+    # Registry.start(some_context)
+    # where some_context is the scope that the variables tv and fan are created in.
+
+    while True:
+        tv.turn_on()
+        fan.turn_off()
+        time.sleep(2)
+
+        tv.turn_off()
+        fan.turn_on()
+        time.sleep(1)
+
+if __name__ == "__main__":
+    test()
+
 # END
