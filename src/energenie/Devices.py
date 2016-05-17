@@ -5,10 +5,6 @@
 
 MFRID                            = 0x04
 
-# Deprecated, these are old device names, do not use.
-#PRODUCTID_C1_MONITOR             = 0x01   # MIHO004 Monitor
-#PRODUCTID_R1_MONITOR_AND_CONTROL = 0x02   # MIHO005 Adaptor Plus
-
 #PRODUCTID_MIHO001               =        #         Home Hub
 #PRODUCTID_MIHO002               =        #         Control only (Uses Legacy OOK protocol)
 #PRODUCTID_MIHO003               = 0x0?   #         Hand Controller
@@ -51,7 +47,7 @@ PRODUCTID_MIHO013                = 0x03   #         eTRV
 #PRODUCTID_MIHO040 2-gang socket Bundle chrome
 #PRODUCTID_MIHO041 2-gang socket Bundle stainless steel
 
-
+# Default keys for OpenThings encryption and decryption
 CRYPT_PID                        = 242
 CRYPT_PIP                        = 0x0100
 
@@ -60,9 +56,7 @@ CRYPT_PIP                        = 0x0100
 # This makes simple discovery possible.
 BROADCAST_ID                     = 0xFFFFFF # Energenie broadcast
 
-#TODO: put additional products in here from the Energenie directory
-#TODO: make this table based
-
+#TODO: This might be deprecated now, and replaced with the DeviceFactory?
 def getDescription(mfrid, productid):
     if mfrid == MFRID:
         mfr = "Energenie"
@@ -83,91 +77,283 @@ def getDescription(mfrid, productid):
     return "Manufacturer:%s Product:%s" % (mfr, product)
 
 
+#TODO this might be deprecated now, and replaced with the Device classes.
+#e.g. if there is a turn_on method or get_switch method, it has a switch.
 def hasSwitch(mfrid, productid):
     if mfrid != MFRID:                  return False
     if productid == PRODUCTID_MIHO005:  return True
     return False
 
 
+#----- CONTRACT WITH AIR-INTERFACE --------------------------------------------
+
+# this might be a real air_interface (a radio), or an adaptor interface
+# (a message scheduler with a queue).
+#
+# TODO: As such, we need to handle:
+#   synchronous send
+#   synchronous receive
+#   asynchronous send (deferred)
+#   asynchronous receive (deferred)
+
+# air_interface has:
+#   configure(parameters)
+#   send(payload)
+#   send(payload, parameters)
+#   listen(parameters)
+#   check() -> payload or None
+
+
 #----- NEW DEVICE CLASSES -----------------------------------------------------
 
 class Device():
-    pass
-    # get_manufacturer_id
-    # get_product_id
-    # get_sensor_id
+    def __init__(self, air_interface):
+        self.air_interface = air_interface
 
-    # get_last_receive_time
-    # get_last_send_time
-    # get_next_receive_time
-    # get_next_send_time
+    def get_manufacturer_id(self): # -> id:int
+        pass
 
-    # incoming_message (OOK or OpenThings as appropriate, stripped of header? decrypted, decoded to pydict)
-    # send_message (a link out to the transport, could be mocked, for example)
+    def get_product_id(self): # -> id:int
+        pass
+
+    def get_sensor_id(self): # -> id:int
+        pass
+
+    def get_last_receive_time(self): # ->timestamp
+        pass
+
+    def get_last_send_time(self): # -> timestamp
+        pass
+
+    def get_next_receive_time(self): # -> timestamp
+        pass
+
+    def get_next_send_time(self): # -> timestamp
+        pass
+
+    def incoming_message(self, payload):
+        pass
+        # incoming_message (OOK or OpenThings as appropriate, stripped of header? decrypted, decoded to pydict)
+
+    def send_message(self, payload):
+        pass
+        # send_message (a link out to the transport, could be mocked, for example)
 
 
 class EnergenieDevice(Device):
-    pass
-    # get_radio_config -> config_selector? (freq, modulation) config_parameters? (inner_repeats, delay, outer_repeats)
-    # has_switch
-    # can_send
-    # can_receive
+    def __init__(self, air_interface):
+        Device.__init__(self, air_interface)
+
+    def get_radio_config(self): # -> default config
+        # get_radio_config -> config_selector? (freq, modulation) config_parameters? (inner_repeats, delay, outer_repeats)
+        pass
+
+    def has_switch(self): # -> default False
+        pass
+
+    def can_send(self): # -> default False
+        pass
+
+    def can_receive(self): # -> default False
+        pass
 
 
 class LegacyDevice(EnergenieDevice):
-    pass
-    # modulation = OOK
-    # freq = 433.92MHz
-    # codec = 4bit
+    def __init__(self, air_interface):
+        EnergenieDevice.__init__(self, air_interface)
 
-
-class ENER002(LegacyDevice):
-    pass
-    # turn_on
-    # turn_off
+    def get_radio_config(self): # -> config
+        pass
+        # freq = 433.92MHz
+        # modulation = OOK
+        # codec = 4bit
 
 
 class MiHomeDevice(EnergenieDevice):
-    pass
-    # modulation = FSK
-    # freq = 433.92MHz
-    # codec = OpenThings
+    def __init__(self, air_interface):
+        EnergenieDevice.__init__(self, air_interface)
+
+    def get_radio_config(self): # -> config
+        pass
+        # freq = 433.92MHz
+        # modulation = FSK
+        # codec = OpenThings
+
+
+class ENER002(LegacyDevice):
+    def __init__(self, air_interface):
+        LegacyDevice.__init__(self, air_interface)
+
+    def turn_on(self):
+        pass
+
+    def turn_off(self):
+        pass
+
+    def can_send(self): # -> True
+        pass
 
 
 class MIHO005(MiHomeDevice): # Adaptor Plus
-    pass
-    # tx_repeats = 4
-    # turn_on
-    # turn_off
-    # is_on
-    # is_off
-    # get_switch
-    # get_voltage
-    # get_frequency
-    # get_apparent
-    # get_reactive
-    # get_real
+    def __init__(self, air_interface):
+        MiHomeDevice.__init__(self, air_interface)
+
+    def get_radio_config(self):
+        pass
+        # + tx_repeats = 4
+
+    def can_send(self): # -> True
+        pass
+
+    def can_receive(self): # -> True
+        pass
+
+    def get_readings(self): # -> readings:pydict
+        pass
+        # a way to get all readings as a single consistent set
+
+    def turn_on(self):
+        pass # command request
+
+    def turn_off(self):
+        pass # command request
+
+    #TODO: difference between 'is on and 'is requested on'
+    #TODO: difference between 'is off' and 'is requested off'
+    #TODO: switch state might be 'unknown' if not heard.
+    #TODO: switch state might be 'turning_on' or 'turning_off' if send request and not heard response yet
+
+    def is_on(self): # -> boolean
+        pass
+        # cached view of last received switch state
+
+    def is_off(self): # -> boolean
+        pass
+        # cached view of last received switch state
+
+    def get_switch(self): # -> boolean
+        pass
+        # cached view of last received switch state
+
+    def get_voltage(self): # -> voltage:float
+        pass
+        # cached view of last received voltage
+
+    def get_frequency(self): # -> frequency:float
+        pass
+        # cached view of last received frequency
+
+    def get_apparent_power(self): # ->power:float
+        pass
+        # cached view of last apparent power reading
+
+    def get_reactive_power(self): # -> power:float
+        pass
+        # cached view of last reactive power reading
+
+    def get_real_power(self): #-> power:float
+        pass
+        # cached view of last real power reading
 
 
 class MIHO006(MiHomeDevice): # Home Monitor
-    pass
-    # get_battery_voltage
-    # get_current
+    def __init__(self, air_interface):
+        MiHomeDevice.__init__(self, air_interface)
+
+    def get_readings(self): # -> readings:pydict
+        pass
+        # a consistent set of all readings together
+
+    def can_send(self): # -> True
+        pass
+
+    def get_battery_voltage(self): # -> voltage:float
+        pass
+        # cached view of last battery voltage reading
+
+    def get_current(self): # -> current:float
+        pass
+        # cached view of last current reading
 
 
 class MIHO012(MiHomeDevice): # eTRV
-    pass
-    # tx_repeats = 10
-    # get_battery_voltage
-    # get_ambient_temperature
-    # get_pipe_temperature
-    # get_setpoint_temperature
-    # set_setpoint_temperature
-    # get_valve_position
-    # set_valve_position
-    # turn_on
-    # turn_off
-    # is_on
-    # is_off
+    def __init__(self, air_interface):
+        MiHomeDevice.__init__(self, air_interface)
+
+    def get_radio_config(self): # -> parameters
+        pass
+        # + tx_repeats = 10
+
+    def can_send(self): # -> True
+        pass
+
+    def can_receive(self): # -> True
+        pass
+
+    def get_readings(self): # -> readings:pydict
+        pass
+        # cached view of all readings together
+
+    def get_battery_voltage(self): # ->voltage:float
+        pass
+        # cached view of last voltage reading
+
+    def get_ambient_temperature(self): # -> temperature:float
+        pass
+        # cached view of last temp reading
+
+    def get_pipe_temperature(self): # -> temperature:float
+        pass
+        # cached view of last temp reading
+
+    def get_setpoint_temperature(self): #-> temperature:float
+        pass
+        # cached view of last temp reading
+
+    def set_setpoint_temperature(self, temperature):
+        pass
+
+    def get_valve_position(self): # -> position:int?
+        pass
+
+    def set_valve_position(self, position):
+        pass
+
+    #TODO: difference between 'is on and 'is requested on'
+    #TODO: difference between 'is off' and 'is requested off'
+    #TODO: switch state might be 'unknown' if not heard.
+    #TODO: switch state might be 'turning_on' or 'turning_off' if send request and not heard response yet
+
+    def turn_on(self): # command
+        pass
+
+    def turn_off(self): # command
+        pass
+
+    def is_on(self): # query last known reported state (unknown if changing?)
+        pass
+
+    def is_off(self): # query last known reported state (unknown if changing?)
+        pass
+
+
+#----- DEVICE FACTORY ---------------------------------------------------------
+
+class DeviceFactory():
+    """A place to come to, to get instances of device classes"""
+    devices = {
+        # official name            friendly name
+        "ENER002":     ENER002,    "GreenButton": ENER002,
+        "MIHO005":     MIHO005,    "AdaptorPlus": MIHO005,
+        "MIHO006":     MIHO006,    "HomeMonitor": MIHO006,
+        "MIHO012":     MIHO012,    "eTRV":        MIHO012,
+    }
+
+    @staticmethod
+    def get_device(name):
+        """Get a device by name, construct a new instance"""
+        c = DeviceFactory.devices[name]
+        return c()
+
 
 # END
