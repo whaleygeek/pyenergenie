@@ -158,6 +158,73 @@ DESIGN Devices.py
     from something that we don't know what it is yet?
 
 
+(do we need to know what our last sent request is, vs last known reported state?
+e.g. if we have sent a request but not heard a response yet, this means we think we asked
+it to turn on, but we don't yet know if it has done that. Some devices can't report
+back, but some can, so it would be nice to have a four stage state machine for on/off)
+
+(note, would be good to be able to persist the last message received on disk,
+so that when code restarts, it knows the last send/receive time that was last processed.
+i.e. a resumable state machine persisted to disk)
+
+(note, a message scheduler if inserted in the middle, would do callbacks to say
+that the request has been processed, so timestamps can be updated. Also same scheduler
+could handle retries perhaps, if the device is tx and rx, then when you send a switch
+change, it would normally report back that the switch had changed, so if you don't
+get it, or if it is in the wrong state, could retry a send again until it changes)
+
+(note, inner variables might have two versions for some devices, the requested
+value and the confirmed value. If they are different, it means might still be
+waiting for a reply, so can't guarantee the command was received yet)
+
+Device
+  get_manufacturer_id
+  get_sensor_id
+  get_product_id
+
+  (these may need an ack-back from radio module to know it happened)
+  ?get_last_receive_time
+  ?get_last_send_time
+  ?get_next_receive_time
+  ?get_next_send_time
+
+  incoming_message (OOK or OpenThings as appropriate, stripped of header? pydict?)
+  send_message (a link out to the transport, could be mocked, for example)
+
+  EnergenieDevice
+    get_radio_config -> config_selector? (freq, modulation) config_parameters? (inner_repeats, delay, outer_repeats)
+    has_switch
+    can_send
+    can_receive
+
+    LegacyDevice
+      ENER002
+        turn_on
+        turn_off
+
+    MiHomeDevice
+      MIHO005 (AdaptorPlus)
+        turn_on
+        turn_off
+        is_on
+        is_off
+        get_switch
+        get_voltage
+        get_freq
+        get_apparent
+        get_reactive
+        get_real
+      MIHO006 (HomeMonitor)
+        get_battery_voltage
+        get_current
+      MIHO012 (eTRV)
+        ?get_battery_voltage
+        ?get_ambient_temperature
+        ?get_pipe_temperature
+        set_setpoint_temperature
+        ?get_valve_position ?is_on ?is_off
+        ?set_valve_position ?turn_on ?turn_off
+
 --------------------------------------------------------------------------------
 DESIGN Registry.py
 
