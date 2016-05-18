@@ -232,28 +232,29 @@ def receive_cbp():
     return rxlist # Python len(rxlist) tells us how many bytes including length byte if present
 
 
-@untested
-def receive_len(size):
-    """Receive a fixed payload size"""
-
-    bufsize = size
-
-    Buffer = ctypes.c_ubyte * bufsize
-    rxbuf  = Buffer()
-    buflen = ctypes.c_ubyte(bufsize)
-    #RADIO_RESULT radio_get_payload_len(uint8_t* buf, uint8_t buflen)
-
-    result = radio_get_payload_len_fn(rxbuf, buflen)
-
-    if result != 0: # RADIO_RESULT_OK
-        raise RuntimeError("Receive failed, error code %s" % hex(result))
-
-    # turn buffer into a list of bytes, using 'size' as the counter
-    rxlist = []
-    for i in range(size):
-        rxlist.append(rxbuf[i])
-
-    return rxlist # Python len(rxlist) tells us how many bytes including length byte if present
+#TODO: Placeholder for when we do OOK receive
+#@untested
+#def receive_len(size):
+#    """Receive a fixed payload size"""
+#
+#    bufsize = size
+#
+#    Buffer = ctypes.c_ubyte * bufsize
+#    rxbuf  = Buffer()
+#    buflen = ctypes.c_ubyte(bufsize)
+#    #RADIO_RESULT radio_get_payload_len(uint8_t* buf, uint8_t buflen)
+#
+#    result = radio_get_payload_len_fn(rxbuf, buflen)
+#
+#    if result != 0: # RADIO_RESULT_OK
+#        raise RuntimeError("Receive failed, error code %s" % hex(result))
+#
+#    # turn buffer into a list of bytes, using 'size' as the counter
+#    rxlist = []
+#    for i in range(size):
+#        rxlist.append(rxbuf[i])
+#
+#    return rxlist # Python len(rxlist) tells us how many bytes including length byte if present
 
 
 def standby():

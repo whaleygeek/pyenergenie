@@ -253,6 +253,71 @@ list the registry in some printable format (like a configuration record)
 
 
 --------------------------------------------------------------------------------
+DESIGN NOTES - registry data store
+
+REQUIREMENT: I want a simple persistent kvp database with the following features:
+
+1. A file format that is portable across all platforms
+
+   so that a single registry file could be copied from a tutorial onto
+   any machine and it would just work
+
+2. A file format that is human readable and easily editable
+
+   so that users could create or edit the file just like a config file
+
+3. A simple read and write key/value abstraction in python
+   with a full CRUD lifecycle
+
+   so that new kvp's can be created, read, updated and deleted.
+
+4. Doesn't have to be hugely efficient or store very large data sets
+
+   it's mostly used for configuration data that rarely changes,
+   or last known values that tend to be quite small.
+
+5. MIT licence
+
+   so that it can be just embedded in an existing project
+
+6. A single python file
+
+   so it is easy to embed
+
+7. Works out of the box with no changes on Python 2 and Python 3
+
+   so it doesn't have to be configured or changed and does not limit
+   or dictate a specific python version.
+
+Additionally, it might:
+
+8. A option to add multi process locking later if required, but not
+   included by default
+
+   so that it could be used as a simple central database for multiple
+   programs sharing the same data set.
+
+9. understand read only and read/write intents better
+
+   when using configuration data and last known values, it is useful
+   to keep them in the same single file, so it is easy to copy
+   to other machines. Some data is naturally 'write once' and
+   very configuration based. Some data is naturally 'write often'.
+   It might be nice if these two types of data could appear in the same
+   file, but the locking/performance and resilience issues be handled
+   differently for the two classes of data - e.g. perhaps having
+   two connections to the same database file, one in read only mode
+   for config records, and one in read/write mode for last use data.
+   There might also be different namespace prefixes in the file
+   so that the key sets are separate, or there may be a way to
+   link them so that when you read a record you get both the static
+   config data and the fast changing last use data as a single
+   record. But this then implies when you do an update, you
+   probably want to update part of a record rather than the
+   whole record.
+
+
+--------------------------------------------------------------------------------
 DESIGN NOTES - discovery process
 
 a way to sequence transmit messages to allow legacy devices to learn a code.

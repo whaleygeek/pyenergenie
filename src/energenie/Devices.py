@@ -113,9 +113,6 @@ class Device():
         self.air_interface = air_interface
         class Config(): pass
         self.config = Config()
-        self.manufacturer_id = None
-        self.product_id = None
-        self.device_id = None
 
     def has_switch(self):
         return False
@@ -129,35 +126,13 @@ class Device():
     def get_radio_config(self):
         return self.config
 
-
-    #TODO: no manufacturerid, productid, deviceid for legacy devices?
-    # so does this move into MiHomeDevice?
-
-    def get_manufacturer_id(self): # -> id:int
-        return self.manufacturer_id
-
-    def get_product_id(self): # -> id:int
-        return self.product_id
-
-    def get_device_id(self): # -> id:int
-        return self.device_id
-
-
     def get_last_receive_time(self): # ->timestamp
+        """The timestamp of the last time any message was received by this device"""
         return self.last_receive_time
 
-    def get_last_send_time(self): # -> timestamp
-        return self.last_send_time
-
     def get_next_receive_time(self): # -> timestamp
+        """An estimate of the next time we expect a message from this device"""
         pass
-        #TODO this should probably be calculated
-        #TODO not sure yet if this lives here
-
-    def get_next_send_time(self): # -> timestamp
-        pass
-        #TODO this should probably be calculated
-        #TODO not sure yet if this lives here
 
     def incoming_message(self, payload):
         # incoming_message (OOK or OpenThings as appropriate, stripped of header? decrypted, decoded to pydict)
@@ -166,6 +141,8 @@ class Device():
 
     def send_message(self, payload):
         if self.air_interface != None:
+            #TODO: might want to send the config, either as a send parameter,
+            #or by calling air_interface.configure() first?
             self.air_interface.send(payload)
         else:
             m = self.manufacturer_id
@@ -175,9 +152,12 @@ class Device():
 
 
 class EnergenieDevice(Device):
-    def __init__(self, air_interface):
+    def __init__(self, air_interface, device_id=None):
         Device.__init__(self, air_interface)
-        self.manufacturer_id = MFRID_ENERGENIE
+        self.device_id = device_id
+
+    def get_device_id(self): # -> id:int
+        return self.device_id
 
 
 class LegacyDevice(EnergenieDevice):
@@ -189,18 +169,27 @@ class LegacyDevice(EnergenieDevice):
 
 
 class MiHomeDevice(EnergenieDevice):
-    def __init__(self, air_interface):
-        EnergenieDevice.__init__(self, air_interface)
+    def __init__(self, air_interface, device_id=None):
+        EnergenieDevice.__init__(self, air_interface, device_id)
         self.config.frequency  = 433.92
         self.config.modulation = "FSK"
         self.config.codec      = "OpenThings"
+        self.manufacturer_id   = MFRID_ENERGENIE
+        self.product_id        = None
+
         #Different devices might have different PIP's
         #if we are cycling codes on each message?
         #self.config.encryptPID = CRYPT_PID
         #self.config.encryptPIP = CRYPT_PIP
 
+    def get_manufacturer_id(self): # -> id:int
+        return self.manufacturer_id
 
-class ENER002(LegacyDevice):
+    def get_product_id(self): # -> id:int
+        return self.product_id
+
+
+class ENER002(LegacyDevice): # Green button switch
     def __init__(self, air_interface=None, device_id=None):
         LegacyDevice.__init__(self, air_interface)
         #NOTE: tuple of (house_address, device_index)
