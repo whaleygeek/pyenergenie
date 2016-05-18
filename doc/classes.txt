@@ -253,6 +253,43 @@ list the registry in some printable format (like a configuration record)
 
 
 --------------------------------------------------------------------------------
+DESIGN - air_interface adaptors for FSK and OOK
+
+It looks like we need an air_interface adaptor, that knits the device class
+parents (LegacyDevice and MiHomeDevice) to the radio.
+
+These adaptors will then OpenThings.encode() and OpenThings.decode() so that
+the address can be consulted in the Registry.Router to route incoming messages
+to the correct device class. This also then means that TwoBit.encode() must
+be done in the air_interface adaptors, not in the Device class code.
+
+There can be an air_interface adaptor for OOK and FSK, Both will take
+payloads as pydict or tuple (ha, da, state) and encode/encrypt then
+configure the radio for the right modulation and send it.
+
+For the receive pipeline, a message pump somewhere in the main loop has to
+put the radio into receive OOK or receive FSK, then when a payload comes in,
+passes up to the appropriate air_interface. The FSK air_interface adaptor
+knows to OpenThings.decode before sending to the fsk_router, which then routes
+to the right device class instance.
+
+Similarly, an OOK transmit in the air_interface adaptor knows to TwoBit.encode
+the tuple (ha, da, s), configure the radio modulation to OOK, pass on any
+device specific parameters such as inner_repeats, and then transmit the message.
+
+
+When we introduce a message scheduler, it will be at the air_interface
+layer, and sending and receiving will be deferred on a queue and scheduled,
+rather than handled immediately.
+
+Note: message send and receipt times will have to be relayed to the device classes,
+either by parameter, or at time of receipt by the class. The scheduler will need
+to precisely know the receipt time to do accurate scheduling, but the device class
+probably only needs to know actual receipt time in the class for freshness measurement
+reasons.
+
+
+--------------------------------------------------------------------------------
 DESIGN NOTES - registry data store
 
 REQUIREMENT: I want a simple persistent kvp database with the following features:

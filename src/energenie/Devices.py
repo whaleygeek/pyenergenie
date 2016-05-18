@@ -3,6 +3,11 @@
 # Information about specific Energenie devices
 # This table is mostly reverse-engineered from various websites and web catalogues.
 
+#TODO: Might move this into an air_interface adaptor, so that TwoBit encodes
+#are done consistently outside of this module, just like OpenThings encodes and decodes are.
+#They are done externally, because you need the address before you can route it to these classes.
+#import TwoBit
+
 MFRID_ENERGENIE                  = 0x04
 MFRID                            = MFRID_ENERGENIE
 
@@ -175,13 +180,18 @@ class LegacyDevice(EnergenieDevice):
         return "LegacyDevice(%s)" % str(self.device_id)
 
     def send_message(self, payload):
-        #TODO: At what point do we run the TwoBit.encode(house_address, index) on this?
-        #We know it's an FSK device here and we know it's device_id which is (house_address, index)
+        ####HERE#### interface with air_interface
+        # Encode the payload two bits per byte as per OOK spec
+        #TODO, should we just pass a payload (as a pydict or tuple) to the air_interface adaptor
+        #and let it encode it, to be consistent with the FSK MiHome devices?
+        #payload could be a 3-tuple of (house_address, device_address, state)
+        #bytes = TwoBit.build_switch_msg(payload, house_address=self.device_id[0], device_address=self.device_id[1])
 
         if self.air_interface != None:
             #TODO: might want to send the config, either as a send parameter,
             #or by calling air_interface.configure() first?
-            self.air_interface.send(payload)
+            #i.e. radio.modulation(MODULATION_OOK)
+            self.air_interface.send(payload) #TODO: or (ha, da, s)
         else:
             d = self.device_id
             print("send_message(mock[%s]):%s" % (str(d), payload))
@@ -216,7 +226,11 @@ class MiHomeDevice(EnergenieDevice):
         self.send_message("join ack") # TODO
 
     def incoming_message(self, payload):
+        ####HERE#### interface with air_interface
         """Handle incoming messages for this device"""
+        #NOTE: we must have already decoded the message with OpenThings to be able to get the addresses out
+        # so payload at this point must be a pydict?
+
         #we know at this point that it's a FSK message
         #TODO: do we OpenThings.decrypt() here? Done by OpenThings.decode() by default
         #TODO: do we OpenThings.decode() here into a pydict header/recs??
@@ -226,6 +240,10 @@ class MiHomeDevice(EnergenieDevice):
         pass # TODO
 
     def send_message(self, payload):
+        ####HERE#### interface with air_interface
+        #is payload a pydict with header at this point, and we have to call OpenThings.encode?
+        #should the encode be done here, or in the air_interface adaptor?
+
         #TODO: at what point is the payload turned into a pydict?
         #TODO: We know it's going over OpenThings,
         #do we call OpenThings.encode(payload) here?
@@ -245,10 +263,8 @@ class ENER002(LegacyDevice):
     """A green-button switch"""
     def __init__(self, air_interface=None, device_id=None):
         LegacyDevice.__init__(self, air_interface)
-        #NOTE: tuple of (house_address, device_index)
-        self.device_id = device_id
+        self.device_id = device_id # (house_address, device_index)
         self.config.tx_repeats = 8
-        #no productid code for legacy devices?
         self.capabilities.switch = True
         self.capabilities.receive = True
 
