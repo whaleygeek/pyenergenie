@@ -95,7 +95,7 @@ def log_method(m):
     return inner
 
 
-class RegistryStore():
+class RegistryStore(): # This is data storage, so it it just the 'RegistRY'??
     """A mock in-memory only store, for testing and debugging"""
     def __init__(self, filename):
         self.filename = filename #TODO: Intentionally not used elsewhere
@@ -118,8 +118,7 @@ class RegistryStore():
         return self.store.keys()
 
 
-
-class DeviceRegistry():
+class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
     """A persistent registry for device class instance configurations"""
     def __init__(self, filename):
         self.store = RegistryStore(filename) # A dummy store, for testing
@@ -142,12 +141,19 @@ class DeviceRegistry():
         """Get the description for a device class from the store, and construct a class instance"""
         c = self.store[name]
         #TODO: Construct a new device class that is configured as per this data
-        #for now, just return the metadata, it could be serialised data too
+        #for now, just return the RAM class instance as it is mocked
+
+        #TODO: work out what type of device it is (fsk, ook)
+        #TODO: decide which router to use for incoming messages
+        #TODO: configure the message router so it will route to the device class instance for us
+        #TODO: at what point is the payload decoded to get the address out?
+        # OpenThings.decode() or TwoBit.decode() - where do those protocol handlers go in the pipeline?
         return c
 
     def delete(self, name):
         """Delete the named class instance"""
         del self.store[name]
+        #TODO: delete from the RAM route too.
 
     def auto_create(self, context):
         """auto-create variables in the provided context, for all persisted registry entries"""
@@ -234,15 +240,34 @@ class Router():
         self.routes = {} # key(tuple of ids) -> value(device class instance)
 
     def add(self, address, instance):
-        pass #TODO: add this to the routing table
-        # address is probably a tuple of matching id numbers (mfrid, prodictid, deviceid)
-        # or (house_code, index)
+        """Add this device instance to the routing table"""
+        # When a message comes in for this address, it will be routed to its handle_message() method
+        # address might be a string, a number, a tuple, but probably always the same for any one router
+        self.routes[address] = instance
 
     def handle_message(self, payload):
-        pass #TODO: decode header, get id's, route to handler or unknown
+        #TODO: decode address from payload
+        #how do we do this?? Perhaps the protocol wrapper fsk or ook does it for us
+        #as the message bubbles up out of the receiver?
+        #e.g. OpenThigns.decode() would be applied to FSK incoming messages and build the header.
+        #the 4bit.decode() could do the same for OOK incoming messages?
+        #TODO: 4bit decoder needs a better name, it's really 2 bits per byte (1 bit per nibble)
+
+        address = "TODO"
+        #TODO: select handler
+        if address in self.routes:
+            ci = self.routes[address]
+            #TODO check if it has a handle_message method, debug print if not?
+            ci.handle_message(payload)
+
+        else: # unknown address
+            self.handle_unknown(address, payload)
 
     def handle_unknown(self, address, payload):
-        pass #TODO: route to something that handles unknown addresses, e.g. discovery agent
+        #TODO: route to something that handles unknown addresses, e.g. discovery agent
+        #discovery agent could be configured by overriding handle_unknown at construction time, below
+        print("unknown address: %s" % address)
+        print("ignored payload: %s" % payload)
 
 
 fsk_router = Router("fsk")
@@ -252,6 +277,12 @@ ook_router = Router("ook")
 #----- SIMPLE TEST HARNESS ----------------------------------------------------
 
 if __name__ == "__main__":
+
+    #TODO need a way to separate device creation from device restoration
+    #and the app needs to know what mode it is in.
+    #creation is probably just a test feature, as a user would either
+    #install the device, configure it, or learn it.
+
 
     # seed the registry
     registry.add(Devices.MIHO005(device_id=0x68b), "tv")

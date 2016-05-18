@@ -144,6 +144,7 @@ class Device():
 
     def send_message(self, payload):
         print("send_message %s" % payload)
+        # A raw device has no knowledge of how to send, the sub class provides that.
 
     def __repr__(self):
         return "Device()"
@@ -174,6 +175,9 @@ class LegacyDevice(EnergenieDevice):
         return "LegacyDevice(%s)" % str(self.device_id)
 
     def send_message(self, payload):
+        #TODO: At what point do we run the TwoBit.encode(house_address, index) on this?
+        #We know it's an FSK device here and we know it's device_id which is (house_address, index)
+
         if self.air_interface != None:
             #TODO: might want to send the config, either as a send parameter,
             #or by calling air_interface.configure() first?
@@ -181,7 +185,6 @@ class LegacyDevice(EnergenieDevice):
         else:
             d = self.device_id
             print("send_message(mock[%s]):%s" % (str(d), payload))
-
 
 
 class MiHomeDevice(EnergenieDevice):
@@ -214,11 +217,19 @@ class MiHomeDevice(EnergenieDevice):
 
     def incoming_message(self, payload):
         """Handle incoming messages for this device"""
+        #we know at this point that it's a FSK message
+        #TODO: do we OpenThings.decrypt() here?
+        #TODO: do we OpenThings.decode() here into a pydict header/recs??
+
         #TODO join request might be handled generically here
         #TODO: subclass can override and call back to this if it wants to
         pass # TODO
 
     def send_message(self, payload):
+        #TODO: at what point is the payload turned into a pydict?
+        #TODO: We know it's going over OpenThings,
+        #do we call OpenThings.encode(payload) here?
+        #also OpenThings.encrypt()
         if self.air_interface != None:
             #TODO: might want to send the config, either as a send parameter,
             #or by calling air_interface.configure() first?
