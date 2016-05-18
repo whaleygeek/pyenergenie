@@ -188,16 +188,65 @@ registry = DeviceRegistry("registry.txt")
 #      learn the pattern
 #   ? broadcast specific (house_code, index) repeatedly
 #   ? user assisted start/stop
-#
+
 #   b. To sniff for any messages from MiHome devices and capture them
 #      for later analysis and turning into device objects
 #   ? either as a special receive-only learn mode
 #   ? or as part of normal receive operation through routing unknown device id's
 #   ? need a way to take a device id and consult active directory list,
 #     and route to the correct class instance - a router for incoming messages
-#
+
+#   This means we need an incoming message 'router' with a message pump
+#   that the app can call - whenever it is in receive, does a peek and
+#   if there is a message, it knows what modulaton scheme is in use
+#   so can route the message with (modulation, payload)
+
 #   c. To process MiHome join requests, and send MiHome join acks
 #   ? this would be routed by address to the device class
+
+#   This also needs the message pump
+
+
+#----- MESSAGE ROUTER ---------------------------------------------------------
+
+# a handler that is called whenever a message is received.
+# routes it to the correct handling device class instance
+# or instigates the unknown handler
+# consults a RAM copy of part of the registry
+# from mfrid,productid,sensorid -> handler
+
+# The RAM copy is a routing table
+# it must be updated whenever a factory returns a device class instance.
+
+# Note, if you have a device class instance that is not registered,
+# this means it cannot receive messages unless you pass them to it yourself.
+# That's fine?
+
+# might be one for OOK devices, a different one for FSK devices
+# as they have different keying rules. OOK receive will only probably
+# occur from another raspberry pi, or from a hand controller or MiHome hub.
+# But it is possible to OOK receive a payload, it only has a house address
+# and 4 index bits in it and no data, but those are routeable.
+
+class Router():
+    def __init__(self, name):
+        self.name = name # probably FSK or OOK
+        self.routes = {} # key(tuple of ids) -> value(device class instance)
+
+    def add(self, address, instance):
+        pass #TODO: add this to the routing table
+        # address is probably a tuple of matching id numbers (mfrid, prodictid, deviceid)
+        # or (house_code, index)
+
+    def handle_message(self, payload):
+        pass #TODO: decode header, get id's, route to handler or unknown
+
+    def handle_unknown(self, address, payload):
+        pass #TODO: route to something that handles unknown addresses, e.g. discovery agent
+
+
+fsk_router = Router("fsk")
+ook_router = Router("ook")
 
 
 #----- SIMPLE TEST HARNESS ----------------------------------------------------
