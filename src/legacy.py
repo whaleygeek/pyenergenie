@@ -8,7 +8,7 @@
 
 import time
 
-from energenie import encoder, radio
+from energenie import TwoBit, radio
 
 # How many times to send messages in the driver fast loop
 # Present version of driver limits to 15
@@ -39,18 +39,18 @@ except NameError:
 HOUSE_ADDRESS = None # Use default energenie quasi-random address 0x6C6C6
 ##HOUSE_ADDRESS = 0xA0170 # Captured address of David's RF hand controller
 
-ALL_ON     = encoder.build_switch_msg(True,                    house_address=HOUSE_ADDRESS)
-ONE_ON     = encoder.build_switch_msg(True,  device_address=1, house_address=HOUSE_ADDRESS)
-TWO_ON     = encoder.build_switch_msg(True,  device_address=2, house_address=HOUSE_ADDRESS)
-THREE_ON   = encoder.build_switch_msg(True,  device_address=3, house_address=HOUSE_ADDRESS)
-FOUR_ON    = encoder.build_switch_msg(True,  device_address=4, house_address=HOUSE_ADDRESS)
+ALL_ON     = TwoBit.build_switch_msg(True,                    house_address=HOUSE_ADDRESS)
+ONE_ON     = TwoBit.build_switch_msg(True,  device_address=1, house_address=HOUSE_ADDRESS)
+TWO_ON     = TwoBit.build_switch_msg(True,  device_address=2, house_address=HOUSE_ADDRESS)
+THREE_ON   = TwoBit.build_switch_msg(True,  device_address=3, house_address=HOUSE_ADDRESS)
+FOUR_ON    = TwoBit.build_switch_msg(True,  device_address=4, house_address=HOUSE_ADDRESS)
 ON_MSGS    = [ALL_ON, ONE_ON, TWO_ON, THREE_ON, FOUR_ON]
 
-ALL_OFF    = encoder.build_switch_msg(False,                   house_address=HOUSE_ADDRESS)
-ONE_OFF    = encoder.build_switch_msg(False, device_address=1, house_address=HOUSE_ADDRESS)
-TWO_OFF    = encoder.build_switch_msg(False, device_address=2, house_address=HOUSE_ADDRESS)
-THREE_OFF  = encoder.build_switch_msg(False, device_address=3, house_address=HOUSE_ADDRESS)
-FOUR_OFF   = encoder.build_switch_msg(False, device_address=4, house_address=HOUSE_ADDRESS)
+ALL_OFF    = TwoBit.build_switch_msg(False,                   house_address=HOUSE_ADDRESS)
+ONE_OFF    = TwoBit.build_switch_msg(False, device_address=1, house_address=HOUSE_ADDRESS)
+TWO_OFF    = TwoBit.build_switch_msg(False, device_address=2, house_address=HOUSE_ADDRESS)
+THREE_OFF  = TwoBit.build_switch_msg(False, device_address=3, house_address=HOUSE_ADDRESS)
+FOUR_OFF   = TwoBit.build_switch_msg(False, device_address=4, house_address=HOUSE_ADDRESS)
 OFF_MSGS   = [ALL_OFF, ONE_OFF, TWO_OFF, THREE_OFF, FOUR_OFF]
 
 
@@ -127,8 +127,8 @@ def pattern_test():
     while True:
         p = readin("number 0..F")
         p = int(p, 16)
-        msg = encoder.build_test_message(p)
-        print("pattern %s payload %s" % (str(hex(p)), encoder.ashex(msg)))
+        msg = TwoBit.build_test_message(p)
+        print("pattern %s payload %s" % (str(hex(p)), TwoBit.ashex(msg)))
         radio.send_payload(msg, OUTER_TIMES, INNER_TIMES)
             
 

@@ -8,7 +8,7 @@
 # will be much nicer to use.
 
 import time
-from energenie import Messages, OpenThings, radio, encoder, Devices
+from energenie import Messages, OpenThings, radio, TwoBit, Devices
 
 # build FSK messages for MiHome purple
 
@@ -29,8 +29,8 @@ purple_off = OpenThings.encode(m)
 
 # build OOK messages for legacy green button
 
-GREEN_ON  = encoder.build_switch_msg(True, device_address=1)
-GREEN_OFF = encoder.build_switch_msg(False, device_address=1)
+GREEN_ON  = TwoBit.build_switch_msg(True, device_address=1)
+GREEN_OFF = TwoBit.build_switch_msg(False, device_address=1)
 
 
 def switch_loop():

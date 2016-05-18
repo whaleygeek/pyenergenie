@@ -61,7 +61,7 @@ def ashex(payload):
 def build_relay_msg(relayState=False):
     """Temporary test code to prove we can turn the relay on or off"""
 
-    payload = PREAMBLE
+    payload = PREAMBLE #TODO: + DEFAULT_ADDR_ENC ??
 
     if relayState: # ON
         payload += SW1_ON_ENC

@@ -218,7 +218,7 @@ class MiHomeDevice(EnergenieDevice):
     def incoming_message(self, payload):
         """Handle incoming messages for this device"""
         #we know at this point that it's a FSK message
-        #TODO: do we OpenThings.decrypt() here?
+        #TODO: do we OpenThings.decrypt() here? Done by OpenThings.decode() by default
         #TODO: do we OpenThings.decode() here into a pydict header/recs??
 
         #TODO join request might be handled generically here
@@ -229,7 +229,7 @@ class MiHomeDevice(EnergenieDevice):
         #TODO: at what point is the payload turned into a pydict?
         #TODO: We know it's going over OpenThings,
         #do we call OpenThings.encode(payload) here?
-        #also OpenThings.encrypt()
+        #also OpenThings.encrypt() - done by encode() as default
         if self.air_interface != None:
             #TODO: might want to send the config, either as a send parameter,
             #or by calling air_interface.configure() first?
