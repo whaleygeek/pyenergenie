@@ -114,15 +114,17 @@ class Device():
         self.air_interface = air_interface
         class Config(): pass
         self.config = Config()
+        class Capabilities(): pass
+        self.capabilities = Capabilities()
 
     def has_switch(self):
-        return False
+        return hasattr(self.capabilities, "switch")
 
     def can_send(self):
-        return False
+        return hasattr(self.capabilities, "send")
 
     def can_receive(self):
-        return False
+        return hasattr(self.capabilities, "receive")
 
     def get_radio_config(self):
         return self.config
@@ -177,7 +179,7 @@ class LegacyDevice(EnergenieDevice):
             #or by calling air_interface.configure() first?
             self.air_interface.send(payload)
         else:
-            d = self.device_id #TODO: Not part of Device now
+            d = self.device_id
             print("send_message(mock[%s]):%s" % (str(d), payload))
 
 
@@ -206,17 +208,26 @@ class MiHomeDevice(EnergenieDevice):
     def get_product_id(self): # -> id:int
         return self.product_id
 
+    def join_ack(self):
+        """Send a join-ack to the real device"""
+        self.send_message("join ack") # TODO
+
+    def incoming_message(self, payload):
+        """Handle incoming messages for this device"""
+        #TODO join request might be handled generically here
+        #TODO: subclass can override and call back to this if it wants to
+        pass # TODO
+
     def send_message(self, payload):
         if self.air_interface != None:
             #TODO: might want to send the config, either as a send parameter,
             #or by calling air_interface.configure() first?
             self.air_interface.send(payload)
         else:
-            m = self.manufacturer_id #TODO: Not part of Device now
-            p = self.product_id #TODO: Not part of Device now
-            d = self.device_id #TODO: Not part of Device now
+            m = self.manufacturer_id
+            p = self.product_id
+            d = self.device_id
             print("send_message(mock[%s %s %s]):%s" % (str(m), str(p), str(d), payload))
-
 
 
 class ENER002(LegacyDevice):
@@ -227,19 +238,13 @@ class ENER002(LegacyDevice):
         self.device_id = device_id
         self.config.tx_repeats = 8
         #no productid code for legacy devices?
-
-    def can_send(self):
-        return True
-
-    def has_switch(self):
-        return True
+        self.capabilities.switch = True
+        self.capabilities.receive = True
 
     def turn_on(self):
-        pass # TODO
         self.send_message("turn on") # TODO
 
     def turn_off(self):
-        pass # TODO
         self.send_message("turn off") # TODO
 
 
@@ -258,15 +263,9 @@ class MIHO005(MiHomeDevice):
             real_power     = None
         self.readings = Readings()
         self.config.tx_repeats = 4
-
-    def can_send(self):
-        return True
-
-    def can_receive(self):
-        return True
-
-    def has_switch(self):
-        return True
+        self.capabilities.send = True
+        self.capabilities.receive = True
+        self.capabilities.switch = True
 
     def get_readings(self): # -> readings:pydict
         """A way to get all readings as a single consistent set"""
@@ -336,9 +335,7 @@ class MIHO006(MiHomeDevice):
             battery_voltage = None
             current         = None
         self.readings = Readings()
-
-    def can_send(self):
-        return True
+        self.capabilities.send = True
 
     def get_battery_voltage(self): # -> voltage:float
         return self.readings.battery_voltage
@@ -361,12 +358,8 @@ class MIHO013(MiHomeDevice):
             valve_position       = None
         self.readings = Readings()
         self.config.tx_repeats = 10
-
-    def can_send(self):
-        return True
-
-    def can_receive(self):
-        return True
+        self.capabilities.send = True
+        self.capabilities.receive = True
 
     def get_battery_voltage(self): # ->voltage:float
         return self.readings.battery_voltage
@@ -381,14 +374,13 @@ class MIHO013(MiHomeDevice):
         return self.readings.setpoint_temperature
 
     def set_setpoint_temperature(self, temperature):
-        pass # TODO command
-        self.send_message("set setpoint temp") # TODO
+        self.send_message("set setpoint temp") # TODO command
 
     def get_valve_position(self): # -> position:int?
-        pass # TODO
+        pass # TODO is this possible?
 
     def set_valve_position(self, position):
-        pass # TODO command
+        pass # TODO command, is this possible?
         self.send_message("set valve pos") #TODO
 
     #TODO: difference between 'is on and 'is requested on'

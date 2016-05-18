@@ -181,6 +181,25 @@ registry = DeviceRegistry("registry.txt")
 #   registry.auto_create(sys.modules[__file__])
 
 
+#----- DISCOVERY AND LEARNING -------------------------------------------------
+#5. LEARN/DISCOVER: To be able to instigate and manage learn mode from within an app
+#
+#   a. To send specific commands to green button devices so they can
+#      learn the pattern
+#   ? broadcast specific (house_code, index) repeatedly
+#   ? user assisted start/stop
+#
+#   b. To sniff for any messages from MiHome devices and capture them
+#      for later analysis and turning into device objects
+#   ? either as a special receive-only learn mode
+#   ? or as part of normal receive operation through routing unknown device id's
+#   ? need a way to take a device id and consult active directory list,
+#     and route to the correct class instance - a router for incoming messages
+#
+#   c. To process MiHome join requests, and send MiHome join acks
+#   ? this would be routed by address to the device class
+
+
 #----- SIMPLE TEST HARNESS ----------------------------------------------------
 
 if __name__ == "__main__":
@@ -194,10 +213,18 @@ if __name__ == "__main__":
     registry.auto_create(sys.modules[__name__])
 
     # variables should now be created in module scope
-    print(tv)
-    print(fan)
+    print("tv %s" % tv)
+    print("fan %s" % fan)
 
     tv.turn_on()
     fan.turn_on()
+
+    print("tv switch:%s"  % tv.has_switch())
+    print("tv send:%s"    % tv.can_send())
+    print("tv receive:%s" % tv.can_receive())
+
+    print("fan switch:%s"  % fan.has_switch())
+    print("fan send:%s"    % fan.can_send())
+    print("fan receive:%s" % fan.can_receive())
 
 # END
