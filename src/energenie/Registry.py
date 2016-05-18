@@ -143,4 +143,17 @@ registry = DeviceRegistry("registry.txt")
 #   from Registry import registry
 #   registry.auto_create(modules[__file__])
 
+
+
+# With the registry, these would be added, so that they could be auto restored
+# on next boot
+# Registry.add(tv)
+# Registry.add(fan)
+
+# Note, when adding registry, all of this data will be stored in the persisted
+# registry, just start the registry and it creates all your object variables
+# for you from it's metadata.
+# Registry.start(some_context)
+# where some_context is the scope that the variables tv and fan are created in.
+
 # END

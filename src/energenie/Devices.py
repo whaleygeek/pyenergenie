@@ -3,7 +3,9 @@
 # Information about specific Energenie devices
 # This table is mostly reverse-engineered from various websites and web catalogues.
 
-MFRID                            = 0x04
+MFRID_ENERGENIE                  = 0x04
+MFRID                            = MFRID_ENERGENIE
+
 
 #PRODUCTID_MIHO001               =        #         Home Hub
 #PRODUCTID_MIHO002               =        #         Control only (Uses Legacy OOK protocol)
@@ -58,7 +60,7 @@ BROADCAST_ID                     = 0xFFFFFF # Energenie broadcast
 
 #TODO: This might be deprecated now, and replaced with the DeviceFactory?
 def getDescription(mfrid, productid):
-    if mfrid == MFRID:
+    if mfrid == MFRID_ENERGENIE:
         mfr = "Energenie"
         if productid == PRODUCTID_MIHO004:
             product = "MIHO004 MONITOR"
@@ -109,114 +111,157 @@ def hasSwitch(mfrid, productid):
 class Device():
     def __init__(self, air_interface):
         self.air_interface = air_interface
+        class Config(): pass
+        self.config = Config()
+        self.manufacturer_id = None
+        self.product_id = None
+        self.device_id = None
+
+    def has_switch(self):
+        return False
+
+    def can_send(self):
+        return False
+
+    def can_receive(self):
+        return False
+
+    def get_radio_config(self):
+        return self.config
+
+
+    #TODO: no manufacturerid, productid, deviceid for legacy devices?
+    # so does this move into MiHomeDevice?
 
     def get_manufacturer_id(self): # -> id:int
-        pass
+        return self.manufacturer_id
 
     def get_product_id(self): # -> id:int
-        pass
+        return self.product_id
 
-    def get_sensor_id(self): # -> id:int
-        pass
+    def get_device_id(self): # -> id:int
+        return self.device_id
+
 
     def get_last_receive_time(self): # ->timestamp
-        pass
+        return self.last_receive_time
 
     def get_last_send_time(self): # -> timestamp
-        pass
+        return self.last_send_time
 
     def get_next_receive_time(self): # -> timestamp
         pass
+        #TODO this should probably be calculated
+        #TODO not sure yet if this lives here
 
     def get_next_send_time(self): # -> timestamp
         pass
+        #TODO this should probably be calculated
+        #TODO not sure yet if this lives here
 
     def incoming_message(self, payload):
-        pass
         # incoming_message (OOK or OpenThings as appropriate, stripped of header? decrypted, decoded to pydict)
+        # default action of base class is to just print the payload
+        print("incoming:%s" % payload)
 
     def send_message(self, payload):
-        pass
-        # send_message (a link out to the transport, could be mocked, for example)
+        if self.air_interface != None:
+            self.air_interface.send(payload)
+        else:
+            m = self.manufacturer_id
+            p = self.product_id
+            d = self.device_id
+            print("send_message(mock[%s %s %s]):%s" % (str(m), str(p), str(d), payload))
 
 
 class EnergenieDevice(Device):
     def __init__(self, air_interface):
         Device.__init__(self, air_interface)
-
-    def get_radio_config(self): # -> default config
-        # get_radio_config -> config_selector? (freq, modulation) config_parameters? (inner_repeats, delay, outer_repeats)
-        pass
-
-    def has_switch(self): # -> default False
-        pass
-
-    def can_send(self): # -> default False
-        pass
-
-    def can_receive(self): # -> default False
-        pass
+        self.manufacturer_id = MFRID_ENERGENIE
 
 
 class LegacyDevice(EnergenieDevice):
     def __init__(self, air_interface):
         EnergenieDevice.__init__(self, air_interface)
-
-    def get_radio_config(self): # -> config
-        pass
-        # freq = 433.92MHz
-        # modulation = OOK
-        # codec = 4bit
+        self.config.frequency  = 433.92
+        self.config.modulation = "OOK"
+        self.config.codec      = "4bit"
 
 
 class MiHomeDevice(EnergenieDevice):
     def __init__(self, air_interface):
         EnergenieDevice.__init__(self, air_interface)
-
-    def get_radio_config(self): # -> config
-        pass
-        # freq = 433.92MHz
-        # modulation = FSK
-        # codec = OpenThings
+        self.config.frequency  = 433.92
+        self.config.modulation = "FSK"
+        self.config.codec      = "OpenThings"
+        #Different devices might have different PIP's
+        #if we are cycling codes on each message?
+        #self.config.encryptPID = CRYPT_PID
+        #self.config.encryptPIP = CRYPT_PIP
 
 
 class ENER002(LegacyDevice):
-    def __init__(self, air_interface):
+    def __init__(self, air_interface=None, device_id=None):
         LegacyDevice.__init__(self, air_interface)
+        #NOTE: tuple of (house_address, device_index)
+        self.device_id = device_id
+        self.config.tx_repeats = 8
+        #no productid code for legacy devices?
+
+    def can_send(self):
+        return True
+
+    def has_switch(self):
+        return True
 
     def turn_on(self):
-        pass
+        pass # TODO
+        self.send_message("turn on") # TODO
 
     def turn_off(self):
-        pass
-
-    def can_send(self): # -> True
-        pass
+        pass # TODO
+        self.send_message("turn off") # TODO
 
 
 class MIHO005(MiHomeDevice): # Adaptor Plus
-    def __init__(self, air_interface):
+    def __init__(self, air_interface=None, device_id=None):
         MiHomeDevice.__init__(self, air_interface)
+        self.product_id = PRODUCTID_MIHO005
+        self.device_id  = device_id
+        class Readings():
+            switch         = None
+            voltage        = None
+            frequency      = None
+            apparent_power = None
+            reactive_power = None
+            real_power     = None
+        self.readings = Readings()
+        self.config.tx_repeats = 4
 
-    def get_radio_config(self):
-        pass
-        # + tx_repeats = 4
+    def can_send(self):
+        return True
 
-    def can_send(self): # -> True
-        pass
+    def can_receive(self):
+        return True
 
-    def can_receive(self): # -> True
-        pass
+    def has_switch(self):
+        return True
 
     def get_readings(self): # -> readings:pydict
-        pass
-        # a way to get all readings as a single consistent set
+        """A way to get all readings as a single consistent set"""
+        return self.readings
 
     def turn_on(self):
-        pass # command request
+        #TODO: build header
+        #TODO: add rec SWITCH=1
+        #TODO: self.send_message()
+        self.send_message("turn on") # TODO
 
     def turn_off(self):
-        pass # command request
+        #TODO: build header
+        #TODO: add rec SWITCH=0
+        #TODO: self.send_message(OPENTHINGS_SWITCH_MESSAGE, False)
+        self.send_message("turn off") # TODO
 
     #TODO: difference between 'is on and 'is requested on'
     #TODO: difference between 'is off' and 'is requested off'
@@ -224,100 +269,104 @@ class MIHO005(MiHomeDevice): # Adaptor Plus
     #TODO: switch state might be 'turning_on' or 'turning_off' if send request and not heard response yet
 
     def is_on(self): # -> boolean
-        pass
-        # cached view of last received switch state
+        """True, False, or None if unknown"""
+        s = self.get_switch()
+        if s == None: return None
+        return s
 
     def is_off(self): # -> boolean
-        pass
-        # cached view of last received switch state
+        """True, False, or None if unknown"""
+        s = self.get_switch()
+        if s == None: return None
+        return not s
 
     def get_switch(self): # -> boolean
-        pass
-        # cached view of last received switch state
+        """Last stored state of the switch, might be None if unknown"""
+        return self.readings.switch
 
     def get_voltage(self): # -> voltage:float
-        pass
-        # cached view of last received voltage
+        """Last stored state of voltage reading, None if unknown"""
+        return self.readings.voltage
 
     def get_frequency(self): # -> frequency:float
-        pass
-        # cached view of last received frequency
+        """Last stored state of frequency reading, None if unknown"""
+        return self.readings.frequency
 
     def get_apparent_power(self): # ->power:float
-        pass
-        # cached view of last apparent power reading
+        """Last stored state of apparent power reading, None if unknown"""
+        return self.readings.apparent_power
 
     def get_reactive_power(self): # -> power:float
-        pass
-        # cached view of last reactive power reading
+        """Last stored state of reactive power reading, None if unknown"""
+        return self.readings.reactive_power
 
     def get_real_power(self): #-> power:float
-        pass
-        # cached view of last real power reading
+        """Last stored state of real power reading, None if unknown"""
+        return self.readings.real_power
 
 
 class MIHO006(MiHomeDevice): # Home Monitor
-    def __init__(self, air_interface):
+    def __init__(self, air_interface=None, device_id=None):
         MiHomeDevice.__init__(self, air_interface)
+        self.product_id = PRODUCTID_MIHO006
+        self.device_id  = device_id
+        class Readings():
+            battery_voltage = None
+            current         = None
+        self.readings = Readings()
 
-    def get_readings(self): # -> readings:pydict
-        pass
-        # a consistent set of all readings together
-
-    def can_send(self): # -> True
-        pass
+    def can_send(self):
+        return True
 
     def get_battery_voltage(self): # -> voltage:float
-        pass
-        # cached view of last battery voltage reading
+        return self.readings.battery_voltage
 
     def get_current(self): # -> current:float
-        pass
-        # cached view of last current reading
+        return self.readings.current
 
 
-class MIHO012(MiHomeDevice): # eTRV
-    def __init__(self, air_interface):
+class MIHO013(MiHomeDevice): # eTRV
+    def __init__(self, air_interface=None, device_id=None):
         MiHomeDevice.__init__(self, air_interface)
+        self.product_id = PRODUCTID_MIHO013
+        self.device_id  = device_id
+        class Readings():
+            battery_voltage      = None
+            ambient_temperature  = None
+            pipe_temperature     = None
+            setpoint_temperature = None
+            valve_position       = None
+        self.readings = Readings()
+        self.config.tx_repeats = 10
 
-    def get_radio_config(self): # -> parameters
-        pass
-        # + tx_repeats = 10
+    def can_send(self):
+        return True
 
-    def can_send(self): # -> True
-        pass
-
-    def can_receive(self): # -> True
-        pass
-
-    def get_readings(self): # -> readings:pydict
-        pass
-        # cached view of all readings together
+    def can_receive(self):
+        return True
 
     def get_battery_voltage(self): # ->voltage:float
-        pass
-        # cached view of last voltage reading
+        return self.readings.battery_voltage
 
     def get_ambient_temperature(self): # -> temperature:float
-        pass
-        # cached view of last temp reading
+        return self.readings.ambient_temperature
 
     def get_pipe_temperature(self): # -> temperature:float
-        pass
-        # cached view of last temp reading
+        return self.readings.pipe_temperature
 
     def get_setpoint_temperature(self): #-> temperature:float
-        pass
-        # cached view of last temp reading
+        return self.readings.setpoint_temperature
 
     def set_setpoint_temperature(self, temperature):
-        pass
+        pass # TODO command
+        self.send_message("set setpoint temp") # TODO
 
     def get_valve_position(self): # -> position:int?
-        pass
+        pass # TODO
 
     def set_valve_position(self, position):
-        pass
+        pass # TODO command
+        self.send_message("set valve pos") #TODO
 
     #TODO: difference between 'is on and 'is requested on'
     #TODO: difference between 'is off' and 'is requested off'
@@ -325,19 +374,27 @@ class MIHO012(MiHomeDevice): # eTRV
     #TODO: switch state might be 'turning_on' or 'turning_off' if send request and not heard response yet
 
     def turn_on(self): # command
-        pass
+        pass # TODO command i.e. valve position?
+        self.send_message("turn on") #TODO
 
     def turn_off(self): # command
-        pass
+        pass # TODO command i.e. valve position?
+        self.send_message("turn off") #TODO
 
     def is_on(self): # query last known reported state (unknown if changing?)
-        pass
+        pass # TODO i.e valve is not completely closed?
 
     def is_off(self): # query last known reported state (unknown if changing?)
-        pass
+        pass # TODO i.e. valve is completely closed?
 
 
 #----- DEVICE FACTORY ---------------------------------------------------------
+
+# This is a singleton, but might not be in the future.
+# i.e. we might have device factories for lots of different devices.
+# and a DeviceFactory could auto configure it's set of devices
+# with a specific air_interface for us.
+# i.e. this might be the EnergenieDeviceFactory, there might be others
 
 class DeviceFactory():
     """A place to come to, to get instances of device classes"""
@@ -346,81 +403,82 @@ class DeviceFactory():
         "ENER002":     ENER002,    "GreenButton": ENER002,
         "MIHO005":     MIHO005,    "AdaptorPlus": MIHO005,
         "MIHO006":     MIHO006,    "HomeMonitor": MIHO006,
-        "MIHO012":     MIHO012,    "eTRV":        MIHO012,
+        "MIHO013":     MIHO013,    "eTRV":        MIHO013,
     }
+    default_air_interface = None
 
     @staticmethod
-    def get_device(name):
+    def set_default_air_interface(air_interface):
+        DeviceFactory.default_air_interface = air_interface
+
+    @staticmethod
+    def keys():
+        return DeviceFactory.devices.keys()
+
+    @staticmethod
+    def get_device(name, air_interface=None, device_id=None):
         """Get a device by name, construct a new instance"""
+        if not name in DeviceFactory.devices:
+            raise ValueError("Unsupported device:%s" % name)
+
         c = DeviceFactory.devices[name]
-        return c()
+        if air_interface == None:
+            air_interface = DeviceFactory.default_air_interface
+        return c(air_interface, device_id)
 
 
 #----- TEMPORARY TEST HARNESS -------------------------------------------------
 
+#hmm: need two addresses for legacy - use a tuple (house_address, index)
+
+#unless we have an adaptor class for air_interface which represents the
+#collective house address for a house code. So if you use more than one
+#house address, you create multiple air interface adaptors with different
+#house codes, that just delegate to the same actual radio air interface?
+#bit like a little local router?
+
+#legacy1 = AirInterface.create("OOK", address=0xC8C8C, energenie_radio)
+
+# Could also consider this a local network, with common parameters shared
+# by all devices that use it.
+#air2    = AirInterface.create("FSK", energenie_radio)
+
+# scheduling would then become
+# scheduler = Scheduler(energenie_radio)
+# legacy1 = AirInterface.create("OOK", address=0xC8C8C, scheduler)
+# air2    = AirInterface.create("FSK", scheduler
+# so that when a device tries to transmit, it gets air interface specific
+# settings added to it as appropriate, then the scheduler decides when
+# to send and receive
+
+# Somehow we need to associate devices with an air interface
+# This might allow us to support multiple radios in the future too?
+#legacy1.add(tv)
+
+# cooperative loop could be energenie_radio.loop()
+# or wrap a thread around it with start() but beware of thread context
+# and thread safety.
+
 import time
 
-# Getting devices, without a registry yet
-def test():
-    #hmm: need two addresses for legacy
-    #unless we have an adaptor class for air_interface which represents the
-    #collective house address for a house code. So if you use more than one
-    #house address, you create multiple air interface adaptors with different
-    #house codes, that just delegate to the same actual radio air interface?
-    #bit like a little local router?
+def test_without_registry():
 
-    #legacy1 = AirInterface.create("OOK", address=0xC8C8C, energenie_radio)
-
-    # Could also consider this a local network, with common parameters shared
-    # by all devices that use it.
-    #air2    = AirInterface.create("FSK", energenie_radio)
-
-    # scheduling would then become
-    # scheduler = Scheduler(energenie_radio)
-    # legacy1 = AirInterface.create("OOK", address=0xC8C8C, scheduler)
-    # air2    = AirInterface.create("FSK", scheduler
-    # so that when a device tries to transmit, it gets air interface specific
-    # settings added to it as appropriate, then the scheduler decides when
-    # to send and receive
-
-    # Somehow we need to associate devices with an air interface
-    # This might allow us to support multiple radios in the future too?
-    #legacy1.add(tv)
-
-    # auto knitting?
-    # DeviceFactory.set_air_interface(energenie_radio)
-    # future get_device causes the air interface to be knitted up to the device
-    # along with receive callbacks for asynchronous receive and update.
-
-    # cooperative loop could be energenie_radio.loop()
-    # or wrap a thread around it with start() but beware of thread context
-    # and thread safety.
-
-
-    tv  = DeviceFactory.get_device("GreenButton", address=(0xC8C8C, 1))
-    fan = DeviceFactory.get_device("AdaptorPlus", address=0x68b)
-
-    # With the registry, these would be added, so that they could be auto restored
-    # on next boot
-    # Registry.add(tv)
-    # Registry.add(fan)
-
-    # Note, when adding registry, all of this data will be stored in the persisted
-    # registry, just start the registry and it creates all your object variables
-    # for you from it's metadata.
-    # Registry.start(some_context)
-    # where some_context is the scope that the variables tv and fan are created in.
+    tv  = DeviceFactory.get_device("GreenButton", device_id=(0xC8C8C, 1))
+    fan = DeviceFactory.get_device("AdaptorPlus", device_id=0x68b)
 
     while True:
+        print("ON")
         tv.turn_on()
         fan.turn_off()
         time.sleep(2)
 
+        print("OFF")
         tv.turn_off()
         fan.turn_on()
         time.sleep(1)
 
+
 if __name__ == "__main__":
-    test()
+    test_without_registry()
 
 # END
