@@ -86,13 +86,43 @@ def get_info(sensor_id):
 
 # TODO: serialisation format for the individual device meta record? json?
 
-class DeviceRegistry():
-    pass
+def log_method(m):
+    def inner(*args, **kwargs):
+        print("CALL %s with: %s %s" % (m, args, kwargs))
+        r = m(*args, **kwargs)
+        print("RETURN %s with: %s" % (m, r))
+        return r
+    return inner
 
-    @unimplemented
+
+class RegistryStore():
+    """A mock in-memory only store, for testing and debugging"""
     def __init__(self, filename):
-        pass
-        # bind this object to a persisted file registry
+        self.filename = filename #TODO: Intentionally not used elsewhere
+        self.store = {}
+
+    #@log_method
+    def __setitem__(self, key, value):
+        self.store[key] = value
+
+    #@log_method
+    def __getitem__(self, key):
+        return self.store[key]
+
+    #@log_method
+    def __delitem__(self, key):
+        del self.store[key]
+
+    #@log_method
+    def keys(self):
+        return self.store.keys()
+
+
+
+class DeviceRegistry():
+    """A persistent registry for device class instance configurations"""
+    def __init__(self, filename):
+        self.store = RegistryStore(filename) # A dummy store, for testing
 
     @unimplemented
     def load(self):
@@ -104,34 +134,40 @@ class DeviceRegistry():
         pass
         # persist registry to disk/write back new entries
 
-    @unimplemented
     def add(self, device, name):
-        pass
-        # add a device class instance to the registry with a friendly name
+        """Add a device class instance to the registry, with a friendly name"""
+        self.store[name] = device
 
-    @unimplemented
     def get(self, name): # -> Device
-        pass
-        # get a device by name from the registry
-        # create a new device class instance from a name
+        """Get the description for a device class from the store, and construct a class instance"""
+        c = self.store[name]
+        #TODO: Construct a new device class that is configured as per this data
+        #for now, just return the metadata, it could be serialised data too
+        return c
 
-    @unimplemented
     def delete(self, name):
-        pass
-        # delete a device from the registry
+        """Delete the named class instance"""
+        del self.store[name]
 
-    @unimplemented
     def auto_create(self, context):
-        pass
-        # auto-create variables in a given scope, for all persisted registry entries
+        """auto-create variables in the provided context, for all persisted registry entries"""
+        if context == None:
+            raise ValueError("Must provide a context to hold new variables")
 
-    @unimplemented
+        for name in self.store.keys():
+            c = self.get(name) #TODO: should return an instantiated class
+            # This creates a variable inside the context of this name, points to class instance
+            setattr(context, name, c)
+
     def list(self):
-        pass
-        # list the registry in some printable format (like a configuration record)
+        """List the registry in a vaguely printable format, mostly for debug"""
+        for k in self.store.keys():
+            print("DEVICE %s" % k)
+            print("  %s" % self.store[k])
 
 
 registry = DeviceRegistry("registry.txt")
+
 
 # This will create all class instance variables in the module that imports the registry.
 # So, if there is an entry called "tv" in the registry, then the app module
@@ -140,20 +176,28 @@ registry = DeviceRegistry("registry.txt")
 # as it has switching capability.
 #
 # usage:
+#   import sys
 #   from Registry import registry
-#   registry.auto_create(modules[__file__])
+#   registry.auto_create(sys.modules[__file__])
 
 
+#----- SIMPLE TEST HARNESS ----------------------------------------------------
 
-# With the registry, these would be added, so that they could be auto restored
-# on next boot
-# Registry.add(tv)
-# Registry.add(fan)
+if __name__ == "__main__":
 
-# Note, when adding registry, all of this data will be stored in the persisted
-# registry, just start the registry and it creates all your object variables
-# for you from it's metadata.
-# Registry.start(some_context)
-# where some_context is the scope that the variables tv and fan are created in.
+    # seed the registry
+    registry.add(Devices.MIHO005(device_id=0x68b), "tv")
+    registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
+
+    # test the auto create mechanism
+    import sys
+    registry.auto_create(sys.modules[__name__])
+
+    # variables should now be created in module scope
+    print(tv)
+    print(fan)
+
+    tv.turn_on()
+    fan.turn_on()
 
 # END

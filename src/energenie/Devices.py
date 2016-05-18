@@ -109,6 +109,7 @@ def hasSwitch(mfrid, productid):
 #----- NEW DEVICE CLASSES -----------------------------------------------------
 
 class Device():
+    """A generic connected device abstraction"""
     def __init__(self, air_interface):
         self.air_interface = air_interface
         class Config(): pass
@@ -140,18 +141,14 @@ class Device():
         print("incoming:%s" % payload)
 
     def send_message(self, payload):
-        if self.air_interface != None:
-            #TODO: might want to send the config, either as a send parameter,
-            #or by calling air_interface.configure() first?
-            self.air_interface.send(payload)
-        else:
-            m = self.manufacturer_id
-            p = self.product_id
-            d = self.device_id
-            print("send_message(mock[%s %s %s]):%s" % (str(m), str(p), str(d), payload))
+        print("send_message %s" % payload)
+
+    def __repr__(self):
+        return "Device()"
 
 
 class EnergenieDevice(Device):
+    """An abstraction for any kind of Energenie connected device"""
     def __init__(self, air_interface, device_id=None):
         Device.__init__(self, air_interface)
         self.device_id = device_id
@@ -159,16 +156,34 @@ class EnergenieDevice(Device):
     def get_device_id(self): # -> id:int
         return self.device_id
 
+    def __repr__(self):
+        return "Device(%s)" % str(self.device_id)
+
 
 class LegacyDevice(EnergenieDevice):
+    """An abstraction for Energenie green button legacy OOK devices"""
     def __init__(self, air_interface):
         EnergenieDevice.__init__(self, air_interface)
         self.config.frequency  = 433.92
         self.config.modulation = "OOK"
         self.config.codec      = "4bit"
 
+    def __repr__(self):
+        return "LegacyDevice(%s)" % str(self.device_id)
+
+    def send_message(self, payload):
+        if self.air_interface != None:
+            #TODO: might want to send the config, either as a send parameter,
+            #or by calling air_interface.configure() first?
+            self.air_interface.send(payload)
+        else:
+            d = self.device_id #TODO: Not part of Device now
+            print("send_message(mock[%s]):%s" % (str(d), payload))
+
+
 
 class MiHomeDevice(EnergenieDevice):
+    """An abstraction for Energenie new style MiHome FSK devices"""
     def __init__(self, air_interface, device_id=None):
         EnergenieDevice.__init__(self, air_interface, device_id)
         self.config.frequency  = 433.92
@@ -182,14 +197,30 @@ class MiHomeDevice(EnergenieDevice):
         #self.config.encryptPID = CRYPT_PID
         #self.config.encryptPIP = CRYPT_PIP
 
+    def __repr__(self):
+        return "MiHomeDevice(%s,%s,%s)" % (str(self.manufacturer_id), str(self.product_id), str(self.device_id))
+
     def get_manufacturer_id(self): # -> id:int
         return self.manufacturer_id
 
     def get_product_id(self): # -> id:int
         return self.product_id
 
+    def send_message(self, payload):
+        if self.air_interface != None:
+            #TODO: might want to send the config, either as a send parameter,
+            #or by calling air_interface.configure() first?
+            self.air_interface.send(payload)
+        else:
+            m = self.manufacturer_id #TODO: Not part of Device now
+            p = self.product_id #TODO: Not part of Device now
+            d = self.device_id #TODO: Not part of Device now
+            print("send_message(mock[%s %s %s]):%s" % (str(m), str(p), str(d), payload))
 
-class ENER002(LegacyDevice): # Green button switch
+
+
+class ENER002(LegacyDevice):
+    """A green-button switch"""
     def __init__(self, air_interface=None, device_id=None):
         LegacyDevice.__init__(self, air_interface)
         #NOTE: tuple of (house_address, device_index)
@@ -212,7 +243,8 @@ class ENER002(LegacyDevice): # Green button switch
         self.send_message("turn off") # TODO
 
 
-class MIHO005(MiHomeDevice): # Adaptor Plus
+class MIHO005(MiHomeDevice):
+    """An Energenie MiHome Adaptor Plus"""
     def __init__(self, air_interface=None, device_id=None):
         MiHomeDevice.__init__(self, air_interface)
         self.product_id = PRODUCTID_MIHO005
@@ -294,7 +326,8 @@ class MIHO005(MiHomeDevice): # Adaptor Plus
         return self.readings.real_power
 
 
-class MIHO006(MiHomeDevice): # Home Monitor
+class MIHO006(MiHomeDevice):
+    """An Energenie MiHome Home Monitor"""
     def __init__(self, air_interface=None, device_id=None):
         MiHomeDevice.__init__(self, air_interface)
         self.product_id = PRODUCTID_MIHO006
@@ -314,7 +347,8 @@ class MIHO006(MiHomeDevice): # Home Monitor
         return self.readings.current
 
 
-class MIHO013(MiHomeDevice): # eTRV
+class MIHO013(MiHomeDevice):
+    """An Energenie MiHome eTRV Radiator Valve"""
     def __init__(self, air_interface=None, device_id=None):
         MiHomeDevice.__init__(self, air_interface)
         self.product_id = PRODUCTID_MIHO013
