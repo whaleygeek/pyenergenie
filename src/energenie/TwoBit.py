@@ -58,6 +58,7 @@ def ashex(payload):
     return line
 
 
+#TODO: encode_relay_msg
 def build_relay_msg(relayState=False):
     """Temporary test code to prove we can turn the relay on or off"""
 
@@ -72,6 +73,7 @@ def build_relay_msg(relayState=False):
     return payload
 
 
+#TODO: encode_test_message
 def build_test_message(pattern):
     """build a test message for a D3D2D1D0 control patter"""
     payload = PREAMBLE + DEFAULT_ADDR_ENC
@@ -81,6 +83,7 @@ def build_test_message(pattern):
     return payload
 
 
+#TODO: encode_switch_msg
 def build_switch_msg(state, device_address=ALL_SOCKETS, house_address=None):
     """Build a message to turn a switch on or off"""
     #print("build: state:%s, device:%d, house:%s" % (str(state), device_address, str(house_address)))
@@ -133,6 +136,7 @@ def build_switch_msg(state, device_address=ALL_SOCKETS, house_address=None):
     #print("encoded as:%s" % ashex(payload))
     return payload
 
+#TODO: decode_switch_msg
 
 def encode_bytes(data):
     """Turn a list of bytes into a modulated pattern equivalent"""
@@ -164,6 +168,23 @@ def encode_bits(data, number):
     #print("  returns:%s" % ashex(encoded))
     return encoded
 
+
+#TODO: decode_bytes
+
+#TODO: decode_bits
+
+#TODO: decode_command
+# 0, False  (all off)
+# 0, True   (all on)
+# 1, False  (1 off)
+# 1, True   (1 on)
+# 2, False  (2 off)
+# 2, True   (2 on)
+# 3, False  (3 off)
+# 3, True   (3 on)
+# 4, False  (4 off)
+# 4, True   (4 on)
+# UNKNOWN   (6 of the other patterns, that are not recognised)
 
 # END
 

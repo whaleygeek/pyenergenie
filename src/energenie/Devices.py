@@ -3,14 +3,15 @@
 # Information about specific Energenie devices
 # This table is mostly reverse-engineered from various websites and web catalogues.
 
-#TODO: Might move this into an air_interface adaptor, so that TwoBit encodes
-#are done consistently outside of this module, just like OpenThings encodes and decodes are.
-#They are done externally, because you need the address before you can route it to these classes.
-#import TwoBit
+import OnAir
+
+# This level of indirection allows easy mocking for testing
+ook_interface = OnAir.TwoBitAirInterface()
+fsk_interface = OnAir.OpenThingsAirInterface()
+
 
 MFRID_ENERGENIE                  = 0x04
 MFRID                            = MFRID_ENERGENIE
-
 
 #PRODUCTID_MIHO001               =        #         Home Hub
 #PRODUCTID_MIHO002               =        #         Control only (Uses Legacy OOK protocol)
@@ -97,18 +98,16 @@ def hasSwitch(mfrid, productid):
 # this might be a real air_interface (a radio), or an adaptor interface
 # (a message scheduler with a queue).
 #
-# TODO: As such, we need to handle:
 #   synchronous send
 #   synchronous receive
-#   asynchronous send (deferred)
-#   asynchronous receive (deferred)
+#   TODO: asynchronous send (deferred)    - implies a callback on 'done, fail, timeout'
+#   TODO: asynchronous receive (deferred) - implies a callback on 'done, fail, timeout'
 
 # air_interface has:
 #   configure(parameters)
 #   send(payload)
 #   send(payload, parameters)
-#   listen(parameters)
-#   check() -> payload or None
+#   receive() -> (radio_measurements, address, payload)
 
 
 #----- NEW DEVICE CLASSES -----------------------------------------------------
@@ -170,8 +169,8 @@ class EnergenieDevice(Device):
 
 class LegacyDevice(EnergenieDevice):
     """An abstraction for Energenie green button legacy OOK devices"""
-    def __init__(self, air_interface):
-        EnergenieDevice.__init__(self, air_interface)
+    def __init__(self):
+        EnergenieDevice.__init__(self, ook_interface)
         self.config.frequency  = 433.92
         self.config.modulation = "OOK"
         self.config.codec      = "4bit"
@@ -199,8 +198,8 @@ class LegacyDevice(EnergenieDevice):
 
 class MiHomeDevice(EnergenieDevice):
     """An abstraction for Energenie new style MiHome FSK devices"""
-    def __init__(self, air_interface, device_id=None):
-        EnergenieDevice.__init__(self, air_interface, device_id)
+    def __init__(self, device_id=None):
+        EnergenieDevice.__init__(self, fsk_interface, device_id)
         self.config.frequency  = 433.92
         self.config.modulation = "FSK"
         self.config.codec      = "OpenThings"
@@ -261,8 +260,8 @@ class MiHomeDevice(EnergenieDevice):
 
 class ENER002(LegacyDevice):
     """A green-button switch"""
-    def __init__(self, air_interface=None, device_id=None):
-        LegacyDevice.__init__(self, air_interface)
+    def __init__(self, device_id=None):
+        LegacyDevice.__init__(self)
         self.device_id = device_id # (house_address, device_index)
         self.config.tx_repeats = 8
         self.capabilities.switch = True
@@ -277,8 +276,8 @@ class ENER002(LegacyDevice):
 
 class MIHO005(MiHomeDevice):
     """An Energenie MiHome Adaptor Plus"""
-    def __init__(self, air_interface=None, device_id=None):
-        MiHomeDevice.__init__(self, air_interface)
+    def __init__(self, device_id=None):
+        MiHomeDevice.__init__(self)
         self.product_id = PRODUCTID_MIHO005
         self.device_id  = device_id
         class Readings():
@@ -354,8 +353,8 @@ class MIHO005(MiHomeDevice):
 
 class MIHO006(MiHomeDevice):
     """An Energenie MiHome Home Monitor"""
-    def __init__(self, air_interface=None, device_id=None):
-        MiHomeDevice.__init__(self, air_interface)
+    def __init__(self, device_id=None):
+        MiHomeDevice.__init__(self)
         self.product_id = PRODUCTID_MIHO006
         self.device_id  = device_id
         class Readings():
@@ -373,8 +372,8 @@ class MIHO006(MiHomeDevice):
 
 class MIHO013(MiHomeDevice):
     """An Energenie MiHome eTRV Radiator Valve"""
-    def __init__(self, air_interface=None, device_id=None):
-        MiHomeDevice.__init__(self, air_interface)
+    def __init__(self, device_id=None):
+        MiHomeDevice.__init__(self)
         self.product_id = PRODUCTID_MIHO013
         self.device_id  = device_id
         class Readings():
