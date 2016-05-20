@@ -276,7 +276,9 @@ ook_router = Router("ook")
 
 #----- SIMPLE TEST HARNESS ----------------------------------------------------
 
-def test_with_registry():
+def test_with_registry_tx():
+    """Test sending a message to a green button and a MiHome Adaptor Plus switch"""
+
     #TODO need a way to separate device creation from device restoration
     #and the app needs to know what mode it is in.
     #creation is probably just a test feature, as a user would either
@@ -299,7 +301,7 @@ def test_with_registry():
     tv.turn_off()
     fan.turn_on()
     fan.turn_off()
-    
+
     #print("tv switch:%s"  % tv.has_switch())
     #print("tv send:%s"    % tv.can_send())
     #print("tv receive:%s" % tv.can_receive())
@@ -309,12 +311,50 @@ def test_with_registry():
     #print("fan receive:%s" % fan.can_receive())
 
 
+def test_with_registry_rx():
+    """Test receiving a dummy message on a MiHome adaptor plus"""
+
+    # seed the registry
+    registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
+
+    # test the auto create mechanism
+    import sys
+    registry.auto_create(sys.modules[__name__])
+
+    fan.turn_on()
+
+    #TODO: synthesise receiving a report message
+    #push it down the receive pipeline
+    #radio.receive()
+    # ->OpenThingsAirInterface.incoming
+    # ->OpenThings.decrypt
+    # ->OpenThings.decode
+    # ->OpenThingsAirInterface->route
+    # ->ENER005.incoming_message()
+    #
+    #it should update voltage, power etc
+
+
+    #TODO: get readings from device
+    ##voltage   = fan.get_voltage()
+    ##frequency = fan.get_frequency()
+    ##power     = fan.get_real_power()
+    ##switch    = fan.is_on()
+
+    ##print("voltage %f"    % voltage)
+    ##print("frequency %f"  % frequency)
+    ##print("power %f"      % power)
+    ##print("switch %s"     % switch)
+
+
 if __name__ == "__main__":
     import OpenThings
 
     OpenThings.init(Devices.CRYPT_PID)
-    test_with_registry()
 
+    test_with_registry_tx()
+
+    ##test_with_registry_rx()
 
 
 # END

@@ -212,7 +212,7 @@ class Device():
     def incoming_message(self, payload):
         # incoming_message (OOK or OpenThings as appropriate, stripped of header? decrypted, decoded to pydict)
         # default action of base class is to just print the payload
-        print("incoming:%s" % payload)
+        print("incoming(unhandled):%s" % payload)
 
     def send_message(self, payload):
         print("send_message %s" % payload)
@@ -299,8 +299,9 @@ class MiHomeDevice(EnergenieDevice):
         # so payload at this point must be a pydict?
 
         #we know at this point that it's a FSK message
-        #TODO: do we OpenThings.decrypt() here? Done by OpenThings.decode() by default
-        #TODO: do we OpenThings.decode() here into a pydict header/recs??
+        #OpenThingsAirInterface has already decrypted and decoded
+        #so we get a pydict payload here with header and recs in it
+        #the header has the address which is used for routing
 
         #TODO join request might be handled generically here
         #TODO: subclass can override and call back to this if it wants to
