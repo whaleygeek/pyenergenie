@@ -29,8 +29,8 @@ purple_off = OpenThings.encode(m)
 
 # build OOK messages for legacy green button
 
-GREEN_ON  = TwoBit.build_switch_msg(True, device_address=1)
-GREEN_OFF = TwoBit.build_switch_msg(False, device_address=1)
+GREEN_ON  = TwoBit.encode_switch_message(True, device_address=1)
+GREEN_OFF = TwoBit.encode_switch_message(False, device_address=1)
 
 
 def switch_loop():

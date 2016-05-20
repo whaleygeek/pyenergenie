@@ -58,8 +58,7 @@ def ashex(payload):
     return line
 
 
-#TODO: encode_relay_msg
-def build_relay_msg(relayState=False):
+def encode_relay_message(relayState=False):
     """Temporary test code to prove we can turn the relay on or off"""
 
     payload = PREAMBLE #TODO: + DEFAULT_ADDR_ENC ??
@@ -73,8 +72,7 @@ def build_relay_msg(relayState=False):
     return payload
 
 
-#TODO: encode_test_message
-def build_test_message(pattern):
+def encode_test_message(pattern):
     """build a test message for a D3D2D1D0 control patter"""
     payload = PREAMBLE + DEFAULT_ADDR_ENC
     pattern &= 0x0F
@@ -83,8 +81,7 @@ def build_test_message(pattern):
     return payload
 
 
-#TODO: encode_switch_msg
-def build_switch_msg(state, device_address=ALL_SOCKETS, house_address=None):
+def encode_switch_message(state, device_address=ALL_SOCKETS, house_address=None):
     """Build a message to turn a switch on or off"""
     #print("build: state:%s, device:%d, house:%s" % (str(state), device_address, str(house_address)))
 

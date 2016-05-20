@@ -276,8 +276,7 @@ ook_router = Router("ook")
 
 #----- SIMPLE TEST HARNESS ----------------------------------------------------
 
-if __name__ == "__main__":
-
+def test_with_registry():
     #TODO need a way to separate device creation from device restoration
     #and the app needs to know what mode it is in.
     #creation is probably just a test feature, as a user would either
@@ -285,7 +284,7 @@ if __name__ == "__main__":
 
 
     # seed the registry
-    registry.add(Devices.MIHO005(device_id=0x68b), "tv")
+    #registry.add(Devices.MIHO005(device_id=0x68b), "tv")
     registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
 
     # test the auto create mechanism
@@ -293,18 +292,24 @@ if __name__ == "__main__":
     registry.auto_create(sys.modules[__name__])
 
     # variables should now be created in module scope
-    print("tv %s" % tv)
+    #print("tv %s" % tv)
     print("fan %s" % fan)
 
-    tv.turn_on()
+    #tv.turn_on()
     fan.turn_on()
 
-    print("tv switch:%s"  % tv.has_switch())
-    print("tv send:%s"    % tv.can_send())
-    print("tv receive:%s" % tv.can_receive())
+    #print("tv switch:%s"  % tv.has_switch())
+    #print("tv send:%s"    % tv.can_send())
+    #print("tv receive:%s" % tv.can_receive())
 
-    print("fan switch:%s"  % fan.has_switch())
-    print("fan send:%s"    % fan.can_send())
-    print("fan receive:%s" % fan.can_receive())
+    #print("fan switch:%s"  % fan.has_switch())
+    #print("fan send:%s"    % fan.can_send())
+    #print("fan receive:%s" % fan.can_receive())
+
+
+if __name__ == "__main__":
+    test_with_registry()
+
+
 
 # END

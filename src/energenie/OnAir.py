@@ -118,12 +118,17 @@ class TwoBitAirInterface():
         #   payload is just a list of bytes, or a byte buffer
         #   radio_params is an overlay on top of radio tx defaults
 
-        p = TwoBit.encode(payload)
+        house_address = payload["house_address"]
+        device_index  = payload["device_index"]
+        state         = payload["on"]
+        bytes = TwoBit.encode_switch_message(state, device_index, house_address)
         radio.modulation(ook=True)
+
         #TODO: merge radio_params with self.tx_defaults
         #TODO: configure radio modulation based on merged params
         #TODO: transmit payload
-        radio.transmit(p, outer_times=1, inner_times=8, outer_delay=0) #TODO: radio params
+
+        radio.transmit(bytes, outer_times=1, inner_times=8, outer_delay=0) #TODO: radio params
         # radio auto-pops to state before transmit
 
     @log_method

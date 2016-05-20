@@ -268,10 +268,20 @@ class ENER002(LegacyDevice):
         self.capabilities.receive = True
 
     def turn_on(self):
-        self.send_message("turn on") # TODO
+        payload = {
+            "house_address":  self.device_id[0],
+            "device_index":   self.device_id[1],
+            "on":             True
+        }
+        self.send_message(payload)
 
     def turn_off(self):
-        self.send_message("turn off") # TODO
+        payload = {
+            "house_address":  self.device_id[0],
+            "device_index":   self.device_id[1],
+            "on":             False
+        }
+        self.send_message(payload)
 
 
 class MIHO005(MiHomeDevice):
