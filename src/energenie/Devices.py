@@ -304,7 +304,7 @@ class MiHomeDevice(EnergenieDevice):
 
         #TODO join request might be handled generically here
         #TODO: subclass can override and call back to this if it wants to
-        pass # TODO
+        raise RuntimeError("Method unimplemented") #TODO
 
     def send_message(self, payload):
         ####HERE#### interface with air_interface

@@ -51,14 +51,14 @@ SW1_ON_ENC  = [0xEE, 0xEE] # 1111 sent as 1111
 SW1_OFF_ENC = [0xEE, 0xE8] # 1110 sent as 0111
 
 
-def ashex(payload):
+def ashex(payload): # -> str with hexascii bytes
     line = ""
     for b in payload:
         line += str(hex(b)) + " "
     return line
 
 
-def encode_relay_message(relayState=False):
+def encode_relay_message(relayState=False): # -> list of numbers
     """Temporary test code to prove we can turn the relay on or off"""
 
     payload = PREAMBLE #TODO: + DEFAULT_ADDR_ENC ??
@@ -72,7 +72,7 @@ def encode_relay_message(relayState=False):
     return payload
 
 
-def encode_test_message(pattern):
+def encode_test_message(pattern): #-> list of numbers
     """build a test message for a D3D2D1D0 control patter"""
     payload = PREAMBLE + DEFAULT_ADDR_ENC
     pattern &= 0x0F
@@ -81,7 +81,7 @@ def encode_test_message(pattern):
     return payload
 
 
-def encode_switch_message(state, device_address=ALL_SOCKETS, house_address=None):
+def encode_switch_message(state, device_address=ALL_SOCKETS, house_address=None): # -> list of numbers
     """Build a message to turn a switch on or off"""
     #print("build: state:%s, device:%d, house:%s" % (str(state), device_address, str(house_address)))
 
@@ -133,9 +133,8 @@ def encode_switch_message(state, device_address=ALL_SOCKETS, house_address=None)
     #print("encoded as:%s" % ashex(payload))
     return payload
 
-#TODO: decode_switch_msg
 
-def encode_bytes(data):
+def encode_bytes(data): # -> list of numbers
     """Turn a list of bytes into a modulated pattern equivalent"""
     #print("modulate_bytes: %s" % ashex(data))
     payload = []
@@ -147,7 +146,7 @@ def encode_bytes(data):
 
 ENCODER = [0x88, 0x8E, 0xE8, 0xEE]
 
-def encode_bits(data, number):
+def encode_bits(data, number): # -> list of numbers
     """Turn bits into n bytes of modulation patterns"""
     # 0000 00BA gets encoded as:
     # 128 64 32 16  8  4  2  1
@@ -166,22 +165,36 @@ def encode_bits(data, number):
     return encoded
 
 
-#TODO: decode_bytes
+def decode_switch_message(bytes): # -> (house_address, device_index, state)
+    pass #TODO
+    # house_address, device_index, state
 
-#TODO: decode_bits
 
-#TODO: decode_command
-# 0, False  (all off)
-# 0, True   (all on)
-# 1, False  (1 off)
-# 1, True   (1 on)
-# 2, False  (2 off)
-# 2, True   (2 on)
-# 3, False  (3 off)
-# 3, True   (3 on)
-# 4, False  (4 off)
-# 4, True   (4 on)
-# UNKNOWN   (6 of the other patterns, that are not recognised)
+def decode_command(bytes): #-> (device_index, state)
+    pass #TODO
+    # 0, False  (all off)
+    # 0, True   (all on)
+    # 1, False  (1 off)
+    # 1, True   (1 on)
+    # 2, False  (2 off)
+    # 2, True   (2 on)
+    # 3, False  (3 off)
+    # 3, True   (3 on)
+    # 4, False  (4 off)
+    # 4, True   (4 on)
+    # UNKNOWN   (6 of the other patterns, that are not recognised)
+
+
+def decode_bytes(bytes): # -> list of numbers, decoded bytes
+    pass #TODO
+
+
+def decode_bits(bits, number): # -> list of bytes, decoded bits
+    # decode 'number' of bits held in 'bits' and return as a list of 1 or more bytes
+    # e.g. decode_bits(0xEE, 2) -> 0b00000011
+    pass # TODO
+
+
 
 # END
 

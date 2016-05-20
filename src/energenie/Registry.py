@@ -285,7 +285,7 @@ def test_with_registry():
 
     # seed the registry
     registry.add(Devices.MIHO005(device_id=0x68b), "tv")
-    #registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
+    registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
 
     # test the auto create mechanism
     import sys
@@ -297,8 +297,9 @@ def test_with_registry():
 
     tv.turn_on()
     tv.turn_off()
-    #fan.turn_on()
-
+    fan.turn_on()
+    fan.turn_off()
+    
     #print("tv switch:%s"  % tv.has_switch())
     #print("tv send:%s"    % tv.can_send())
     #print("tv receive:%s" % tv.can_receive())
