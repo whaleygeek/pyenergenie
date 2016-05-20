@@ -378,6 +378,18 @@ class MIHO005(MiHomeDevice):
         self.capabilities.receive = True
         self.capabilities.switch = True
 
+    def incoming_message(self, payload):
+        ####HERE####
+        for rec in payload["recs"]:
+            paramid = rec["paramid"]
+            if paramid in [OpenThings.PARAM_SWITCH_STATE, OpenThings.PARAM_VOLTAGE]: #TODO store in cache in init
+                # TODO consider making this table driven and allowing our base class to fill our readings in for us
+                # then just define the mapping table in __init__ (i.e. paramid->Readings field name)
+                value = rec["value"]
+                if paramid == OpenThings.PARAM_SWITCH_STATE:
+                    self.readings.switch = ((value == True) or (value != 0))
+                    print("#### Switch state updated")
+
     def get_readings(self): # -> readings:pydict
         """A way to get all readings as a single consistent set"""
         return self.readings
@@ -423,22 +435,32 @@ class MIHO005(MiHomeDevice):
 
     def get_voltage(self): # -> voltage:float
         """Last stored state of voltage reading, None if unknown"""
+        if self.readings.voltage == None:
+            raise RuntimeError("No voltage reading received yet")
         return self.readings.voltage
 
     def get_frequency(self): # -> frequency:float
         """Last stored state of frequency reading, None if unknown"""
+        if self.readings.frequency == None:
+            raise RuntimeError("No frequency reading received yet")
         return self.readings.frequency
 
     def get_apparent_power(self): # ->power:float
         """Last stored state of apparent power reading, None if unknown"""
+        if self.readings.apparent_power == None:
+            raise RuntimeError("No apparent power reading received yet")
         return self.readings.apparent_power
 
     def get_reactive_power(self): # -> power:float
         """Last stored state of reactive power reading, None if unknown"""
+        if self.readings.reactive_power == None:
+            raise RuntimeError("No reactive power reading received yet")
         return self.readings.reactive_power
 
     def get_real_power(self): #-> power:float
         """Last stored state of real power reading, None if unknown"""
+        if self.readings.real_power == None:
+            raise RuntimeError("No real power reading received yet")
         return self.readings.real_power
 
 

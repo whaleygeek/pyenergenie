@@ -315,13 +315,13 @@ def test_with_registry_rx():
     """Test receiving a dummy message on a MiHome adaptor plus"""
 
     # seed the registry
-    registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
+    registry.add(Devices.MIHO005(device_id=0x68b), "tv")
 
     # test the auto create mechanism
     import sys
     registry.auto_create(sys.modules[__name__])
 
-    fan.turn_on()
+    tv.turn_on()
 
     #TODO: synthesise receiving a report message
     #push it down the receive pipeline
@@ -333,18 +333,20 @@ def test_with_registry_rx():
     # ->ENER005.incoming_message()
     #
     #it should update voltage, power etc
+    ## poor mans incoming synthetic message
+    tv.incoming_message({"recs":[{"paramid": OpenThings.PARAM_SWITCH_STATE, "value":1}]})
 
 
-    #TODO: get readings from device
-    ##voltage   = fan.get_voltage()
-    ##frequency = fan.get_frequency()
-    ##power     = fan.get_real_power()
-    ##switch    = fan.is_on()
+    # get readings from device
+    ##voltage   = tv.get_voltage()
+    ##frequency = tv.get_frequency()
+    ##power     = tv.get_real_power()
+    switch    = tv.is_on()
 
     ##print("voltage %f"    % voltage)
     ##print("frequency %f"  % frequency)
     ##print("power %f"      % power)
-    ##print("switch %s"     % switch)
+    print("switch %s"     % switch)
 
 
 if __name__ == "__main__":
@@ -352,9 +354,9 @@ if __name__ == "__main__":
 
     OpenThings.init(Devices.CRYPT_PID)
 
-    test_with_registry_tx()
+    ##test_with_registry_tx()
 
-    ##test_with_registry_rx()
+    test_with_registry_rx()
 
 
 # END
