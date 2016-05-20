@@ -57,7 +57,7 @@ class OpenThingsAirInterface():
         radio.transmitter(fsk=True)
         #TODO: configure other radio parameters
         #TODO: transmit payload
-        radio.transmit(p, outer_times=0, inner_times=4, outer_delay=0)
+        radio.transmit(p, outer_times=1, inner_times=4, outer_delay=0)
         # radio auto-returns to previous state after transmit completes
 
     @log_method

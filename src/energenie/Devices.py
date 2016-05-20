@@ -4,6 +4,7 @@
 # This table is mostly reverse-engineered from various websites and web catalogues.
 
 import OnAir
+import OpenThings
 
 # This level of indirection allows easy mocking for testing
 ook_interface = OnAir.TwoBitAirInterface()
@@ -268,6 +269,9 @@ class ENER002(LegacyDevice):
         self.capabilities.receive = True
 
     def turn_on(self):
+        #TODO should this be here, or in LegacyDevice??
+        #addressing should probably be in LegacyDevice
+        #child devices might interpret the command differently
         payload = {
             "house_address":  self.device_id[0],
             "device_index":   self.device_id[1],
@@ -276,6 +280,9 @@ class ENER002(LegacyDevice):
         self.send_message(payload)
 
     def turn_off(self):
+        #TODO: should this be here, or in LegacyDevice???
+        #addressing should probably be in LegacyDevice
+        #child devices might interpret the command differently
         payload = {
             "house_address":  self.device_id[0],
             "device_index":   self.device_id[1],
@@ -308,16 +315,53 @@ class MIHO005(MiHomeDevice):
         return self.readings
 
     def turn_on(self):
-        #TODO: build header
-        #TODO: add rec SWITCH=1
-        #TODO: self.send_message()
-        self.send_message("turn on") # TODO
+        #TODO: header construction should be in MiHomeDevice as it is shared
+        #but be careful to clone it, as later we might queue messages
+        #and they must be independent.
+        #TODO: might use OpenThings.alter_message to build a header?
+        payload = {
+            "header": {
+                "mfrid"     : self.manufacturer_id,
+                "productid" : self.product_id,
+                "sensorid":   self.device_id,
+                "encryptPIP": CRYPT_PIP
+            },
+            "recs": [
+                {
+                    "wr":      True,
+                    "paramid": OpenThings.PARAM_SWITCH_STATE,
+                    "typeid":  OpenThings.Value.UINT,
+                    "length":  1,
+                    "value":   True
+                }
+            ]
+        }
+        self.send_message(payload)
 
     def turn_off(self):
-        #TODO: build header
-        #TODO: add rec SWITCH=0
-        #TODO: self.send_message(OPENTHINGS_SWITCH_MESSAGE, False)
-        self.send_message("turn off") # TODO
+        #TODO: header construction should be in MiHomeDevice as it is shared
+        #but be careful to clone it, as later we might queue messages
+        #and they must be independent.
+        #TODO: might use OpenThings.alter_message to build a header?
+        payload = {
+            "header": {
+                "mfrid"     : self.manufacturer_id,
+                "productid" : self.product_id,
+                "sensorid":   self.device_id,
+                "encryptPIP": CRYPT_PIP
+            },
+            "recs": [
+                {
+                    "wr":      True,
+                    "paramid": OpenThings.PARAM_SWITCH_STATE,
+                    "typeid":  OpenThings.Value.UINT,
+                    "length":  1,
+                    "value":   False
+                }
+            ]
+        }
+
+        self.send_message(payload)
 
     #TODO: difference between 'is on and 'is requested on'
     #TODO: difference between 'is off' and 'is requested off'

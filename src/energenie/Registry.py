@@ -284,8 +284,8 @@ def test_with_registry():
 
 
     # seed the registry
-    #registry.add(Devices.MIHO005(device_id=0x68b), "tv")
-    registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
+    registry.add(Devices.MIHO005(device_id=0x68b), "tv")
+    #registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
 
     # test the auto create mechanism
     import sys
@@ -293,10 +293,10 @@ def test_with_registry():
 
     # variables should now be created in module scope
     #print("tv %s" % tv)
-    print("fan %s" % fan)
+    #print("fan %s" % fan)
 
-    #tv.turn_on()
-    fan.turn_on()
+    tv.turn_on()
+    #fan.turn_on()
 
     #print("tv switch:%s"  % tv.has_switch())
     #print("tv send:%s"    % tv.can_send())
@@ -308,6 +308,9 @@ def test_with_registry():
 
 
 if __name__ == "__main__":
+    import OpenThings
+
+    OpenThings.init(Devices.CRYPT_PID)
     test_with_registry()
 
 
