@@ -9,7 +9,7 @@
 # However, it will log all messages from MiHome monitor, adaptor plus and house monitor
 # to a CSV log file, so could be the basis for a non-controlling energy logging app.
 
-from energenie import Registry, Devices, Messages, OpenThings, radio
+from energenie import Registry, Devices, OpenThings, radio
 import time
 import Logger
 
@@ -56,7 +56,7 @@ def monitor_loop():
                     mfrid     = OpenThings.getFromMessage(decoded, "header_mfrid")
                     productid = OpenThings.getFromMessage(decoded, "header_productid")
                     sensorid  = OpenThings.getFromMessage(decoded, "header_sensorid")
-                    Messages.send_join_ack(radio, mfrid, productid, sensorid)
+                    Devices.send_join_ack(radio, mfrid, productid, sensorid)
 
 
 if __name__ == "__main__":

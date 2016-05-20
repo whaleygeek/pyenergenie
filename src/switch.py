@@ -11,7 +11,7 @@
 # Consider waiting for me to finish developing the device object interface first.
 
 import time
-from energenie import Devices, Messages, Registry, OpenThings, radio
+from energenie import Devices, Registry, OpenThings, radio
 from Timer import Timer
 
 
@@ -60,7 +60,7 @@ def switch_sniff_loop():
                 mfrid     = OpenThings.getFromMessage(decoded, "header_mfrid")
                 productid = OpenThings.getFromMessage(decoded, "header_productid")
                 sensorid  = OpenThings.getFromMessage(decoded, "header_sensorid")
-                Messages.send_join_ack(radio, mfrid, productid, sensorid)
+                Devices.send_join_ack(radio, mfrid, productid, sensorid)
 
 
 def switch_toggle_loop():
@@ -79,7 +79,7 @@ def switch_toggle_loop():
             productid = header["productid"]
 
             if Devices.hasSwitch(mfrid, productid):
-                request = OpenThings.alterMessage(Messages.SWITCH,
+                request = OpenThings.alterMessage(Devices.create_message(Devices.SWITCH),
                     header_sensorid=sensorid,
                     recs_0_value=switch_state)
                 p = OpenThings.encode(request)
@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
     # Seed the registry with a known device, to simplify tx-only testing
     SENSOR_ID = 0x68B # captured from a real device
-    device_header = OpenThings.alterMessage(Messages.REGISTERED_SENSOR,
+    device_header = OpenThings.alterMessage(Devices.create_message(Devices.REGISTERED_SENSOR),
         header_mfrid     = Devices.MFRID,
         header_productid = Devices.PRODUCTID_MIHO005, # adaptor plus
         header_sensorid  = SENSOR_ID)

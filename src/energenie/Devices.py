@@ -94,6 +94,73 @@ def hasSwitch(mfrid, productid):
     return False
 
 
+#----- DEFINED MESSAGE TEMPLATES ----------------------------------------------
+
+import copy
+
+def create_message(message):
+    return copy.deepcopy(message)
+
+SWITCH = {
+    "header": {
+        "mfrid":       MFRID_ENERGENIE,
+        "productid":   PRODUCTID_MIHO005,
+        "encryptPIP":  CRYPT_PIP,
+        "sensorid":    0 # FILL IN
+    },
+    "recs": [
+        {
+            "wr":      True,
+            "paramid": OpenThings.PARAM_SWITCH_STATE,
+            "typeid":  OpenThings.Value.UINT,
+            "length":  1,
+            "value":   0 # FILL IN
+        }
+    ]
+}
+
+
+JOIN_ACK = {
+    "header": {
+        "mfrid":       0, # FILL IN
+        "productid":   0, # FILL IN
+        "encryptPIP":  CRYPT_PIP,
+        "sensorid":    0 # FILL IN
+    },
+    "recs": [
+        {
+            "wr":      False,
+            "paramid": OpenThings.PARAM_JOIN,
+            "typeid":  OpenThings.Value.UINT,
+            "length":  0
+        }
+    ]
+}
+
+
+REGISTERED_SENSOR = {
+    "header": {
+        "mfrid":       MFRID_ENERGENIE,
+        "productid":   0, # FILL IN
+        "encryptPIP":  CRYPT_PIP,
+        "sensorid":    0 # FILL IN
+    }
+}
+
+
+def send_join_ack(radio, mfrid, productid, sensorid):
+    # send back a JOIN ACK, so that join light stops flashing
+    response = OpenThings.alterMessage(create_message(JOIN_ACK),
+        header_mfrid=mfrid,
+        header_productid=productid,
+        header_sensorid=sensorid)
+    p = OpenThings.encode(response)
+    radio.transmitter()
+    radio.transmit(p, inner_times=2)
+    radio.receiver()
+
+
+
 #----- CONTRACT WITH AIR-INTERFACE --------------------------------------------
 
 # this might be a real air_interface (a radio), or an adaptor interface
@@ -316,51 +383,20 @@ class MIHO005(MiHomeDevice):
 
     def turn_on(self):
         #TODO: header construction should be in MiHomeDevice as it is shared
-        #but be careful to clone it, as later we might queue messages
-        #and they must be independent.
-        #TODO: might use OpenThings.alter_message to build a header?
-        payload = {
-            "header": {
-                "mfrid"     : self.manufacturer_id,
-                "productid" : self.product_id,
-                "sensorid":   self.device_id,
-                "encryptPIP": CRYPT_PIP
-            },
-            "recs": [
-                {
-                    "wr":      True,
-                    "paramid": OpenThings.PARAM_SWITCH_STATE,
-                    "typeid":  OpenThings.Value.UINT,
-                    "length":  1,
-                    "value":   True
-                }
-            ]
-        }
+        payload = OpenThings.alterMessage(
+            create_message(SWITCH),
+            header_productid = self.product_id,
+            header_sensorid  = self.device_id,
+            recs_0_value     = True)
         self.send_message(payload)
 
     def turn_off(self):
         #TODO: header construction should be in MiHomeDevice as it is shared
-        #but be careful to clone it, as later we might queue messages
-        #and they must be independent.
-        #TODO: might use OpenThings.alter_message to build a header?
-        payload = {
-            "header": {
-                "mfrid"     : self.manufacturer_id,
-                "productid" : self.product_id,
-                "sensorid":   self.device_id,
-                "encryptPIP": CRYPT_PIP
-            },
-            "recs": [
-                {
-                    "wr":      True,
-                    "paramid": OpenThings.PARAM_SWITCH_STATE,
-                    "typeid":  OpenThings.Value.UINT,
-                    "length":  1,
-                    "value":   False
-                }
-            ]
-        }
-
+        payload = OpenThings.alterMessage(
+            create_message(SWITCH),
+            header_productid = self.product_id,
+            header_sensorid  = self.device_id,
+            recs_0_value     = False)
         self.send_message(payload)
 
     #TODO: difference between 'is on and 'is requested on'

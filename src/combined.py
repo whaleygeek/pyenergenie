@@ -8,7 +8,7 @@
 # will be much nicer to use.
 
 import time
-from energenie import Messages, OpenThings, radio, TwoBit, Devices
+from energenie import OpenThings, radio, TwoBit, Devices
 
 # build FSK messages for MiHome purple
 
@@ -16,13 +16,13 @@ OpenThings.init(Devices.CRYPT_PID)
 
 PURPLE_ID = 0x68B # captured from a real device using Monitor.py
 m = OpenThings.alterMessage(
-    Messages.SWITCH,
+    Devices.create_message(Devices.SWITCH),
     header_sensorid=PURPLE_ID,
     recs_0_value=1)
 purple_on = OpenThings.encode(m)
 
 m = OpenThings.alterMessage(
-    Messages.SWITCH,
+    Devices.create_message(Devices.SWITCH),
     header_sensorid=PURPLE_ID,
     recs_0_value=0)
 purple_off = OpenThings.encode(m)

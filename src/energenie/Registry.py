@@ -296,6 +296,7 @@ def test_with_registry():
     #print("fan %s" % fan)
 
     tv.turn_on()
+    tv.turn_off()
     #fan.turn_on()
 
     #print("tv switch:%s"  % tv.has_switch())
