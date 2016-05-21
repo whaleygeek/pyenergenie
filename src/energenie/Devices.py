@@ -369,6 +369,7 @@ class MIHO005(MiHomeDevice):
             switch         = None
             voltage        = None
             frequency      = None
+            current        = None
             apparent_power = None
             reactive_power = None
             real_power     = None
@@ -382,13 +383,29 @@ class MIHO005(MiHomeDevice):
         ####HERE####
         for rec in payload["recs"]:
             paramid = rec["paramid"]
-            if paramid in [OpenThings.PARAM_SWITCH_STATE, OpenThings.PARAM_VOLTAGE]: #TODO store in cache in init
-                # TODO consider making this table driven and allowing our base class to fill our readings in for us
-                # then just define the mapping table in __init__ (i.e. paramid->Readings field name)
-                value = rec["value"]
-                if paramid == OpenThings.PARAM_SWITCH_STATE:
-                    self.readings.switch = ((value == True) or (value != 0))
-                    print("#### Switch state updated")
+            #TODO: consider making this table driven and allowing our base class to fill our readings in for us
+            #  then just define the mapping table in __init__ (i.e. paramid->Readings field name)
+            value = rec["value"]
+            if paramid == OpenThings.PARAM_SWITCH_STATE:
+                self.readings.switch = ((value == True) or (value != 0))
+            elif paramid == OpenThings.PARAM_VOLTAGE:
+                self.readings.voltage = value
+            elif paramid == OpenThings.PARAM_CURRENT:
+                self.readings.current = value
+            elif paramid == OpenThings.PARAM_REAL_POWER:
+                self.readings.real_power = value
+            elif paramid == OpenThings.PARAM_APPARENT_POWER:
+                self.readings.apparent_power = value
+            elif paramid == OpenThings.PARAM_REACTIVE_POWER:
+                self.readings.reactive_power = value
+            elif paramid == OpenThings.PARAM_FREQUENCY:
+                self.readings.frequency = value
+            else:
+                try:
+                    param_name = OpenThings.param_info[paramid]['n'] # name
+                except:
+                    param_name = "UNKNOWN_%s" % str(hex(paramid))
+                print("unwanted paramid: %s" % param_name)
 
     def get_readings(self): # -> readings:pydict
         """A way to get all readings as a single consistent set"""

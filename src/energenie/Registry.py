@@ -323,29 +323,102 @@ def test_with_registry_rx():
 
     tv.turn_on()
 
-    #TODO: synthesise receiving a report message
+    #synthesise receiving a report message
     #push it down the receive pipeline
     #radio.receive()
     # ->OpenThingsAirInterface.incoming
     # ->OpenThings.decrypt
     # ->OpenThings.decode
     # ->OpenThingsAirInterface->route
-    # ->ENER005.incoming_message()
+    # ->MIHO005.incoming_message()
     #
     #it should update voltage, power etc
     ## poor mans incoming synthetic message
-    tv.incoming_message({"recs":[{"paramid": OpenThings.PARAM_SWITCH_STATE, "value":1}]})
+
+    MIHO005_REPORT = {
+        "header": {
+            "mfrid":       Devices.MFRID_ENERGENIE,
+            "productid":   Devices.PRODUCTID_MIHO005,
+            "encryptPIP":  Devices.CRYPT_PIP,
+            "sensorid":    0 # FILL IN
+        },
+        "recs": [
+            {
+                "wr":      False,
+                "paramid": OpenThings.PARAM_SWITCH_STATE,
+                "typeid":  OpenThings.Value.UINT,
+                "length":  1,
+                "value":   0 # FILL IN
+            },
+            {
+                "wr":      False,
+                "paramid": OpenThings.PARAM_VOLTAGE,
+                "typeid":  OpenThings.Value.UINT,
+                "length":  1,
+                "value":   0 # FILL IN
+            },
+            {
+                "wr":      False,
+                "paramid": OpenThings.PARAM_CURRENT,
+                "typeid":  OpenThings.Value.UINT,
+                "length":  1,
+                "value":   0 # FILL IN
+            },
+            {
+                "wr":      False,
+                "paramid": OpenThings.PARAM_FREQUENCY,
+                "typeid":  OpenThings.Value.UINT,
+                "length":  1,
+                "value":   0 # FILL IN
+            },
+            {
+                "wr":      False,
+                "paramid": OpenThings.PARAM_REAL_POWER,
+                "typeid":  OpenThings.Value.UINT,
+                "length":  1,
+                "value":   0 # FILL IN
+            },
+            {
+                "wr":      False,
+                "paramid": OpenThings.PARAM_REACTIVE_POWER,
+                "typeid":  OpenThings.Value.UINT,
+                "length":  1,
+                "value":   0 # FILL IN
+            },
+            {
+                "wr":      False,
+                "paramid": OpenThings.PARAM_APPARENT_POWER,
+                "typeid":  OpenThings.Value.UINT,
+                "length":  1,
+                "value":   0 # FILL IN
+            },
+
+        ]
+    }
+
+    report = Devices.create_message(MIHO005_REPORT)
+    report = OpenThings.alterMessage(
+        report,
+        recs_0_value=240, # voltage
+        recs_1_value=2,   # current
+        recs_2_value=50,  # frequency
+        recs_3_value=100, # real power
+        recs_4_value=0,   # reactive power
+        recs_5_value=100, # apparent power
+    )
+    tv.incoming_message(report)
+
 
 
     # get readings from device
-    ##voltage   = tv.get_voltage()
-    ##frequency = tv.get_frequency()
-    ##power     = tv.get_real_power()
+    voltage   = tv.get_voltage()
+    frequency = tv.get_frequency()
+    power     = tv.get_real_power()
     switch    = tv.is_on()
 
-    ##print("voltage %f"    % voltage)
-    ##print("frequency %f"  % frequency)
-    ##print("power %f"      % power)
+    print("voltage %f"    % voltage)
+    print("frequency %f"  % frequency)
+    print("real power %f" % power)
     print("switch %s"     % switch)
 
 
