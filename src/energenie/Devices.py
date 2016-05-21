@@ -3,6 +3,7 @@
 # Information about specific Energenie devices
 # This table is mostly reverse-engineered from various websites and web catalogues.
 
+from lifecycle import *
 import OnAir
 import OpenThings
 
@@ -66,6 +67,9 @@ CRYPT_PIP                        = 0x0100
 BROADCAST_ID                     = 0xFFFFFF # Energenie broadcast
 
 #TODO: This might be deprecated now, and replaced with the DeviceFactory?
+#Still used in deprecated methods in Registry.py
+
+@deprecated
 def getDescription(mfrid, productid):
     if mfrid == MFRID_ENERGENIE:
         mfr = "Energenie"
@@ -88,6 +92,9 @@ def getDescription(mfrid, productid):
 
 #TODO this might be deprecated now, and replaced with the Device classes.
 #e.g. if there is a turn_on method or get_switch method, it has a switch.
+#still used in switch.py demo (will be until device classes deployed into tests)
+
+@deprecated
 def hasSwitch(mfrid, productid):
     if mfrid != MFRID:                  return False
     if productid == PRODUCTID_MIHO005:  return True
@@ -147,6 +154,67 @@ REGISTERED_SENSOR = {
     }
 }
 
+
+MIHO005_REPORT = {
+    "header": {
+        "mfrid":       MFRID_ENERGENIE,
+        "productid":   PRODUCTID_MIHO005,
+        "encryptPIP":  CRYPT_PIP,
+        "sensorid":    0 # FILL IN
+    },
+    "recs": [
+        {
+            "wr":      False,
+            "paramid": OpenThings.PARAM_SWITCH_STATE,
+            "typeid":  OpenThings.Value.UINT,
+            "length":  1,
+            "value":   0 # FILL IN
+        },
+        {
+            "wr":      False,
+            "paramid": OpenThings.PARAM_VOLTAGE,
+            "typeid":  OpenThings.Value.UINT,
+            "length":  1,
+            "value":   0 # FILL IN
+        },
+        {
+            "wr":      False,
+            "paramid": OpenThings.PARAM_CURRENT,
+            "typeid":  OpenThings.Value.UINT,
+            "length":  1,
+            "value":   0 # FILL IN
+        },
+        {
+            "wr":      False,
+            "paramid": OpenThings.PARAM_FREQUENCY,
+            "typeid":  OpenThings.Value.UINT,
+            "length":  1,
+            "value":   0 # FILL IN
+        },
+        {
+            "wr":      False,
+            "paramid": OpenThings.PARAM_REAL_POWER,
+            "typeid":  OpenThings.Value.UINT,
+            "length":  1,
+            "value":   0 # FILL IN
+        },
+        {
+            "wr":      False,
+            "paramid": OpenThings.PARAM_REACTIVE_POWER,
+            "typeid":  OpenThings.Value.UINT,
+            "length":  1,
+            "value":   0 # FILL IN
+        },
+        {
+            "wr":      False,
+            "paramid": OpenThings.PARAM_APPARENT_POWER,
+            "typeid":  OpenThings.Value.UINT,
+            "length":  1,
+            "value":   0 # FILL IN
+        },
+
+    ]
+}
 
 def send_join_ack(radio, mfrid, productid, sensorid):
     # send back a JOIN ACK, so that join light stops flashing

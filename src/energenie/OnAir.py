@@ -39,7 +39,7 @@ class OpenThingsAirInterface():
             timeout       = 1000 #ms
         self.rx_defaults = RxDefaults()
 
-    @log_method
+    #@log_method
     def send(self, payload, radio_params=None):
         #   payload is a pydict suitable for OpenThings
         #   radio_params is an overlay on top of radio tx defaults
@@ -53,7 +53,7 @@ class OpenThingsAirInterface():
         radio.transmit(p, outer_times=1, inner_times=4, outer_delay=0)
         # radio auto-returns to previous state after transmit completes
 
-    @log_method
+    #@log_method
     def receive(self, radio_params): # -> (radio_measurements, address or None, payload or None)
         #   radio_params is an overlay on top of radio rx defaults (e.g. poll rate, timeout, min payload, max payload)
         #   radio_measurements might include rssi reading, short payload report, etc
@@ -106,7 +106,7 @@ class TwoBitAirInterface():
             timeout       = 1000 #ms
         self.rx_defaults = RxDefaults()
 
-    @log_method
+    #@log_method
     def send(self, payload, radio_params=None):
         #   payload is just a list of bytes, or a byte buffer
         #   radio_params is an overlay on top of radio tx defaults
@@ -124,7 +124,7 @@ class TwoBitAirInterface():
         radio.transmit(bytes, outer_times=1, inner_times=8, outer_delay=0) #TODO: radio params
         # radio auto-pops to state before transmit
 
-    @log_method
+    #@log_method
     def receive(self, radio_params): # -> (radio_measurements, address or None, payload or None)
         #   radio_params is an overlay on top of radio rx defaults (e.g. poll rate, timeout, min payload, max payload)
         #   radio_measurements might include rssi reading, short payload report, etc

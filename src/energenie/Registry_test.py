@@ -31,13 +31,17 @@ class TestRegistry(unittest.TestCase):
         print("fan send:%s"    % self.fan.can_send())
         print("fan receive:%s" % self.fan.can_receive())
 
-    def text_tx(self):
+    def test_ook_tx(self):
         """Test the transmit pipeline"""
 
-        tv.turn_on()
-        tv.turn_off()
-        fan.turn_on()
-        fan.turn_off()
+        self.fan.turn_on()
+        self.fan.turn_off()
+
+    def test_fsk_tx(self):
+        """Test the transmit pipeline for MiHome FSK devices"""
+
+        self.tv.turn_on()
+        self.tv.turn_off()
 
     def test_fsk_rx(self):
         """Test the receive pipeline for FSK MiHome adaptor"""
@@ -54,68 +58,8 @@ class TestRegistry(unittest.TestCase):
         #it should update voltage, power etc
         ## poor mans incoming synthetic message
 
-        MIHO005_REPORT = {
-            "header": {
-                "mfrid":       Devices.MFRID_ENERGENIE,
-                "productid":   Devices.PRODUCTID_MIHO005,
-                "encryptPIP":  Devices.CRYPT_PIP,
-                "sensorid":    0 # FILL IN
-            },
-            "recs": [
-                {
-                    "wr":      False,
-                    "paramid": OpenThings.PARAM_SWITCH_STATE,
-                    "typeid":  OpenThings.Value.UINT,
-                    "length":  1,
-                    "value":   0 # FILL IN
-                },
-                {
-                    "wr":      False,
-                    "paramid": OpenThings.PARAM_VOLTAGE,
-                    "typeid":  OpenThings.Value.UINT,
-                    "length":  1,
-                    "value":   0 # FILL IN
-                },
-                {
-                    "wr":      False,
-                    "paramid": OpenThings.PARAM_CURRENT,
-                    "typeid":  OpenThings.Value.UINT,
-                    "length":  1,
-                    "value":   0 # FILL IN
-                },
-                {
-                    "wr":      False,
-                    "paramid": OpenThings.PARAM_FREQUENCY,
-                    "typeid":  OpenThings.Value.UINT,
-                    "length":  1,
-                    "value":   0 # FILL IN
-                },
-                {
-                    "wr":      False,
-                    "paramid": OpenThings.PARAM_REAL_POWER,
-                    "typeid":  OpenThings.Value.UINT,
-                    "length":  1,
-                    "value":   0 # FILL IN
-                },
-                {
-                    "wr":      False,
-                    "paramid": OpenThings.PARAM_REACTIVE_POWER,
-                    "typeid":  OpenThings.Value.UINT,
-                    "length":  1,
-                    "value":   0 # FILL IN
-                },
-                {
-                    "wr":      False,
-                    "paramid": OpenThings.PARAM_APPARENT_POWER,
-                    "typeid":  OpenThings.Value.UINT,
-                    "length":  1,
-                    "value":   0 # FILL IN
-                },
 
-            ]
-        }
-
-        report = Devices.create_message(MIHO005_REPORT)
+        report = Devices.create_message(Devices.MIHO005_REPORT)
         report = OpenThings.alterMessage(
             report,
             recs_0_value=240, # voltage
