@@ -113,6 +113,22 @@ param_info = {
 	PARAM_WATER_PRESSURE  : {"n":"WATER_PRESSURE",		"u":"Pa"},
 }
 
+def paramname_to_paramid(paramname):
+	"""Turn a parameter name to a parameter id number"""
+	for paramid in param_info:
+		name = param_info[paramid]['n'] # name
+		if name == paramname:
+			return paramid
+	raise ValueError("Unknown param name %s" % paramname)
+
+
+def paramid_to_paramname(paramid):
+	"""Turn a parameter id number into a parameter name"""
+	try:
+		return param_info[paramid]
+	except KeyError:
+		return "UNKNOWN_%s" % str(hex(paramid))
+
 
 crypt_pid = None
 
@@ -607,18 +623,30 @@ def showMessage(msg, timestamp=None):
 def alterMessage(message, **kwargs):
 	"""Change parameters in-place in a message template"""
 	# e.g. header_sensorid=1234, recs_0_value=1
+
+	#TODO: ####HERE#### for recs[n] it would be useful to also (or instead of) allow a paramid key
+	#i.e. recs_{PARAMID_VOLTAGE}_value
+	#but these names must be identifiers, so they must be alloweable id characters
+	#(#ucase, lcase, underscore) ... anything else??
 	for arg in kwargs:
 
 		path = arg.split("_")
 		value = kwargs[arg]
 
 		m = message
-		for p in path[:-1]:
-			try:
-				p = int(p)
-			except:
-				pass
-			m = m[p]
+		for pkey in path[:-1]:
+			if len(pkey) > 2 and pkey[0] == '{' and pkey[-1] == '}':
+				# It's a paramid name
+				paramid = paramname_to_paramid(pkey[1:-1])
+				pkey = paramid # it's an int
+			else:
+				try:
+					# If it is convertable to an int, it's an array index
+					pkey = int(pkey)
+				except:
+					# It must be a field name
+					pass
+			m = m[pkey]
 		#trace("old value:%s" % m[path[-1]])
 		m[path[-1]] = value
 
