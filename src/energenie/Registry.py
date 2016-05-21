@@ -4,29 +4,13 @@
 #
 # NOTE: This is an initial, non persisted implementation only
 
+from lifecycle import *
+
 import time
 try:
     import Devices # python 2
 except ImportError:
     from . import Devices # python 3
-
-
-def deprecated(m):
-    print("warning: deprecated method %s" % str(m))
-    return m
-
-
-def unimplemented(m):
-    print("warning: unimplemented method %s" % str(m))
-    def inner(*args, **kwargs):
-        print("warning: unimplemented method %s" % str(m))
-        return m()
-    return inner
-
-
-def untested(m):
-    print("warning: untested method %s" % str(m))
-    return m
 
 
 directory = {}
@@ -85,14 +69,6 @@ def get_info(sensor_id):
 # just embed it here to have zero dependencies.
 
 # TODO: serialisation format for the individual device meta record? json?
-
-def log_method(m):
-    def inner(*args, **kwargs):
-        print("CALL %s with: %s %s" % (m, args, kwargs))
-        r = m(*args, **kwargs)
-        print("RETURN %s with: %s" % (m, r))
-        return r
-    return inner
 
 
 class RegistryStore(): # This is data storage, so it it just the 'RegistRY'??

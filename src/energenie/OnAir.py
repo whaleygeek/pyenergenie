@@ -13,17 +13,10 @@
 # NOTE: This also might include intelligent power level selection based
 # on RSSI reports from different devices.
 
+from lifecycle import *
 import OpenThings
 import TwoBit
 import radio
-
-def log_method(m):
-    def inner(*args, **kwargs):
-        print("CALL %s with %s %s" % (m, args, kwargs))
-        r = m(*args, **kwargs)
-        print("RETURN %s with %s" % (m, r))
-        return r
-    return inner
 
 
 class OpenThingsAirInterface():

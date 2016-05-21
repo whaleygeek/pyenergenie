@@ -12,6 +12,8 @@
 # All you would need is a different radio.py that marshalled data to and from
 # the Arduino via pyserial.
 
+from lifecycle import *
+
 #TODO: Should really add parameter validation here, so that C code doesn't have to.
 #although it will be faster in C (C could be made optional, like an assert?)
 
@@ -60,30 +62,6 @@ def tohex(l):
     for item in l:
         line += hex(item) + " "
     return line
-
-
-def unimplemented(m):
-    print("warning: method is not implemented:%s" % m)
-    return m
-
-
-def deprecated(m):
-    """Load-time warning about deprecated method"""
-    print("warning: method is deprecated:%s" % m)
-    return m
-
-
-def untested(m):
-    """Load-time warning about untested function"""
-    print("warning: method is untested:%s" % m)
-    return m
-
-
-def disabled(m):
-    """Load-time waring about disabled function"""
-    print("warning: method is disabled:%s" % m)
-    def nothing(*args, **kwargs):pass
-    return nothing
 
 
 def init():
