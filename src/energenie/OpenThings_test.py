@@ -7,6 +7,7 @@
 
 from OpenThings import *
 import pprint
+import unittest
 
 
 def printhex(payload):
@@ -130,10 +131,109 @@ def test_value_decoder():
 	# FLOAT
 
 
+#----- UNIT TEST FOR MESSAGE --------------------------------------------------
+
+import Devices
+
+class TestMessage(unittest.TestCase):
+	def test_blank(self):
+		# create a blank message
+		msg = Message()
+		msg.dump()
+
+	def XXXtest_blank_create_header(self):
+		# create a blank message and add some header fields at creation time
+		msg = Message(header_mfrid=123, header_productid=456, header_sensorid=789)
+		msg.dump()
+
+	def XXXtest_add_header_dict(self):
+		# add header fields to a message after creation like a pydict
+		msg = Message()
+		msg["header"]["mfrid"] = 123
+		msg.dump()
+
+	def XXXtest_add_rec_dict(self):
+		# add rec fields to a message after creation like a pydict
+		msg = Message()
+		msg["recs"][0] = {"paramid": PARAM_SWITCH_STATE, "value": 1}
+		msg.dump()
+
+	def XXXtest_add_header_path(self):
+		# add header fields to a message after creation via pathed keys
+		msg = Message()
+		msg.add(header_mfrid=123, header_productid=456)
+		msg.dump()
+
+	def XXXtest_add_rec_path(self):
+		# add rec fields to a message after creation via pathed indexed keys
+		msg = Message()
+		msg.add(recs_0_paramid=PARAM_SWITCH_STATE, recs_0_value=1)
+		msg.dump()
+
+	def XXXtest_add_rec_fn(self):
+		# add rec fields to a message after creation via pathed PARAM name keys
+		msg = Message()
+		msg.add_rec(PARAM_SWITCH_STATE, value=1)
+		msg.dump()
+
+	def XXXtest_create_template(self):
+		# create a message from a template
+		msg = Message(Devices.MIHO005_REPORT)
+		msg.dump()
+
+	def XXXtest_alter_rec_template(self):
+		# alter rec fields in a template
+		msg = Message(Devices.MIHO005_REPORT)
+		msg.alter(header_productid=123)
+		msg.alter(recs_SWITCH_STATE_value=1)
+		msg.dump()
+
+	def XXXtest_dump(self):
+		## dump a message in printable format
+		msg = Message(Devices.MIHO005_REPORT)
+		print(msg)
+		print(str(msg))
+
+	def XXXtest_pydict_read(self):
+		## access a specific keyed entry like a normal pydict, for read
+		msg = Message(Devices.MIHO005_REPORT)
+		print(msg["header"])
+		print(msg["header"]["mfrid"])
+
+	def XXXtest_pydict_write(self):
+		## access a specific keyed entry like a normal pydict, for write
+		msg = Message(Devices.MIHO005_REPORT)
+		msg["header"]["mfrid"] = 222
+		msg.dump()
+
+	def XXXtest_paramid_read_struct(self):
+		# access a paramid entry for read of the whole structure
+		msg = Message(Devices.MIHO005_REPORT)
+		print(msg[PARAM_SWITCH_STATE])
+
+	def XXXtest_paramid_read_field(self):
+		## read a value from a param id field that exists
+		msg = Message(Devices.MIHO005_REPORT)
+		print(msg[PARAM_SWITCH_STATE]["value"])
+
+	def XXXtest_paramid_write(self):
+		## write a value to a param id field that exists
+		msg = Message(Devices.MIHO005_REPORT)
+		msg[PARAM_SWITCH_STATE]["value"] = 1
+		msg.dump()
+
+
+def test_message():
+	import unittest
+	unittest.main()
+
 if __name__ == "__main__":
-	#test_value_encoder()
-	#test_value_decoder()
-	test_payload_unencrypted()
-	#test_payload_encrypted()
+	##TODO: Change these into unittest test cases
+	##test_value_encoder()
+	##test_value_decoder()
+	##test_payload_unencrypted()
+	##test_payload_encrypted()
+
+	test_message()
 
 # END

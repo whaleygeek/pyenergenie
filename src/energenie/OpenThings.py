@@ -2,6 +2,7 @@
 #
 # Implement OpenThings message encoding and decoding
 
+from lifecycle import *
 import time
 try:
 	import crypto # python 2
@@ -641,10 +642,23 @@ def calcCRC(payload, start, length):
 ##  msg.asdict() -> # pydict (for the encoder to use)
 ##
 
+import copy
+
 class Message():
-	def __init__(self, pydict):
+	BLANK = {
+		"header": {
+			"mfrid" :    None,
+			"productid": None,
+			"sensorid":  None
+		}
+	}
+
+	def __init__(self, pydict=None):
+		if pydict == None:
+			pydict = copy.deepcopy(Message.BLANK)
 		self.pydict = pydict
 
+	@untested
 	def __getitem__(self, key):
 		try:
 			# an integer key is used as a paramid in recs[]
@@ -662,19 +676,80 @@ class Message():
 		# just returns a reference to that part of the inner pydict
 		return self.pydict[key]
 
+	@untested
 	def copyof(self): # -> Message
 		"""Clone, to create a new message that is a completely independent copy"""
 		import copy
 		return Message(copy.deepcopy(self.pydict))
 
-	#def __str__(self): # -> str
-	#	pass ##TODO: replaces showMessage
- 	#	showMessage(self.pydict) ##TODO: Migrate code into this method
+	def __str__(self): # -> str
+		return "Message.STR"
 
+	def __repr__(self): # -> str
+		return "Message.REPR"
+
+	@untested
 	def dump(self):
-		showMessage(self.pydict)
+		msg = self.pydict
+		timestamp = None
+
+		# TIMESTAMP
+		if timestamp != None:
+			print("receive-time:%s" % time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)))
+
+		# HEADER
+		if "header" in msg:
+			header    = msg["header"]
+			mfrid     = header["mfrid"]
+			if mfrid == None: mfrid = ""
+			else:             mfrid = str(hex(mfrid))
+
+			productid = header["productid"]
+			if productid == None: productid = ""
+			else:                 productid = str(hex(productid))
+
+			sensorid  = header["sensorid"]
+			if sensorid == None: sensorid = ""
+			else:                sensorid = str(hex(sensorid))
+
+			print("mfrid:%s prodid:%s sensorid:%s" % (mfrid, productid, sensorid))
+
+		# RECORDS
+		if "recs" in msg:
+			for rec in msg["recs"]:
+				wr = rec["wr"]
+				if wr == True:
+					write = "write"
+				else:
+					write = "read "
+
+				try:
+					paramname = rec["paramname"] # This only come out from decoded messages
+				except:
+					paramname = ""
+
+				try:
+					paramid = rec["paramid"] #This is only present on a input message (e.g SWITCH)
+					paramname = paramid_to_paramname(paramid)
+					paramid = str(hex(paramid))
+				except:
+					paramid = ""
+
+				try:
+					paramunit = rec["paramunit"] # This only come out from decoded messages
+				except:
+					paramunit = ""
+
+				if "value" in rec:
+						value = rec["value"]
+				else:
+						value = None
+
+				print("%s %s %s %s = %s" % (write, paramid, paramname, paramunit, str(value)))
 
 
+
+@deprecated
 def showMessage(msg, timestamp=None):
 	"""Show the message in a friendly format"""
 
@@ -725,6 +800,7 @@ def showMessage(msg, timestamp=None):
 #   recs_0_value               msg["recs"][0]["value"]
 #   recs_WATER_DETECTOR_value  msg["recs"].find_param("WATER_DETECTOR")["value"]
 
+@deprecated
 def alterMessage(message, **kwargs):
 	"""Change parameters in-place in a message template"""
 
@@ -749,6 +825,7 @@ def alterMessage(message, **kwargs):
 	return message
 
 
+@deprecated
 def getFromMessage(message, keypath):
 	"""Get a field from a message, given an underscored keypath to the item"""
 	path = keypath.split("_")
@@ -761,13 +838,5 @@ def getFromMessage(message, keypath):
 		message = message[pkey]
 	return message[path[-1]]
 
-# QUICK TEST
-
-if __name__ == "__main__":
-	import Devices
-	msg = Message(Devices.MIHO005_REPORT)
-	#print(str(msg))
-	#msg.dump()
-	print(msg[PARAM_SWITCH_STATE])
 
 # END
