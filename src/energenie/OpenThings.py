@@ -647,19 +647,19 @@ class Message():
 
 	def __getitem__(self, key):
 		try:
+			# an integer key is used as a paramid in recs[]
 			key = int(key)
-			# if key is a convertible int, this must be a paramid
-			##TODO add paramid keying with integers
-			##msg[PARAM_AIR_PRESSURE] this is an int, so will search for recs[]["paramid"] == int
-			##and get that item. You can then write to it as a normal pydict??
-			##msg[PARAM_AIR_PRESSURE]["value"] = 22
-			raise RuntimeError("paramid keying not yet implemented")
+			for rec in self.pydict["recs"]:
+				if "paramid" in rec:
+					paramid = rec["paramid"]
+					if paramid == key:
+						return rec
+			raise RuntimeError("no paramid found for %d" % str(hex(key)))
 		except:
 			pass
 
 		# typically used for msg["header"] and msg["recs"]
 		# just returns a reference to that part of the inner pydict
-
 		return self.pydict[key]
 
 	def copyof(self): # -> Message
@@ -767,7 +767,7 @@ if __name__ == "__main__":
 	import Devices
 	msg = Message(Devices.MIHO005_REPORT)
 	#print(str(msg))
-	msg.dump()
-
+	#msg.dump()
+	print(msg[PARAM_SWITCH_STATE])
 
 # END
