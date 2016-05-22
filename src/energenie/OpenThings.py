@@ -8,6 +8,15 @@ try:
 except ImportError:
 	from . import crypto # python 3
 
+
+def warning(msg):
+	print("warning:" + str(msg))
+
+
+def trace(msg):
+	print("OpenThings:%s" % str(msg))
+
+
 class OpenThingsException(Exception):
 	def __init__(self, value):
 		self.value = value
@@ -15,6 +24,15 @@ class OpenThingsException(Exception):
 	def __str__(self):
 		return repr(self.value)
 
+#----- CRYPT PROCESSING -------------------------------------------------------
+
+crypt_pid = None
+
+def init(pid):
+	global crypt_pid
+	crypt_pid = pid
+
+#----- PARAMETERS -------------------------------------------------------------
 
 # report has bit 7 clear
 # command has bit 7 set
@@ -125,24 +143,9 @@ def paramname_to_paramid(paramname):
 def paramid_to_paramname(paramid):
 	"""Turn a parameter id number into a parameter name"""
 	try:
-		return param_info[paramid]
+		return param_info[paramid]['n']
 	except KeyError:
 		return "UNKNOWN_%s" % str(hex(paramid))
-
-
-crypt_pid = None
-
-def init(pid):
-	global crypt_pid
-	crypt_pid = pid
-
-
-def warning(msg):
-	print("warning:" + str(msg))
-
-
-def trace(msg):
-	print("OpenThings:%s" % str(msg))
 
 
 #----- MESSAGE DECODER --------------------------------------------------------
@@ -590,6 +593,88 @@ def calcCRC(payload, start, length):
 	return rem
 
 
+#----- MESSAGE UTILITIES ------------------------------------------------------
+
+# SAMPLE MESSAGE
+# SWITCH = {
+#     "header": {
+#         "mfrid":       MFRID_ENERGENIE,
+#         "productid":   PRODUCTID_MIHO005,
+#         "encryptPIP":  CRYPT_PIP,
+#         "sensorid":    0 # FILL IN
+#     },
+#     "recs": [
+#         {
+#             "wr":      True,
+#             "paramid": OpenThings.PARAM_SWITCH_STATE,
+#             "typeid":  OpenThings.Value.UINT,
+#             "length":  1,
+#             "value":   0 # FILL IN
+#         }
+#     ]
+# }
+
+##TODO: Considering changing all messages into a Class with an inner pydict
+#It will make cloning, altering, reading, printing much easier
+
+## request = OpenThings.alterMessage(
+##               Devices.create_message(Devices.SWITCH),
+## 	             header_sensorid=sensorid,
+## 	             recs_0_value=switch_state)
+
+## request = OpenThings.alterMessage(
+##               Devices.create_message(Devices.SWITCH),
+## 	             header_sensorid=sensorid,
+## 	             recs_SWITCH_STATE_value=switch_state)
+
+##possible interface variants:
+##
+##  SWITCH = Message({...})
+##  msg = SWITCH.copyof()
+##
+##  msg = SWITCH()
+##  msg["header"]["sensorid"] = 0x123
+##
+##  msg = SWITCH(sensorid=0x123, AIR_PRESSURE_value=123)  <-- the new alterMessage
+##  msg.set(sensorid=0x123, AIR_PRESSURE_value=123)
+##
+##  msg.asdict() -> # pydict (for the encoder to use)
+##
+
+class Message():
+	def __init__(self, pydict):
+		self.pydict = pydict
+
+	def __getitem__(self, key):
+		try:
+			key = int(key)
+			# if key is a convertible int, this must be a paramid
+			##TODO add paramid keying with integers
+			##msg[PARAM_AIR_PRESSURE] this is an int, so will search for recs[]["paramid"] == int
+			##and get that item. You can then write to it as a normal pydict??
+			##msg[PARAM_AIR_PRESSURE]["value"] = 22
+			raise RuntimeError("paramid keying not yet implemented")
+		except:
+			pass
+
+		# typically used for msg["header"] and msg["recs"]
+		# just returns a reference to that part of the inner pydict
+
+		return self.pydict[key]
+
+	def copyof(self): # -> Message
+		"""Clone, to create a new message that is a completely independent copy"""
+		import copy
+		return Message(copy.deepcopy(self.pydict))
+
+	#def __str__(self): # -> str
+	#	pass ##TODO: replaces showMessage
+ 	#	showMessage(self.pydict) ##TODO: Migrate code into this method
+
+	def dump(self):
+		showMessage(self.pydict)
+
+
 def showMessage(msg, timestamp=None):
 	"""Show the message in a friendly format"""
 
@@ -610,47 +695,56 @@ def showMessage(msg, timestamp=None):
 		else:
 			write = "read "
 
-		paramid   = rec["paramid"]
-		paramname = rec["paramname"]
-		paramunit = rec["paramunit"]
+		try:
+			paramname = rec["paramname"] # This only come out from decoded messages
+		except:
+			paramname = ""
+
+		try:
+			paramid = rec["paramid"] #This is only present on a input message (e.g SWITCH)
+			paramname = paramid_to_paramname(paramid)
+			paramid = str(hex(paramid))
+		except:
+			paramid = ""
+
+		try:
+			paramunit = rec["paramunit"] # This only come out from decoded messages
+		except:
+			paramunit = ""
+
 		if "value" in rec:
 				value = rec["value"]
 		else:
 				value = None
-		print("%s %s %s = %s" % (write, paramname, paramunit, str(value)))
 
+		print("%s %s %s %s = %s" % (write, paramid, paramname, paramunit, str(value)))
+
+
+# Example paths into message
+#   header_sensorid            msg["header"]["sensorid"]
+#   recs_0_value               msg["recs"][0]["value"]
+#   recs_WATER_DETECTOR_value  msg["recs"].find_param("WATER_DETECTOR")["value"]
 
 def alterMessage(message, **kwargs):
 	"""Change parameters in-place in a message template"""
-	# e.g. header_sensorid=1234, recs_0_value=1
 
-	#TODO: ####HERE#### for recs[n] it would be useful to also (or instead of) allow a paramid key
-	#i.e. recs_{PARAMID_VOLTAGE}_value
-	#but these names must be identifiers, so they must be alloweable id characters
-	#(#ucase, lcase, underscore) ... anything else??
 	for arg in kwargs:
-
 		path = arg.split("_")
 		value = kwargs[arg]
-
 		m = message
+
 		for pkey in path[:-1]:
-			if len(pkey) > 2 and pkey[0] == '{' and pkey[-1] == '}':
-				# It's a paramid name
-				paramid = paramname_to_paramid(pkey[1:-1])
-				pkey = paramid # it's an int
-			else:
-				try:
-					# If it is convertable to an int, it's an array index
-					pkey = int(pkey)
-				except:
-					# It must be a field name
-					pass
+			try:
+				# If it is convertable to an int, it's an array index
+				pkey = int(pkey)
+			except:
+				# It must be a field name
+				pass
 			m = m[pkey]
-		#trace("old value:%s" % m[path[-1]])
+		##trace("old value:%s" % m[path[-1]])
 		m[path[-1]] = value
 
-		#trace("modified:" + str(message))
+		##trace("modified:" + str(message))
 
 	return message
 
@@ -659,14 +753,21 @@ def getFromMessage(message, keypath):
 	"""Get a field from a message, given an underscored keypath to the item"""
 	path = keypath.split("_")
 
-	for p in path[:-1]:
+	for pkey in path[:-1]:
 		try:
-			p = int(p)
+			pkey = int(pkey)
 		except:
 			pass
-		message = message[p]
+		message = message[pkey]
 	return message[path[-1]]
 
+# QUICK TEST
+
+if __name__ == "__main__":
+	import Devices
+	msg = Message(Devices.MIHO005_REPORT)
+	#print(str(msg))
+	msg.dump()
 
 
 # END

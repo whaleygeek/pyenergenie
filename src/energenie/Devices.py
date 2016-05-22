@@ -103,6 +103,8 @@ def hasSwitch(mfrid, productid):
 
 #----- DEFINED MESSAGE TEMPLATES ----------------------------------------------
 
+##TODO: This should really be in OpenThings.Message
+
 import copy
 
 def create_message(message):
