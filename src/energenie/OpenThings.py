@@ -756,8 +756,6 @@ class Message():
 						m.append({})
 					m[pkey] = value
 
-
-
 	def set_PARAM_NAME(self, key, value):
 		"""Set a parameter given a PARAM_NAME key like recs_PARAM_NAME_field_nae"""
 		##print("set param name %s %s" % (key, value))
@@ -801,8 +799,6 @@ class Message():
 			##print("REC with field")
 			field_key = key[len(name)+1:]
 			self.pydict["recs"][pos][field_key] = value
-
-
 
 	def append_rec(self, *args, **kwargs):
 		"""Add a rec"""

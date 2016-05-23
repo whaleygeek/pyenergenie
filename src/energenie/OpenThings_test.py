@@ -168,8 +168,8 @@ def test_0(m):
 		print("test disabled:%s" % m)
 		return None
 
-	##return nothing # DISABLE
-	return run # ENABLE ALL
+	return nothing # DISABLE
+	##return run # ENABLE ALL
 
 def test_1(m):
 	def run(*args, **kwargs):
