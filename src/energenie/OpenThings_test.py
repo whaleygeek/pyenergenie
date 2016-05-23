@@ -152,38 +152,40 @@ import Devices
 #     10 msg[PARAM_SWITCH_STATE]
 
 
+#TODO: Capture and compare outputs from each method
+
 class TestMessage(unittest.TestCase):
 
 	def XXXtest_blank(self):
 		"""CREATE a completely blank message"""
 		msg = Message()
-		print(msg.pydict)
+		print(msg)
 		msg.dump()
 
 	def XXXtest_blank_template(self):
 		"""CREATE a message from a simple pydict template"""
 		# This is useful to simplify all other tests
 		msg = Message(Message.BLANK)
-		print(msg.pydict)
+		print(msg)
 		msg.dump()
 
 	def XXXtest_blank_create_dict(self): #1 {pydict}
 		"""CREATE a blank message with a dict parameter"""
 		msg = Message({"header":{}, "recs":[{"wr":False, "parmid":PARAM_SWITCH_STATE, "value":1}]})
-		print(msg.pydict)
+		print(msg)
 		msg.dump()
 
 	def XXXtest_blank_create_header_dict(self): #2 header={pydict}
 		"""CREATE a blank message and add a header at creation time from a dict"""
 		msg = Message(header={"mfrid":123, "productid":456, "sensorid":789})
-		print(msg.pydict)
+		print(msg)
 		msg.dump()
 
 	def XXXtest_create_big_template(self): #1 {pydict}
 		"""CREATE from a large template message"""
 		# create a message from a template
 		msg = Message(Devices.MIHO005_REPORT)
-		print(msg.pydict)
+		print(msg)
 		msg.dump()
 
 	def XXXtest_add_rec_dict(self): #1 {pydict}
@@ -191,47 +193,48 @@ class TestMessage(unittest.TestCase):
 		msg = Message(Message.BLANK)
 		i = msg.append_rec({"paramid":PARAM_SWITCH_STATE, "wr":True, "value":1})
 		print("added index:%d" % i)
-		print(msg.pydict)
+		print(msg)
 		msg.dump()
 
 	def XXXtest_add_header_dict(self): #2 header={pydict}
 		"""UPDATE(SET) a new header to an existing message"""
 		msg = Message()
 		msg.set(header={"mfrid":123, "productid":456, "sensorid":789})
-		print(msg.pydict)
+		print(msg)
 		msg.dump()
 
 	def XXXtest_add_recs_dict(self):
 		"""UPDATE(SET) recs to an existing message"""
 		msg = Message()
 		msg.set(recs=[{"paramid":PARAM_SWITCH_STATE, "wr":True, "value":1}])
-		print(msg.pydict)
+		print(msg)
 		msg.dump()
 
 	def XXXtest_add_path(self):
 		"""UPDATE(SET) a pathed key to an existing message"""
 		msg = Message()
 		msg.set(header_productid=1234)
-		print(msg.pydict)
+		print(msg)
 		msg.dump()
 
 	def XXXtest_alter_template(self): #3 header_mfrid=123
 		"""UPDATE(SET) an existing key with a path"""
 		msg = Message(Devices.MIHO005_REPORT)
 		msg.set(header_productid=123)
+		print(msg)
 		msg.dump()
 
 	def XXXtest_alter_template_multiple(self):
 		"""UPDATE(SET) multiple keys with paths"""
 		msg = Message(Devices.MIHO005_REPORT)
 		msg.set(header_productid=123, header_sensorid=99)
-		print(msg.pydict)
+		print(msg)
 		msg.dump()
 
 	def XXXtest_blank_create_header_paths(self): #3 header_mfrid=123    (CREATE)
 		"""CREATE message with pathed keys in constructor"""
 		msg = Message(header_mfrid=123, header_productid=456, header_sensorid=789)
-		print(msg.pydict)
+		print(msg)
 		msg.dump()
 
 	def XXXtest_blank_create_recs_paths(self):
@@ -239,7 +242,7 @@ class TestMessage(unittest.TestCase):
 		# uses integer path component to mean array index
 		msg = Message(recs_0={"paramid":PARAM_SWITCH_STATE, "wr":True, "value":1},
 					  recs_1={"paramid":PARAM_AIR_PRESSURE, "wr":True, "value":2})
-		print(msg.pydict)
+		print(msg)
 		msg.dump()
 
 	def XXXtest_add_rec_path(self): #5 recs_0_paramid=PARAM_SWITCH_STATE
@@ -247,7 +250,7 @@ class TestMessage(unittest.TestCase):
 		msg = Message(recs_0={}) # must create rec before you can change it
 		print(msg.pydict)
 		msg.set(recs_0_paramid=PARAM_SWITCH_STATE, recs_0_value=1, recs_0_wr=True)
-		print(msg.pydict)
+		print(msg)
 		msg.dump()
 
 	def XXXtest_add_rec_fn_pydict(self): #6 SWITCH_STATE={pydict}
@@ -255,14 +258,14 @@ class TestMessage(unittest.TestCase):
 		#always creates a new rec at the end and then populates
 		msg = Message()
 		msg.append_rec(PARAM_SWITCH_STATE, {"wr": True, "value":1})
-		print(msg.pydict)
+		print(msg)
 		msg.dump()
 
 	def XXXtest_add_rec_fn_keyed(self): #7 SWITCH_STATE,value=1    (ADD)
 		"""UPDATE(ADD) a rec to message using PARAM const and keyed values"""
 		msg = Message()
 		msg.append_rec(PARAM_SWITCH_STATE, wr=True, value=1)
-		print(msg.pydict)
+		print(msg)
 		msg.dump()
 
 	def XXXtest_get_pathed(self):
@@ -300,36 +303,65 @@ class TestMessage(unittest.TestCase):
 		msg = Message(Devices.MIHO005_REPORT)
 		print(msg["recs"][0]["value"])
 
+
+	def XXXtest_setattr_header(self):
+		"""UPDATE(SET) the header from a setattr key index"""
+		msg = Message(Devices.MIHO005_REPORT)
+		msg["header"] = {"mfrid":111, "productid":222, "sensorid":333}
+		print(msg)
+
+	def XXXtest_setattr_header_field_overwrite(self):
+		"""UPDATE(SET) overwrite an existing header field"""
+		msg = Message(Devices.MIHO005_REPORT)
+		msg["header"]["productid"] = 999
+		print(msg)
+
+	def XXXtest_setattr_header_field_add(self):
+		"""UPDATE(SET) add a new header field"""
+		msg = Message(Devices.MIHO005_REPORT)
+		msg["header"]["timestamp"] = 1234
+		print(msg)
+
+	def XXXtest_setattr_recs(self):
+		"""UPDATE(SET) overwrite all recs"""
+		msg = Message(Devices.MIHO005_REPORT)
+		msg["recs"] = [ {"paramid":PARAM_SWITCH_STATE, "wr":True, "value":1},
+						{"paramid":PARAM_AIR_PRESSURE, "wr":True, "value":33}]
+		print(msg)
+
+	def XXXtest_setattr_rec_overwrite(self):
+		"""UPDATE(SET) overwrite a single rec"""
+		msg = Message(Devices.MIHO005_REPORT)
+		msg["recs"][0] = {"paramid":9999, "wr":False, "value":9999}
+		print(msg)
+
+	def XXXtest_setattr_rec_append(self):
+		"""UPDATE(SET) add a new rec by appending"""
+		msg = Message(Devices.MIHO005_REPORT)
+		msg["recs"].append({"paramid":9999, "wr":True, "value":9999})
+		print(msg)
+
+	def XXXXtest_setattr_rec_field_overwrite(self):
+		"""UPDATE(SET) overwrite an existing rec field"""
+		msg = Message(Devices.MIHO005_REPORT)
+		msg["recs"][0]["value"] = 9999
+		print(msg)
+
+	def XXXtest_setattr_rec_field_append(self):
+		"""UPDATE(SET) append a new field"""
+		msg = Message(Devices.MIHO005_REPORT)
+		msg["recs"][0]["colour"] = "**RED**"
+		print(msg)
+
 	#----- HERE -----
 
-	#write header
-	#write header field
-	#write recs
-	#write rec overwrite
-	#write rec append
-	#write rec field overwrite
-	#write rec field append
 
-	def XXXtest_pydict_write(self): #9 msg["header"]  msg["recs"][0]    (CHANGE)
-		## access a specific keyed entry like a normal pydict, for write
-		msg = Message(Devices.MIHO005_REPORT)
-		msg["header"]["mfrid"] = 222
-		msg.dump()
-
-	def XXXtest_add_header_attr(self): #9 msg["header"]  msg["recs"][0]    (CHANGE)
-		# add header fields to a message after creation like a pydict
-		msg = Message()
-		msg["header"]["mfrid"] = 123
-		msg.dump()
-
-	def XXXtest_add_rec_attr(self): #9 msg["header"]  msg["recs"][0]    (CHANGE)
-		# add rec fields to a message after creation like a pydict
-		msg = Message()
-		msg["recs"][0] = {"paramid": PARAM_SWITCH_STATE, "value": 1}
-		msg.dump()
-
-
-	#### This is the PARAMID indexer
+	#------
+	#### PARAMID indexer - code mod required, re-test all after done
+	#read param
+	#read field
+	#write field change
+	#write field add
 
 	def XXXtest_paramid_read_struct(self): #10 msg[PARAM_SWITCH_STATE]    (READ)
 		# access a paramid entry for read of the whole structure
@@ -348,7 +380,8 @@ class TestMessage(unittest.TestCase):
 		msg.dump()
 
 
-
+	#-----
+	# PARAMNAME aware paths
 	####TODO: This is where we need an intelligent key parser
 
 	def XXXtest_alter_rec_template_paramname(self): #8 SWITCH_STATE_value=1    (CHANGE)
@@ -358,8 +391,11 @@ class TestMessage(unittest.TestCase):
 		msg.dump()
 
 
-	####TODO: This is where dump() might need to dump to a strbuf and then output
+	#-----
+	# dump and display
+	##TODO: This is where dump() might need to dump to a strbuf and then output
 	#some of these might just print the inner pydict though
+
 	def XXXtest_repr(self):
 		## dump a message in printable format
 		msg = Message(Devices.MIHO005_REPORT)

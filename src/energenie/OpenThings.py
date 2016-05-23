@@ -661,7 +661,6 @@ class Message():
 
 		self.set(**kwargs)
 
-	@untested
 	def __getitem__(self, key):
 		try:
 			# an integer key is used as a paramid in recs[]
@@ -678,6 +677,11 @@ class Message():
 		# typically used for msg["header"] and msg["recs"]
 		# just returns a reference to that part of the inner pydict
 		return self.pydict[key]
+
+	def __setitem__(self, key, value):
+		"""set the header or the recs to the provided value"""
+		#TODO: add integer indexing for PARAMID later
+		self.pydict[key] = value
 
 	@untested
 	def copyof(self): # -> Message
@@ -759,12 +763,11 @@ class Message():
 		return m
 
 	def __str__(self): # -> str
-		return "Message.STR"
+		return str(self.pydict)
 
 	def __repr__(self): # -> str
 		return "Message.REPR"
 
-	@untested
 	def dump(self):
 		msg = self.pydict
 		timestamp = None
