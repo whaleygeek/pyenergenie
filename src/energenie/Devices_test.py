@@ -59,6 +59,8 @@ def test_without_registry():
 
 
 if __name__ == "__main__":
+    import OpenThings, Devices
+    OpenThings.init(Devices.CRYPT_PID)
     test_without_registry()
 
 # END

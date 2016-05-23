@@ -252,8 +252,9 @@ def send_join_ack(radio, mfrid, productid, sensorid):
 
 class Device():
     """A generic connected device abstraction"""
-    def __init__(self, air_interface):
+    def __init__(self, air_interface=None, device_id=None):
         self.air_interface = air_interface
+        self.device_id = device_id
         class Config(): pass
         self.config = Config()
         class Capabilities(): pass
@@ -294,9 +295,8 @@ class Device():
 
 class EnergenieDevice(Device):
     """An abstraction for any kind of Energenie connected device"""
-    def __init__(self, air_interface, device_id=None):
-        Device.__init__(self, air_interface)
-        self.device_id = device_id
+    def __init__(self, air_interface=None, device_id=None):
+        Device.__init__(self, air_interface, device_id)
 
     def get_device_id(self): # -> id:int
         return self.device_id
@@ -307,8 +307,10 @@ class EnergenieDevice(Device):
 
 class LegacyDevice(EnergenieDevice):
     """An abstraction for Energenie green button legacy OOK devices"""
-    def __init__(self):
-        EnergenieDevice.__init__(self, ook_interface)
+    def __init__(self, air_interface=None, device_id=None):
+        if air_interface == None:
+            air_interface == ook_interface
+        EnergenieDevice.__init__(self, ook_interface, device_id)
         self.config.frequency  = 433.92
         self.config.modulation = "OOK"
         self.config.codec      = "4bit"
@@ -336,8 +338,10 @@ class LegacyDevice(EnergenieDevice):
 
 class MiHomeDevice(EnergenieDevice):
     """An abstraction for Energenie new style MiHome FSK devices"""
-    def __init__(self, device_id=None):
-        EnergenieDevice.__init__(self, fsk_interface, device_id)
+    def __init__(self, air_interface=None, device_id=None):
+        if air_interface == None:
+            air_interface = fsk_interface
+        EnergenieDevice.__init__(self, air_interface, device_id)
         self.config.frequency  = 433.92
         self.config.modulation = "FSK"
         self.config.codec      = "OpenThings"
@@ -399,8 +403,8 @@ class MiHomeDevice(EnergenieDevice):
 
 class ENER002(LegacyDevice):
     """A green-button switch"""
-    def __init__(self, device_id=None):
-        LegacyDevice.__init__(self)
+    def __init__(self, air_interface=None, device_id=None):
+        LegacyDevice.__init__(self, air_interface, device_id)
         self.device_id = device_id # (house_address, device_index)
         self.config.tx_repeats = 8
         self.capabilities.switch = True
@@ -431,10 +435,9 @@ class ENER002(LegacyDevice):
 
 class MIHO005(MiHomeDevice):
     """An Energenie MiHome Adaptor Plus"""
-    def __init__(self, device_id=None):
-        MiHomeDevice.__init__(self)
+    def __init__(self, air_interface=None, device_id=None):
+        MiHomeDevice.__init__(self, air_interface, device_id)
         self.product_id = PRODUCTID_MIHO005
-        self.device_id  = device_id
         class Readings():
             switch         = None
             voltage        = None
@@ -550,10 +553,9 @@ class MIHO005(MiHomeDevice):
 
 class MIHO006(MiHomeDevice):
     """An Energenie MiHome Home Monitor"""
-    def __init__(self, device_id=None):
-        MiHomeDevice.__init__(self)
+    def __init__(self, air_interface=None, device_id=None):
+        MiHomeDevice.__init__(self, air_interface, device_id)
         self.product_id = PRODUCTID_MIHO006
-        self.device_id  = device_id
         class Readings():
             battery_voltage = None
             current         = None
@@ -569,10 +571,9 @@ class MIHO006(MiHomeDevice):
 
 class MIHO013(MiHomeDevice):
     """An Energenie MiHome eTRV Radiator Valve"""
-    def __init__(self, device_id=None):
-        MiHomeDevice.__init__(self)
+    def __init__(self, air_interface=None, device_id=None):
+        MiHomeDevice.__init__(self, air_interface, device_id)
         self.product_id = PRODUCTID_MIHO013
-        self.device_id  = device_id
         class Readings():
             battery_voltage      = None
             ambient_temperature  = None
@@ -662,6 +663,7 @@ class DeviceFactory():
         c = DeviceFactory.devices[name]
         if air_interface == None:
             air_interface = DeviceFactory.default_air_interface
+        #TODO: different devices have different init signatures at moment
         return c(air_interface, device_id)
 
 # END

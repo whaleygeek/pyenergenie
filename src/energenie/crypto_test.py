@@ -4,4 +4,5 @@
 
 #TODO:
 
+print("no tests defined")
 # END
