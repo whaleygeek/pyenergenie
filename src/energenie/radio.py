@@ -28,6 +28,8 @@ import ctypes
 from os import path
 mydir = path.dirname(path.abspath(__file__))
 
+DEBUG = False
+
 libradio                     = ctypes.cdll.LoadLibrary(mydir + "/" + LIBNAME)
 radio_init_fn                = libradio["radio_init"]
 radio_reset_fn               = libradio["radio_reset"]
@@ -110,7 +112,8 @@ def transmit(payload, outer_times=1, inner_times=8, outer_delay=0):
     #Note, this optionally does a mode change before and after
     #extern void radio_transmit(uint8_t* payload, uint8_t len, uint8_t repeats);
 
-    ##print("***TX %s" % payload)
+    if DEBUG:
+        print("***TX %s" % payload)
     ##import OpenThings
     ##print(OpenThings.decode(payload))
 

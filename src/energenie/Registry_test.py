@@ -10,6 +10,9 @@
 
 import unittest
 from Registry import *
+import radio
+
+radio.DEBUG=True
 
 class TestRegistry(unittest.TestCase):
     def setUp(self):
@@ -18,8 +21,6 @@ class TestRegistry(unittest.TestCase):
         registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
 
         # test the auto create mechanism
-        #import sys
-        #registry.auto_create(sys.modules[__name__])
         registry.auto_create(self)
 
     def test_capabilities(self):
