@@ -59,16 +59,13 @@ class TestRegistry(unittest.TestCase):
         ## poor mans incoming synthetic message
 
 
-        report = Devices.create_message(Devices.MIHO005_REPORT)
-        report = OpenThings.alterMessage( ####HERE
-            report,
-            recs_0_value=240, # voltage
-            recs_1_value=2,   # current
-            recs_2_value=50,  # frequency
-            recs_3_value=100, # real power
-            recs_4_value=0,   # reactive power
-            recs_5_value=100, # apparent power
-        )
+        report = OpenThings.Message(Devices.MIHO005_REPORT)
+        report.set(recs_VOLTAGE_value=240,
+                   recs_CURRENT_value=2,
+                   recs_FREQUENCY_value=50,
+                   recs_REAL_POWER_value=100,
+                   recs_REACTIVE_POWER_value=0,
+                   recs_APPARENT_POWER_value=100)
         self.tv.incoming_message(report)
 
         # get readings from device

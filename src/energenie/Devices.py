@@ -220,10 +220,10 @@ MIHO005_REPORT = {
 
 def send_join_ack(radio, mfrid, productid, sensorid):
     # send back a JOIN ACK, so that join light stops flashing
-    response = OpenThings.alterMessage(create_message(JOIN_ACK), ####HERE use the new Message()
-        header_mfrid=mfrid,
-        header_productid=productid,
-        header_sensorid=sensorid)
+    response = OpenThings.Message(JOIN_ACK)
+    response.set(header_mfrid=mfrid,
+                 header_productid=productid,
+                 header_sensorid=sensorid)
     p = OpenThings.encode(response)
     radio.transmitter()
     radio.transmit(p, inner_times=2)
@@ -317,7 +317,7 @@ class LegacyDevice(EnergenieDevice):
         return "LegacyDevice(%s)" % str(self.device_id)
 
     def send_message(self, payload):
-        ####HERE#### interface with air_interface
+        #TODO: interface with air_interface
         # Encode the payload two bits per byte as per OOK spec
         #TODO, should we just pass a payload (as a pydict or tuple) to the air_interface adaptor
         #and let it encode it, to be consistent with the FSK MiHome devices?
@@ -363,7 +363,7 @@ class MiHomeDevice(EnergenieDevice):
         self.send_message("join ack") # TODO
 
     def incoming_message(self, payload):
-        ####HERE#### interface with air_interface
+        #TODO: interface with air_interface
         """Handle incoming messages for this device"""
         #NOTE: we must have already decoded the message with OpenThings to be able to get the addresses out
         # so payload at this point must be a pydict?
@@ -378,7 +378,7 @@ class MiHomeDevice(EnergenieDevice):
         raise RuntimeError("Method unimplemented") #TODO
 
     def send_message(self, payload):
-        ####HERE#### interface with air_interface
+        #TODO: interface with air_interface
         #is payload a pydict with header at this point, and we have to call OpenThings.encode?
         #should the encode be done here, or in the air_interface adaptor?
 
@@ -481,21 +481,19 @@ class MIHO005(MiHomeDevice):
         return self.readings
 
     def turn_on(self):
-        #TODO: header construction should be in MiHomeDevice as it is shared
-        payload = OpenThings.alterMessage( ####HERE use the new Message()
-            create_message(SWITCH),
-            header_productid = self.product_id,
-            header_sensorid  = self.device_id,
-            recs_0_value     = True)
+        #TODO: header construction should be in MiHomeDevice as it is shared?
+        payload = OpenThings.Message(SWITCH)
+        payload.set(header_productid=self.product_id,
+                    header_sensorid=self.device_id,
+                    recs_SWITCH_STATE_value=True)
         self.send_message(payload)
 
     def turn_off(self):
-        #TODO: header construction should be in MiHomeDevice as it is shared
-        payload = OpenThings.alterMessage( ####HERE use the new Message()
-            create_message(SWITCH),
-            header_productid = self.product_id,
-            header_sensorid  = self.device_id,
-            recs_0_value     = False)
+        #TODO: header construction should be in MiHomeDevice as it is shared?
+        payload = OpenThings.Message(SWITCH)
+        payload.set(header_productid=self.product_id,
+                    header_sensorid=self.device_id,
+                    recs_SWITCH_STATE_value=False)
         self.send_message(payload)
 
     #TODO: difference between 'is on and 'is requested on'

@@ -33,14 +33,16 @@ def monitor_loop():
         if radio.is_receive_waiting():
             trace("receiving payload")
             payload = radio.receive()
+            now = time.time()
             try:
-                decoded = OpenThings.decode(payload)
-                now = time.time()
+                decoded = OpenThings.decode(payload, receive_timestamp=now)
             except OpenThings.OpenThingsException as e:
                 warning("Can't decode payload:" + str(e))
                 continue
-                      
-            OpenThings.showMessage(decoded, timestamp=now) ####HERE msg.dump()
+
+            #TODO: Consider putting a 'timestamp' in a received decoded message
+            print(now) #TODO: improve formatting of timestamp
+            print(decoded)
             # Any device that reports will be added to the non-persistent directory
             Registry.update(decoded)
             ##trace(decoded)
@@ -52,10 +54,11 @@ def monitor_loop():
                 print("Empty record:%s" % decoded)
             else:
                 # assume only 1 rec in a join, for now
+                #TODO: 'if OpenThings.PARAM_JOIN in decoded:'  - special magic handling for param_id
                 if decoded["recs"][0]["paramid"] == OpenThings.PARAM_JOIN:
-                    mfrid     = OpenThings.getFromMessage(decoded, "header_mfrid") ####HERE use the new Message()
-                    productid = OpenThings.getFromMessage(decoded, "header_productid") ####HERE use the new Message()
-                    sensorid  = OpenThings.getFromMessage(decoded, "header_sensorid") ####HERE use the new Message()
+                    mfrid     = decoded.get("header_mfrid")
+                    productid = decoded.get("header_productid")
+                    sensorid  = decoded.get("header_sensorid")
                     Devices.send_join_ack(radio, mfrid, productid, sensorid)
 
 

@@ -155,7 +155,7 @@ def paramid_to_paramname(paramid):
 #we're trying to process an encrypted packet without decrypting it.
 #the code should be more robust to this (by checking the CRC)
 
-def decode(payload, decrypt=True):
+def decode(payload, decrypt=True, receive_timestamp=None):
 	"""Decode a raw buffer into an OpenThings pydict"""
 	#Note, decrypt must already have run on this for it to work
 	length = payload[0]
@@ -250,11 +250,14 @@ def decode(payload, decrypt=True):
 		# store rec
 		recs.append(rec)
 
-	return {
+	m = {
 		"type":    "OK",
 		"header":  header,
 		"recs":    recs
 	}
+	if receive_timestamp != None:
+		m["rxtimestamp"] = receive_timestamp
+	return Message(m)
 
 
 #----- MESSAGE ENCODER --------------------------------------------------------

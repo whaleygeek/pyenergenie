@@ -17,6 +17,7 @@ from lifecycle import *
 import OpenThings
 import TwoBit
 import radio
+import time
 
 
 class OpenThingsAirInterface():
@@ -69,7 +70,8 @@ class OpenThingsAirInterface():
         while True: # timer not expired
             if radio.is_receive_waiting():
                 payload = radio.receive() # TODO payload, radio_measurements = radio.receive()
-                p = OpenThings.decode(payload)
+                now = time.time()
+                p = OpenThings.decode(payload, receive_timestamp=now)
                 #TODO: if crc failure, report it, but keep trying
                 #if crc check passes...
                 break

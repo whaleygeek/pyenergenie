@@ -15,16 +15,12 @@ from energenie import OpenThings, radio, TwoBit, Devices
 OpenThings.init(Devices.CRYPT_PID)
 
 PURPLE_ID = 0x68B # captured from a real device using Monitor.py
-m = OpenThings.alterMessage( ####HERE use the new Message() abstraction
-    Devices.create_message(Devices.SWITCH),
-    header_sensorid=PURPLE_ID,
-    recs_0_value=1)
+m = OpenThings.Message(Devices.SWITCH)
+m.set(header_sensorid=PURPLE_ID, recs_SWITCH_STATE_value=1)
 purple_on = OpenThings.encode(m)
 
-m = OpenThings.alterMessage( ####HERE use the new Message() abstraction
-    Devices.create_message(Devices.SWITCH),
-    header_sensorid=PURPLE_ID,
-    recs_0_value=0)
+m = OpenThings.Message(Devices.SWITCH)
+m.set(header_sensorid=PURPLE_ID, recs_SWITCH_STATE_value=0)
 purple_off = OpenThings.encode(m)
 
 # build OOK messages for legacy green button
