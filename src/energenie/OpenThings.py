@@ -665,23 +665,52 @@ class Message():
 		try:
 			# an integer key is used as a paramid in recs[]
 			key = int(key)
-			for rec in self.pydict["recs"]:
-				if "paramid" in rec:
-					paramid = rec["paramid"]
-					if paramid == key:
-						return rec
-			raise RuntimeError("no paramid found for %d" % str(hex(key)))
 		except:
-			pass
+			# not an integer, so do a normal key lookup
+			# typically used for msg["header"] and msg["recs"]
+			# just returns a reference to that part of the inner pydict
+			return self.pydict[key]
 
-		# typically used for msg["header"] and msg["recs"]
-		# just returns a reference to that part of the inner pydict
-		return self.pydict[key]
+		# Is an integer, so index into recs[]
+		##print("looking up in recs")
+		for rec in self.pydict["recs"]:
+			if "paramid" in rec:
+				paramid = rec["paramid"]
+				if paramid == key:
+					return rec
+		raise RuntimeError("no paramid found for %s" % str(hex(key)))
+
 
 	def __setitem__(self, key, value):
 		"""set the header or the recs to the provided value"""
-		#TODO: add integer indexing for PARAMID later
-		self.pydict[key] = value
+		try:
+			key = int(key)
+		except:
+			# Not an parseable integer, so access by field name
+			##print("set by key")
+			self.pydict[key] = value
+			return
+
+		# Is an integer, so index into recs[]
+		##print("looking up in recs")
+		i = 0
+		for rec in self.pydict["recs"]:
+			if "paramid" in rec:
+				paramid = rec["paramid"]
+				if paramid == key:
+					##print("found at index %d %s" % (i, rec))
+					# add in the paramid
+					value["paramid"] = key
+					self.pydict["recs"][i] = value
+					return
+			i += 1
+
+		# Not found, so we should add it
+		print("no paramid for key %s, adding..." % str(hex(key)))
+		#TODO: add
+		# add in the paramid
+		value["paramid"] = key
+		self.pydict["recs"].append(value)
 
 	@untested
 	def copyof(self): # -> Message
