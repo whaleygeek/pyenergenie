@@ -40,7 +40,7 @@ def monitor_loop():
                 warning("Can't decode payload:" + str(e))
                 continue
                       
-            OpenThings.showMessage(decoded, timestamp=now)
+            OpenThings.showMessage(decoded, timestamp=now) ####HERE msg.dump()
             # Any device that reports will be added to the non-persistent directory
             Registry.update(decoded)
             ##trace(decoded)
@@ -53,9 +53,9 @@ def monitor_loop():
             else:
                 # assume only 1 rec in a join, for now
                 if decoded["recs"][0]["paramid"] == OpenThings.PARAM_JOIN:
-                    mfrid     = OpenThings.getFromMessage(decoded, "header_mfrid")
-                    productid = OpenThings.getFromMessage(decoded, "header_productid")
-                    sensorid  = OpenThings.getFromMessage(decoded, "header_sensorid")
+                    mfrid     = OpenThings.getFromMessage(decoded, "header_mfrid") ####HERE use the new Message()
+                    productid = OpenThings.getFromMessage(decoded, "header_productid") ####HERE use the new Message()
+                    sensorid  = OpenThings.getFromMessage(decoded, "header_sensorid") ####HERE use the new Message()
                     Devices.send_join_ack(radio, mfrid, productid, sensorid)
 
 

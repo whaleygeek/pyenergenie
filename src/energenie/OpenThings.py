@@ -483,7 +483,7 @@ class Value():
 					bits = Value.typebits(typeid)
 				#trace("need bits:" + str(bits))
 				# NORMALISE BITS TO BYTES
-				####HERE#### round up to nearest number of 8 bits
+				#round up to nearest number of 8 bits
 				# if already 8, leave 1,2,3,4,5,6,7,8 = 8   0,1,2,3,4,5,6,7 (((b-1)/8)+1)*8
 				# 9,10,11,12,13,14,15,16=16
 				bits = (((bits-1)/8)+1)*8 # snap to nearest byte boundary
@@ -615,32 +615,6 @@ def calcCRC(payload, start, length):
 #     ]
 # }
 
-##TODO: Considering changing all messages into a Class with an inner pydict
-#It will make cloning, altering, reading, printing much easier
-
-## request = OpenThings.alterMessage(
-##               Devices.create_message(Devices.SWITCH),
-## 	             header_sensorid=sensorid,
-## 	             recs_0_value=switch_state)
-
-## request = OpenThings.alterMessage(
-##               Devices.create_message(Devices.SWITCH),
-## 	             header_sensorid=sensorid,
-## 	             recs_SWITCH_STATE_value=switch_state)
-
-##possible interface variants:
-##
-##  SWITCH = Message({...})
-##  msg = SWITCH.copyof()
-##
-##  msg = SWITCH()
-##  msg["header"]["sensorid"] = 0x123
-##
-##  msg = SWITCH(sensorid=0x123, AIR_PRESSURE_value=123)  <-- the new alterMessage
-##  msg.set(sensorid=0x123, AIR_PRESSURE_value=123)
-##
-##  msg.asdict() -> # pydict (for the encoder to use)
-##
 
 import copy
 
@@ -901,50 +875,50 @@ class Message():
 				print("%s %s %s %s = %s" % (write, paramid, paramname, paramunit, str(value)))
 
 
-@deprecated
-def showMessage(msg, timestamp=None):
-	"""Show the message in a friendly format"""
-
-	# HEADER
-	header    = msg["header"]
-	mfrid     = header["mfrid"]
-	productid = header["productid"]
-	sensorid  = header["sensorid"]
-	if timestamp != None:
-		print("receive-time:%s" % time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)))
-	print("mfrid:%s prodid:%s sensorid:%s" % (hex(mfrid), hex(productid), hex(sensorid)))
-
-	# RECORDS
-	for rec in msg["recs"]:
-		wr = rec["wr"]
-		if wr == True:
-			write = "write"
-		else:
-			write = "read "
-
-		try:
-			paramname = rec["paramname"] # This only come out from decoded messages
-		except:
-			paramname = ""
-
-		try:
-			paramid = rec["paramid"] #This is only present on a input message (e.g SWITCH)
-			paramname = paramid_to_paramname(paramid)
-			paramid = str(hex(paramid))
-		except:
-			paramid = ""
-
-		try:
-			paramunit = rec["paramunit"] # This only come out from decoded messages
-		except:
-			paramunit = ""
-
-		if "value" in rec:
-				value = rec["value"]
-		else:
-				value = None
-
-		print("%s %s %s %s = %s" % (write, paramid, paramname, paramunit, str(value)))
+#@deprecated
+#def showMessage(msg, timestamp=None):
+#	"""Show the message in a friendly format"""
+#
+#	# HEADER
+#	header    = msg["header"]
+#	mfrid     = header["mfrid"]
+#	productid = header["productid"]
+#	sensorid  = header["sensorid"]
+#	if timestamp != None:
+#		print("receive-time:%s" % time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)))
+#	print("mfrid:%s prodid:%s sensorid:%s" % (hex(mfrid), hex(productid), hex(sensorid)))
+#
+#	# RECORDS
+#	for rec in msg["recs"]:
+#		wr = rec["wr"]
+#		if wr == True:
+#			write = "write"
+#		else:
+#			write = "read "
+#
+#		try:
+#			paramname = rec["paramname"] # This only come out from decoded messages
+#		except:
+#			paramname = ""
+##
+#		try:
+#			paramid = rec["paramid"] #This is only present on a input message (e.g SWITCH)
+#			paramname = paramid_to_paramname(paramid)
+#			paramid = str(hex(paramid))
+##		except:
+#			paramid = ""
+#
+#		try:
+#			paramunit = rec["paramunit"] # This only come out from decoded messages
+#		except:
+#			paramunit = ""
+#
+#		if "value" in rec:
+#				value = rec["value"]
+#		else:
+#				value = None
+#
+#		print("%s %s %s %s = %s" % (write, paramid, paramname, paramunit, str(value)))
 
 
 # Example paths into message
@@ -952,43 +926,43 @@ def showMessage(msg, timestamp=None):
 #   recs_0_value               msg["recs"][0]["value"]
 #   recs_WATER_DETECTOR_value  msg["recs"].find_param("WATER_DETECTOR")["value"]
 
-@deprecated
-def alterMessage(message, **kwargs):
-	"""Change parameters in-place in a message template"""
+#@deprecated
+#def alterMessage(message, **kwargs):
+#	"""Change parameters in-place in a message template"""
+#
+#	for arg in kwargs:
+#		path = arg.split("_")
+#		value = kwargs[arg]
+#		m = message
+#
+#		for pkey in path[:-1]:
+#			try:
+#				# If it is convertable to an int, it's an array index
+#				pkey = int(pkey)
+#			except:
+#				# It must be a field name
+#				pass
+#			m = m[pkey]
+#		##trace("old value:%s" % m[path[-1]])
+#		m[path[-1]] = value
+#
+#		##trace("modified:" + str(message))
+#
+#	return message
 
-	for arg in kwargs:
-		path = arg.split("_")
-		value = kwargs[arg]
-		m = message
 
-		for pkey in path[:-1]:
-			try:
-				# If it is convertable to an int, it's an array index
-				pkey = int(pkey)
-			except:
-				# It must be a field name
-				pass
-			m = m[pkey]
-		##trace("old value:%s" % m[path[-1]])
-		m[path[-1]] = value
-
-		##trace("modified:" + str(message))
-
-	return message
-
-
-@deprecated
-def getFromMessage(message, keypath):
-	"""Get a field from a message, given an underscored keypath to the item"""
-	path = keypath.split("_")
-
-	for pkey in path[:-1]:
-		try:
-			pkey = int(pkey)
-		except:
-			pass
-		message = message[pkey]
-	return message[path[-1]]
+#@deprecated
+#def getFromMessage(message, keypath):
+#	"""Get a field from a message, given an underscored keypath to the item"""
+#	path = keypath.split("_")
+#
+#	for pkey in path[:-1]:
+#		try:
+#			pkey = int(pkey)
+#		except:
+#			pass
+#		message = message[pkey]
+#	return message[path[-1]]
 
 
 # END

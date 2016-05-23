@@ -60,7 +60,7 @@ class TestRegistry(unittest.TestCase):
 
 
         report = Devices.create_message(Devices.MIHO005_REPORT)
-        report = OpenThings.alterMessage(
+        report = OpenThings.alterMessage( ####HERE
             report,
             recs_0_value=240, # voltage
             recs_1_value=2,   # current

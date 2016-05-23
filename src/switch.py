@@ -45,7 +45,7 @@ def switch_sniff_loop():
             warning("Can't decode payload:" + str(e))
             return
 
-        OpenThings.showMessage(decoded, timestamp=now)
+        OpenThings.showMessage(decoded, timestamp=now) ##HERE msg.dump()
         # Any device that reports will be added to the non-persistent directory
         Registry.update(decoded)
         ##trace(decoded)
@@ -57,9 +57,9 @@ def switch_sniff_loop():
         else:
             # assume only 1 rec in a join, for now
             if decoded["recs"][0]["paramid"] == OpenThings.PARAM_JOIN:
-                mfrid     = OpenThings.getFromMessage(decoded, "header_mfrid")
-                productid = OpenThings.getFromMessage(decoded, "header_productid")
-                sensorid  = OpenThings.getFromMessage(decoded, "header_sensorid")
+                mfrid     = OpenThings.getFromMessage(decoded, "header_mfrid")  ####HERE use the new Message()
+                productid = OpenThings.getFromMessage(decoded, "header_productid") ####HERE use the new Message()
+                sensorid  = OpenThings.getFromMessage(decoded, "header_sensorid") ####HERE use the new Message()
                 Devices.send_join_ack(radio, mfrid, productid, sensorid)
 
 
@@ -79,7 +79,7 @@ def switch_toggle_loop():
             productid = header["productid"]
 
             if Devices.hasSwitch(mfrid, productid):
-                request = OpenThings.alterMessage(Devices.create_message(Devices.SWITCH),
+                request = OpenThings.alterMessage(Devices.create_message(Devices.SWITCH), ####HERE use the new Message()
                     header_sensorid=sensorid,
                     recs_0_value=switch_state)
                 p = OpenThings.encode(request)
@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
     # Seed the registry with a known device, to simplify tx-only testing
     SENSOR_ID = 0x68B # captured from a real device
-    device_header = OpenThings.alterMessage(Devices.create_message(Devices.REGISTERED_SENSOR),
+    device_header = OpenThings.alterMessage(Devices.create_message(Devices.REGISTERED_SENSOR), ####HERE use the new Message()
         header_mfrid     = Devices.MFRID,
         header_productid = Devices.PRODUCTID_MIHO005, # adaptor plus
         header_sensorid  = SENSOR_ID)

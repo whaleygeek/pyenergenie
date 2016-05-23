@@ -220,7 +220,7 @@ MIHO005_REPORT = {
 
 def send_join_ack(radio, mfrid, productid, sensorid):
     # send back a JOIN ACK, so that join light stops flashing
-    response = OpenThings.alterMessage(create_message(JOIN_ACK),
+    response = OpenThings.alterMessage(create_message(JOIN_ACK), ####HERE use the new Message()
         header_mfrid=mfrid,
         header_productid=productid,
         header_sensorid=sensorid)
@@ -450,7 +450,6 @@ class MIHO005(MiHomeDevice):
         self.capabilities.switch = True
 
     def incoming_message(self, payload):
-        ####HERE####
         for rec in payload["recs"]:
             paramid = rec["paramid"]
             #TODO: consider making this table driven and allowing our base class to fill our readings in for us
@@ -483,7 +482,7 @@ class MIHO005(MiHomeDevice):
 
     def turn_on(self):
         #TODO: header construction should be in MiHomeDevice as it is shared
-        payload = OpenThings.alterMessage(
+        payload = OpenThings.alterMessage( ####HERE use the new Message()
             create_message(SWITCH),
             header_productid = self.product_id,
             header_sensorid  = self.device_id,
@@ -492,7 +491,7 @@ class MIHO005(MiHomeDevice):
 
     def turn_off(self):
         #TODO: header construction should be in MiHomeDevice as it is shared
-        payload = OpenThings.alterMessage(
+        payload = OpenThings.alterMessage( ####HERE use the new Message()
             create_message(SWITCH),
             header_productid = self.product_id,
             header_sensorid  = self.device_id,

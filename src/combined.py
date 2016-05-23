@@ -15,13 +15,13 @@ from energenie import OpenThings, radio, TwoBit, Devices
 OpenThings.init(Devices.CRYPT_PID)
 
 PURPLE_ID = 0x68B # captured from a real device using Monitor.py
-m = OpenThings.alterMessage(
+m = OpenThings.alterMessage( ####HERE use the new Message() abstraction
     Devices.create_message(Devices.SWITCH),
     header_sensorid=PURPLE_ID,
     recs_0_value=1)
 purple_on = OpenThings.encode(m)
 
-m = OpenThings.alterMessage(
+m = OpenThings.alterMessage( ####HERE use the new Message() abstraction
     Devices.create_message(Devices.SWITCH),
     header_sensorid=PURPLE_ID,
     recs_0_value=0)
