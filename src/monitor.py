@@ -42,7 +42,8 @@ def monitor_loop():
 
             #TODO: Consider putting a 'timestamp' in a received decoded message
             print(now) #TODO: improve formatting of timestamp
-            print(decoded)
+            ##print(decoded)
+            decoded.dump()
             # Any device that reports will be added to the non-persistent directory
             Registry.update(decoded)
             ##trace(decoded)
