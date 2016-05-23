@@ -398,5 +398,59 @@ aquarium.when_turned_off(just_turned_off)
 
 
 --------------------------------------------------------------------------------
+PRESENT STATUS
+
+Registry and OpenThings and Devices pretty much implemented now.
+
+No Router yet in Registry
+No Discovery yet in Registry
+
+
+--------------------------------------------------------------------------------
+TODO NEXT
+
+* test on real hardware to make sure existing examples still work
+  with the new Message abstraction:
+
+  legacy.py monitor.py switch.py combined.py
+
+----
+
+* see if we can rewrite legacy.py using the new device classes
+  (this is tx only with a seeded registry)
+
+* see if we can rewrite combined.py using the new device classes
+  (this is tx only with a seeded registry)
+
+* see if we can rewrite switch.py using the new device classes
+  (might use a seeded registry and remove the join logic)
+
+----
+* write the Router() as a table that routes messages to device
+  class instances in the registry
+
+* Think about how the receive poll loop will be pumped,
+  as this creates the need for a receiver Router() that routes
+  incoming messages - probably a Router.loop() that is called
+  by the main app loop (or wrapped in a thread later)
+
+
+* test a synthetic receive route to make sure receive messages
+  can be routed and decoded by different device classes,
+  pump the Router.loop() manually
+
+----
+
+* rewrite the monitor.py to use the new Router
+
+* look at starting a thread that pumps the Router.loop()
+  for receive processing, but be careful of threading issues.
+
+----
+
+* look at if we need some when_x_updated() methods on device
+  classes, even just a generic callback that is called when
+  data has been updated. Consider if there are multiple
+  consumers of this data (multiple callback targets)
 
 END
