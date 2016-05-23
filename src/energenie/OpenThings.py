@@ -650,13 +650,16 @@ class Message():
 			"mfrid" :    None,
 			"productid": None,
 			"sensorid":  None
-		}
+		},
+		"recs":[]
 	}
 
-	def __init__(self, pydict=None):
+	def __init__(self, pydict=None, **kwargs):
 		if pydict == None:
 			pydict = copy.deepcopy(Message.BLANK)
 		self.pydict = pydict
+
+		self.set(**kwargs)
 
 	@untested
 	def __getitem__(self, key):
@@ -682,6 +685,79 @@ class Message():
 		import copy
 		return Message(copy.deepcopy(self.pydict))
 
+	def set(self, **kwargs):
+		"""Set fields in the message from key value pairs"""
+		for key in kwargs:
+			value = kwargs[key]
+			pathed_key = key.split('_')
+			m = self.pydict
+			# walk to the parent
+			for pkey in pathed_key[:-1]:
+				# If the key parseable as an integer, use as a list index instead
+				try:
+					pkey = int(pkey)
+				except:
+					pass
+				m = m[pkey]
+			# set the parent to have a key that points to the new value
+			pkey = pathed_key[-1]
+			# If the key parseable as an integer, use as a list index instead
+			try:
+				pkey = int(pkey)
+			except:
+				pass
+
+			# if index exists, change it, else create it
+			try:
+				m[pkey] = value
+			except IndexError:
+				# expand recs up to pkey
+				l = len(m) # length of list
+				gap = (l - pkey)+1
+				for i in range(gap):
+					m.append({})
+				m[pkey] = value
+
+	def append_rec(self, *args, **kwargs):
+		"""Add a rec"""
+		if type(args[0]) == dict:
+			# This is ({})
+			self.pydict["recs"].append(args[0])
+			return len(self.pydict["recs"])-1 # index of rec just added
+
+		elif type(args[0]) == int:
+			if len(kwargs) == 0:
+				# This is (PARAM_x, pydict)
+				paramid = args[0]
+				pydict  = args[1]
+				pydict["paramid"] = paramid
+				return self.append_rec(pydict)
+			else:
+				# This is (PARAM_x, key1=value1, key2=value2)
+				paramid = args[0]
+				# build a pydict
+				pydict = {"paramid":paramid}
+				for key in kwargs:
+					value = kwargs[key]
+					pydict[key] = value
+				self.append_rec(pydict)
+
+		else:
+			raise ValueError("Not sure how to parse arguments to append_rec")
+
+	def get(self, keypath):
+		"""READ(GET) from a single keypathed entry"""
+		path = keypath.split("_")
+		m = self.pydict
+		# walk to the final item
+		for pkey in path:
+			try:
+				pkey = int(pkey)
+			except:
+				pass
+			m = m[pkey]
+		return m
+
 	def __str__(self): # -> str
 		return "Message.STR"
 
@@ -699,18 +775,17 @@ class Message():
 
 		# HEADER
 		if "header" in msg:
-			header    = msg["header"]
-			mfrid     = header["mfrid"]
-			if mfrid == None: mfrid = ""
-			else:             mfrid = str(hex(mfrid))
+			header = msg["header"]
 
-			productid = header["productid"]
-			if productid == None: productid = ""
-			else:                 productid = str(hex(productid))
+			def gethex(key):
+				if key in header:
+					value = header[key]
+					if value != None: return str(hex(value))
+				return ""
 
-			sensorid  = header["sensorid"]
-			if sensorid == None: sensorid = ""
-			else:                sensorid = str(hex(sensorid))
+			mfrid     = gethex("mfrid")
+			productid = gethex("productid")
+			sensorid  = gethex("sensorid")
 
 			print("mfrid:%s prodid:%s sensorid:%s" % (mfrid, productid, sensorid))
 
@@ -724,19 +799,19 @@ class Message():
 					write = "read "
 
 				try:
-					paramname = rec["paramname"] # This only come out from decoded messages
+					paramname = rec["paramname"] #NOTE: This only comes out from decoded messages
 				except:
 					paramname = ""
 
 				try:
-					paramid = rec["paramid"] #This is only present on a input message (e.g SWITCH)
+					paramid = rec["paramid"] #NOTE: This is only present on a input message (e.g SWITCH)
 					paramname = paramid_to_paramname(paramid)
 					paramid = str(hex(paramid))
 				except:
 					paramid = ""
 
 				try:
-					paramunit = rec["paramunit"] # This only come out from decoded messages
+					paramunit = rec["paramunit"] #NOTE: This only comes out from decoded messages
 				except:
 					paramunit = ""
 
@@ -746,7 +821,6 @@ class Message():
 						value = None
 
 				print("%s %s %s %s = %s" % (write, paramid, paramname, paramunit, str(value)))
-
 
 
 @deprecated

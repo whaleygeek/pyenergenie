@@ -154,83 +154,125 @@ import Devices
 
 class TestMessage(unittest.TestCase):
 
-	def test_blank(self):
-		# create a blank message
+	def XXXtest_blank(self):
+		"""CREATE a completely blank message"""
 		msg = Message()
+		print(msg.pydict)
 		msg.dump()
 
-	def test_blank_create_dict(self): #1 {pydict}      (CREATE)
-		msg = Message({"header":{}, "recs":[{"parmid":PARAM_SWITCH_STATE, "value":1}]})
+	def XXXtest_blank_template(self):
+		"""CREATE a message from a simple pydict template"""
+		# This is useful to simplify all other tests
+		msg = Message(Message.BLANK)
+		print(msg.pydict)
 		msg.dump()
 
-	def XXXtest_add_rec_dict(self): #1 {pydict}        (ADD)
-		# add rec fields from a dict parameter
-		msg = Message()
-		msg.add_rec({"paramid":PARAM_SWITCH_STATE, "value":1})
+	def XXXtest_blank_create_dict(self): #1 {pydict}
+		"""CREATE a blank message with a dict parameter"""
+		msg = Message({"header":{}, "recs":[{"wr":False, "parmid":PARAM_SWITCH_STATE, "value":1}]})
+		print(msg.pydict)
+		msg.dump()
 
-	def XXXtest_create_template(self): #1 {pydict}     (CREATE)
+	def XXXtest_blank_create_header_dict(self): #2 header={pydict}
+		"""CREATE a blank message and add a header at creation time from a dict"""
+		msg = Message(header={"mfrid":123, "productid":456, "sensorid":789})
+		print(msg.pydict)
+		msg.dump()
+
+	def XXXtest_create_big_template(self): #1 {pydict}
+		"""CREATE from a large template message"""
 		# create a message from a template
 		msg = Message(Devices.MIHO005_REPORT)
+		print(msg.pydict)
 		msg.dump()
 
-
-	def XXXtest_blank_create_header_dict(self): #2 header={pydict}     (CREATE)
-		# create a blank message and add a header at creation from a dict
-		msg = Message(header={"mfrid":123, "productid":456, "sensorid":789})
+	def XXXtest_add_rec_dict(self): #1 {pydict}
+		"""UPDATE(APPEND) rec fields from a dict parameter"""
+		msg = Message(Message.BLANK)
+		i = msg.append_rec({"paramid":PARAM_SWITCH_STATE, "wr":True, "value":1})
+		print("added index:%d" % i)
+		print(msg.pydict)
 		msg.dump()
 
-	def XXXtest_add_header_dict(self): #2 header={pydict}    (ADD)
+	def XXXtest_add_header_dict(self): #2 header={pydict}
+		"""UPDATE(SET) a new header to an existing message"""
 		msg = Message()
-		msg.add(header={"mfrid":123, "productid":456, "sensorid":789})
+		msg.set(header={"mfrid":123, "productid":456, "sensorid":789})
+		print(msg.pydict)
 		msg.dump()
 
+	def XXXtest_add_recs_dict(self):
+		"""UPDATE(SET) recs to an existing message"""
+		msg = Message()
+		msg.set(recs=[{"paramid":PARAM_SWITCH_STATE, "wr":True, "value":1}])
+		print(msg.pydict)
+		msg.dump()
 
-	def XXXtest_alter_rec_template(self): #3 header_mfrid=123    (CHANGE)
-		# alter rec fields in a template
+	def XXXtest_add_path(self):
+		"""UPDATE(SET) a pathed key to an existing message"""
+		msg = Message()
+		msg.set(header_productid=1234)
+		print(msg.pydict)
+		msg.dump()
+
+	def XXXtest_alter_template(self): #3 header_mfrid=123
+		"""UPDATE(SET) an existing key with a path"""
 		msg = Message(Devices.MIHO005_REPORT)
-		msg.alter(header_productid=123)
+		msg.set(header_productid=123)
+		msg.dump()
+
+	def XXXtest_alter_template_multiple(self):
+		"""UPDATE(SET) multiple keys with paths"""
+		msg = Message(Devices.MIHO005_REPORT)
+		msg.set(header_productid=123, header_sensorid=99)
+		print(msg.pydict)
 		msg.dump()
 
 	def XXXtest_blank_create_header_paths(self): #3 header_mfrid=123    (CREATE)
-		# create a blank message and add some header fields at creation time
+		"""CREATE message with pathed keys in constructor"""
 		msg = Message(header_mfrid=123, header_productid=456, header_sensorid=789)
+		print(msg.pydict)
 		msg.dump()
 
-	def XXXtest_add_header_path(self): #3 header_mfrid=123    (ADD)
-		# add header fields to a message after creation via pathed keys
+	def XXXtest_blank_create_recs_paths(self):
+		"""CREATE message with pathed keys in constructor"""
+		# uses integer path component to mean array index
+		msg = Message(recs_0={"paramid":PARAM_SWITCH_STATE, "wr":True, "value":1},
+					  recs_1={"paramid":PARAM_AIR_PRESSURE, "wr":True, "value":2})
+		print(msg.pydict)
+		msg.dump()
+
+	def XXXtest_add_rec_path(self): #5 recs_0_paramid=PARAM_SWITCH_STATE
+		"""UPDATE(SET) records in a message"""
+		msg = Message(recs_0={}) # must create rec before you can change it
+		print(msg.pydict)
+		msg.set(recs_0_paramid=PARAM_SWITCH_STATE, recs_0_value=1, recs_0_wr=True)
+		print(msg.pydict)
+		msg.dump()
+
+	def XXXtest_add_rec_fn_pydict(self): #6 SWITCH_STATE={pydict}
+		"""UPDATE(ADD) a rec to message using PARAM constants as keys"""
+		#always creates a new rec at the end and then populates
 		msg = Message()
-		msg.add(header_mfrid=123, header_productid=456)
+		msg.append_rec(PARAM_SWITCH_STATE, {"wr": True, "value":1})
+		print(msg.pydict)
 		msg.dump()
 
-	###4 recs_0={pydict}
-
-	def XXXtest_add_rec_path(self): #5 recs_0_paramid=PARAM_SWITCH_STATE    (ADD)
-		# add rec fields to a message after creation via pathed indexed keys
+	def XXXtest_add_rec_fn_keyed(self): #7 SWITCH_STATE,value=1    (ADD)
+		"""UPDATE(ADD) a rec to message using PARAM const and keyed values"""
 		msg = Message()
-		msg.add(recs_0_paramid=PARAM_SWITCH_STATE, recs_0_value=1)
+		msg.append_rec(PARAM_SWITCH_STATE, wr=True, value=1)
+		print(msg.pydict)
 		msg.dump()
 
-
-	def XXXtest_add_rec_fn_pydict(self): #6 SWITCH_STATE={pydict}    (ADD)
-		# add rec fields to a message after creation via pathed PARAM name keys
-		msg = Message()
-		msg.add_rec(PARAM_SWITCH_STATE, {"value":1})
-		msg.dump()
-
-
-	def XXXtest_add_rec_fn(self): #7 SWITCH_STATE,value=1    (ADD)
-		# add rec fields to a message after creation via pathed PARAM name keys
-		msg = Message()
-		msg.add_rec(PARAM_SWITCH_STATE, value=1)
-		msg.dump()
-
-
-	def XXXtest_alter_rec_template_paramname(self): #8 SWITCH_STATE_value=1    (CHANGE)
-		# alter rec fields in a template
+	def XXXtest_get_pathed(self):
+		"""READ from the message with a path key"""
 		msg = Message(Devices.MIHO005_REPORT)
-		msg.alter(recs_SWITCH_STATE_value=1)
-		msg.dump()
+		print(msg.get("header_mfrid"))
 
+	#----- HERE -----
+
+	#### This is the attribute set/get abstraction
 
 	def XXXtest_pydict_read(self): #9 msg["header"]  msg["recs"][0]    (READ)
 		## access a specific keyed entry like a normal pydict, for read
@@ -256,6 +298,9 @@ class TestMessage(unittest.TestCase):
 		msg["recs"][0] = {"paramid": PARAM_SWITCH_STATE, "value": 1}
 		msg.dump()
 
+
+	#### This is the PARAMID indexer
+
 	def XXXtest_paramid_read_struct(self): #10 msg[PARAM_SWITCH_STATE]    (READ)
 		# access a paramid entry for read of the whole structure
 		msg = Message(Devices.MIHO005_REPORT)
@@ -273,6 +318,18 @@ class TestMessage(unittest.TestCase):
 		msg.dump()
 
 
+
+	####TODO: This is where we need an intelligent key parser
+
+	def XXXtest_alter_rec_template_paramname(self): #8 SWITCH_STATE_value=1    (CHANGE)
+		# alter rec fields in a template
+		msg = Message(Devices.MIHO005_REPORT)
+		msg.set(recs_SWITCH_STATE_value=1)
+		msg.dump()
+
+
+	####TODO: This is where dump() might need to dump to a strbuf and then output
+	#some of these might just print the inner pydict though
 	def XXXtest_repr(self):
 		## dump a message in printable format
 		msg = Message(Devices.MIHO005_REPORT)
