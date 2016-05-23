@@ -878,6 +878,7 @@ class Message():
 				print("%s %s %s %s = %s" % (write, paramid, paramname, paramunit, str(value)))
 
 
+#TODO: Remove this when the new Message() integration is tested
 #@deprecated
 #def showMessage(msg, timestamp=None):
 #	"""Show the message in a friendly format"""
@@ -929,6 +930,7 @@ class Message():
 #   recs_0_value               msg["recs"][0]["value"]
 #   recs_WATER_DETECTOR_value  msg["recs"].find_param("WATER_DETECTOR")["value"]
 
+#TODO: Remove this when the new Message() integration is tested
 #@deprecated
 #def alterMessage(message, **kwargs):
 #	"""Change parameters in-place in a message template"""
@@ -953,7 +955,7 @@ class Message():
 #
 #	return message
 
-
+#TODO: Remove this when the new Message() integration is tested
 #@deprecated
 #def getFromMessage(message, keypath):
 #	"""Get a field from a message, given an underscored keypath to the item"""
