@@ -722,34 +722,87 @@ class Message():
 		"""Set fields in the message from key value pairs"""
 		for key in kwargs:
 			value = kwargs[key]
-			pathed_key = key.split('_')
-			m = self.pydict
-			# walk to the parent
-			for pkey in pathed_key[:-1]:
+			# Is it a recs_PARAM_NAME_value format?
+			if key.startswith('recs_') and len(key)>6 and key[6].isupper():
+				self.set_PARAM_NAME(key[5:], value)
+			else:
+				# It's a full path
+				pathed_key = key.split('_')
+				m = self.pydict
+				# walk to the parent
+				for pkey in pathed_key[:-1]:
+					# If the key parseable as an integer, use as a list index instead
+					try:
+						pkey = int(pkey)
+					except:
+						pass
+					m = m[pkey]
+				# set the parent to have a key that points to the new value
+				pkey = pathed_key[-1]
 				# If the key parseable as an integer, use as a list index instead
 				try:
 					pkey = int(pkey)
 				except:
 					pass
-				m = m[pkey]
-			# set the parent to have a key that points to the new value
-			pkey = pathed_key[-1]
-			# If the key parseable as an integer, use as a list index instead
-			try:
-				pkey = int(pkey)
-			except:
-				pass
 
-			# if index exists, change it, else create it
-			try:
-				m[pkey] = value
-			except IndexError:
-				# expand recs up to pkey
-				l = len(m) # length of list
-				gap = (l - pkey)+1
-				for i in range(gap):
-					m.append({})
-				m[pkey] = value
+				# if index exists, change it, else create it
+				try:
+					m[pkey] = value
+				except IndexError:
+					# expand recs up to pkey
+					l = len(m) # length of list
+					gap = (l - pkey)+1
+					for i in range(gap):
+						m.append({})
+					m[pkey] = value
+
+
+
+	def set_PARAM_NAME(self, key, value):
+		"""Set a parameter given a PARAM_NAME key like recs_PARAM_NAME_field_nae"""
+		##print("set param name %s %s" % (key, value))
+		##key='recs_SWITCH_STATE'
+		#e.g. recs_SWITCH_STATE_value
+		#scan forward from char 5 until first lower case char, or end
+		pos = 0
+		last_uc=None
+		for c in key:
+			pos += 1
+			if c.isupper():
+				last_uc = pos
+			if c.islower(): break
+		name = key[:last_uc]
+
+		# turn PARAM_NAME into an integer id
+		param_id = paramname_to_paramid(name)
+		##print("paramid %d" % param_id)
+
+		# search for the id as a rec[]["paramid":v] value and get the rec
+		found = False
+		pos = 0
+		for rec in self.pydict["recs"]:
+			if "paramid" in rec:
+				if rec["paramid"] == param_id:
+					##print("found: %s" % rec)
+					found = True
+					break
+			pos += 1
+
+		if not found:
+			raise ValueError("No such paramid in message: %s" % name)
+
+		# is this rec_PARAM_NAME or rec_PARAM_NAME_field_name??
+		if len(key) == len(name):
+			##print("REC")
+			value["paramid"] = param_id
+			self.pydict["recs"][pos] = value
+
+		else:
+			##print("REC with field")
+			field_key = key[len(name)+1:]
+			self.pydict["recs"][pos][field_key] = value
+
+
 
 	def append_rec(self, *args, **kwargs):
 		"""Add a rec"""
@@ -793,9 +846,6 @@ class Message():
 
 	def __str__(self): # -> str
 		return str(self.pydict)
-
-	def __repr__(self): # -> str
-		return "Message.REPR"
 
 	def dump(self):
 		msg = self.pydict

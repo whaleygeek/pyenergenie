@@ -158,10 +158,18 @@ import Devices
 
 def test_0(m):
 	#print("test disabled:%s" % m)
+	def run(*args, **kwargs):
+		print("running:%s" % m)
+		r = m(*args, **kwargs)
+		print("finished:%s" % m)
+		return r
+
 	def nothing(*args, **kwargs):
 		print("test disabled:%s" % m)
 		return None
-	return nothing
+
+	##return nothing # DISABLE
+	return run # ENABLE ALL
 
 def test_1(m):
 	def run(*args, **kwargs):
@@ -449,21 +457,12 @@ class TestMessage(unittest.TestCase):
 		msg[PARAM_SWITCH_STATE]["value"] = 123
 		print(msg)
 
-	@test_1
+	@test_0
 	def test_paramid_write_field_add(self):
 		"""WRITE(add) a field to a paramid rec"""
 		msg = Message(Devices.MIHO005_REPORT)
 		msg[PARAM_SWITCH_STATE]["colour"] = "***RED***"
 		print(msg)
-
-	#----- HERE -----
-
-
-
-	#-----
-	# dump and display
-	##TODO: This is where dump() might need to dump to a strbuf and then output
-	#some of these might just print the inner pydict though
 
 	@test_0
 	def test_repr(self):
@@ -477,17 +476,21 @@ class TestMessage(unittest.TestCase):
 		msg = Message(Devices.MIHO005_REPORT)
 		print(str(msg))
 
-	#-----
-	# PARAMNAME aware paths
-	####TODO: This is where we need an intelligent key parser
+	@test_0
+	def test_alter_PARAM_NAME_rec(self): #8 SWITCH_STATE_value=1
+		"""UPDATE(alter) a complete rec from a PARAM_NAME index"""
+		msg = Message(Message.BLANK)
+		msg[PARAM_SWITCH_STATE] = {"wr":True, "value":42}
+		msg.set(recs_SWITCH_STATE={"wr":False, "value":99})
+		print(msg)
 
 	@test_0
-	def test_alter_rec_template_paramname(self): #8 SWITCH_STATE_value=1    (CHANGE)
-		# alter rec fields in a template
-		msg = Message(Devices.MIHO005_REPORT)
-		msg.set(recs_SWITCH_STATE_value=1)
-		msg.dump()
-
+	def test_alter_PARAM_NAME_field(self): #8 SWITCH_STATE_value=1
+		"""UPDATE(alter) a rec field from a PARAM_NAME index"""
+		msg = Message(Message.BLANK)
+		msg[PARAM_SWITCH_STATE] = {"wr":True, "value":42}
+		msg.set(recs_SWITCH_STATE_value=22)
+		print(msg)
 
 
 def test_message():
