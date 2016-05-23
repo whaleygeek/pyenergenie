@@ -270,15 +270,45 @@ class TestMessage(unittest.TestCase):
 		msg = Message(Devices.MIHO005_REPORT)
 		print(msg.get("header_mfrid"))
 
-	#----- HERE -----
-
-	#### This is the attribute set/get abstraction
-
-	def XXXtest_pydict_read(self): #9 msg["header"]  msg["recs"][0]    (READ)
+	def XXXtest_attr_header(self): #9 msg["header"]  msg["recs"][0]
+		"""READ(attr) the header"""
 		## access a specific keyed entry like a normal pydict, for read
 		msg = Message(Devices.MIHO005_REPORT)
 		print(msg["header"])
+
+	def XXXtest_attr_header_field(self): #9 msg["header"]  msg["recs"][0]
+		"""READ(attr) a field within the header"""
+		## access a specific keyed entry like a normal pydict, for read
+		msg = Message(Devices.MIHO005_REPORT)
 		print(msg["header"]["mfrid"])
+
+	def XXXtest_attr_recs(self): #9 msg["header"]  msg["recs"][0]
+		"""READ(attr) all recs"""
+		## access a specific keyed entry like a normal pydict, for read
+		msg = Message(Devices.MIHO005_REPORT)
+		print(msg["recs"])
+
+	def XXXtest_attr_rec(self): #9 msg["header"]  msg["recs"][0]
+		"""READ(attr) a single reg"""
+		## access a specific keyed entry like a normal pydict, for read
+		msg = Message(Devices.MIHO005_REPORT)
+		print(msg["recs"][0])
+
+	def XXXtest_attr_rec_field(self): #9 msg["header"]  msg["recs"][0]
+		"""READ(attr) a field in a rec"""
+		## access a specific keyed entry like a normal pydict, for read
+		msg = Message(Devices.MIHO005_REPORT)
+		print(msg["recs"][0]["value"])
+
+	#----- HERE -----
+
+	#write header
+	#write header field
+	#write recs
+	#write rec overwrite
+	#write rec append
+	#write rec field overwrite
+	#write rec field append
 
 	def XXXtest_pydict_write(self): #9 msg["header"]  msg["recs"][0]    (CHANGE)
 		## access a specific keyed entry like a normal pydict, for write
