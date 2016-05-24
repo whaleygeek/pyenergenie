@@ -1,4 +1,4 @@
-# combined.py  15/05/2016  D.J.Whale
+# control_both.py  15/05/2016  D.J.Whale
 #
 # A simple demo of combining both FSK (MiHome) and OOK (green button legacy)
 #

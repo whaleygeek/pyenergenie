@@ -93,6 +93,9 @@ class RegistryStore(): # This is data storage, so it it just the 'RegistRY'??
     def keys(self):
         return self.store.keys()
 
+    def size(self):
+        return len(self.store)
+
 
 class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
     """A persistent registry for device class instance configurations"""
@@ -146,6 +149,21 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
         for k in self.store.keys():
             print("DEVICE %s" % k)
             print("  %s" % self.store[k])
+
+    def size(self):
+        """How many entries are there in the registry?"""
+        return self.store.size()
+
+
+    def devices(self):
+        """Get a list of all device classes in the registry"""
+        #TODO: Temporary method until we read up about iterable, so we can say
+        # for devices in energenie.registry
+        dl = []
+        for k in self.store.keys():
+            d = self.store[k]
+            dl.append(d)
+        return dl
 
 
 registry = DeviceRegistry("registry.txt")

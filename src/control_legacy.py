@@ -1,12 +1,12 @@
 # legacy.py  17/03/2016  D.J.Whale
 #
-# Control up to 4 legacy green-button sockets
+# Control up to 4 legacy green-button sockets (or MiHome control-only sockets)
 
 import time
 import energenie
 
 APP_DELAY = 1
-energenie.radio.DEBUG = True
+##energenie.radio.DEBUG = True
 
 all_sockets = energenie.Devices.ENER002(0)
 socket1     = energenie.Devices.ENER002(1)

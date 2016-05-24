@@ -1,6 +1,6 @@
-# monitor.py  27/09/2015  D.J.Whale
+# monitor_mihome.py  27/09/2015  D.J.Whale
 #
-# Monitor Energine MiHome plugs
+# Monitor Energine MiHome sockets
 
 # Note, this is *only* a test program, to exercise the lower level code.
 # Don't expect this to be a good starting point for an application.

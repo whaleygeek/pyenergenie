@@ -410,9 +410,6 @@ No Discovery yet in Registry
 TODO NEXT
 
 DONE
-* see if we can rewrite legacy.py using the new device classes
-  (this is tx only with a seeded registry)
-
 * see if we can rewrite switch.py using the new device classes
   (might use a seeded registry and remove the join logic)
 

@@ -438,6 +438,10 @@ class ENER002(LegacyDevice):
         }
         self.send_message(payload)
 
+    def __repr__(self):
+        return "ENER002(%s,%s)" % (str(hex(self.device_id[0]), str(self.device_id[1])))
+
+
 
 class MIHO005(MiHomeDevice):
     """An Energenie MiHome Adaptor Plus"""
@@ -457,6 +461,10 @@ class MIHO005(MiHomeDevice):
         self.capabilities.send = True
         self.capabilities.receive = True
         self.capabilities.switch = True
+
+    def __repr__(self):
+        return "MIHO005(%s)" % str(hex(self.device_id))
+
 
     def incoming_message(self, payload):
         for rec in payload["recs"]:
@@ -504,6 +512,12 @@ class MIHO005(MiHomeDevice):
                     header_sensorid=self.device_id,
                     recs_SWITCH_STATE_value=False)
         self.send_message(payload)
+
+    def set_switch(self, state):
+        if state:
+            self.turn_on()
+        else:
+            self.turn_off()
 
     #TODO: difference between 'is on and 'is requested on'
     #TODO: difference between 'is off' and 'is requested off'

@@ -11,16 +11,20 @@ try:
     from . import radio
     from . import Devices
     from . import Registry
+    from . import OpenThings
 except ImportError:
     # Python 2
     import radio
     import Devices
     import Registry
+    import OpenThings
 
+registry = Registry.registry
 
 def init():
     """Start the Energenie system running"""
     radio.init()
+    OpenThings.init(Devices.CRYPT_PID)
 
 
 def finished():
