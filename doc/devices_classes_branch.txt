@@ -400,33 +400,36 @@ aquarium.when_turned_off(just_turned_off)
 --------------------------------------------------------------------------------
 PRESENT STATUS
 
-Registry and OpenThings and Devices pretty much implemented now.
+Router written and integrated in energenie.loop()
 
-No Router yet in Registry
 No Discovery yet in Registry
 
 
 --------------------------------------------------------------------------------
 TODO NEXT
 
-* write the Router() as a table that routes messages to device
-  class instances in the registry
+* in monitor_mihome, knit up to unhandled device callback
+  as a poor-mans discovery. This will tell us when a message is received
+  from a device.
 
-* Think about how the receive poll loop will be pumped,
-  as this creates the need for a receiver Router() that routes
-  incoming messages - probably a Router.loop() that is called
-  by the main app loop (or wrapped in a thread later)
+  Then add it to the registry.
+
+  Adding to the registry should add a route to the Router and create
+  the correct class for that device sensor_id,
+
+  so we need a way to turn a device_id into a class instance
+  in the Device factory.
+
+* write a loop() call in the monitor_mihome.py program
 
 * test a synthetic receive route to make sure receive messages
   can be routed and decoded by different device classes,
-  pump the Router.loop() manually
 
 ----
 
-* rewrite the monitor.py to use the new Router
-
-* look at starting a thread that pumps the Router.loop()
-  for receive processing, but be careful of threading issues.
+* Write discovery properly as a service in Registry
+When an unknown device is found, add it to the registry
+if the discovery process is enabled, and route it's addres.
 
 ----
 
@@ -434,5 +437,9 @@ TODO NEXT
   classes, even just a generic callback that is called when
   data has been updated. Consider if there are multiple
   consumers of this data (multiple callback targets)
+
+----
+
+Need the registry to be persistent with save and load
 
 END
