@@ -412,8 +412,6 @@ TODO NEXT
   that passes the message that has just been handled, but without loosing
   the reading update.
 
-* find out why sensorid is zero in the logged message
-
 * design a way that a MIHO005 class instance can be auto generated from a product_id field
 
 * provide an option in the router to turn on or off auto device registration

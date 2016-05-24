@@ -6,6 +6,9 @@ import energenie
 import Logger
 import time
 
+MY_SENSOR_ID = 0x68b # manually captured from a previous run
+DUMMY_SENSOR_ID = 0x111 # for testing unknown messages
+
 
 #----- TEST APPLICATION -------------------------------------------------------
 
@@ -15,9 +18,9 @@ if __name__ == "__main__":
     energenie.init()
 
     # Manually seed the device registry and router with a known device address
-    purple = energenie.Devices.MIHO005(0x68b)
+    purple = energenie.Devices.MIHO005(MY_SENSOR_ID)
     energenie.registry.add(purple, "purple")
-    energenie.fsk_router.add((energenie.Devices.MFRID_ENERGENIE, energenie.Devices.PRODUCTID_MIHO005,0x68b), purple)
+    energenie.fsk_router.add((energenie.Devices.MFRID_ENERGENIE, energenie.Devices.PRODUCTID_MIHO005, MY_SENSOR_ID), purple)
 
     def new_data(self, message):
         print("new data for %s\n%s\n\n" % (self, message))
@@ -42,12 +45,14 @@ if __name__ == "__main__":
             msg[energenie.OpenThings.PARAM_VOLTAGE]["value"] = 240
 
             # Poke the synthetic unknown reading into the router and let it route it to the device class instance
+            msg.set(header_sensorid=MY_SENSOR_ID)
             energenie.fsk_router.handle_message(
-                (energenie.Devices.MFRID_ENERGENIE, energenie.Devices.PRODUCTID_MIHO005, 0x111), msg)
+                (energenie.Devices.MFRID_ENERGENIE, energenie.Devices.PRODUCTID_MIHO005, DUMMY_SENSOR_ID), msg)
 
             # Poke the synthetic known reading into the router and let it route it to the device class instance
+            msg.set(header_sensorid=DUMMY_SENSOR_ID)
             energenie.fsk_router.handle_message(
-                (energenie.Devices.MFRID_ENERGENIE, energenie.Devices.PRODUCTID_MIHO005, 0x68b), msg)
+                (energenie.Devices.MFRID_ENERGENIE, energenie.Devices.PRODUCTID_MIHO005, MY_SENSOR_ID), msg)
 
             # Process any received messages from the real radio
             ##energenie.loop()
