@@ -239,19 +239,10 @@ class Router():
         # address might be a string, a number, a tuple, but probably always the same for any one router
         self.routes[address] = instance
 
-    def handle_message(self, payload):
-        #TODO: decode address from payload
-        #how do we do this?? Perhaps the protocol wrapper fsk or ook does it for us
-        #as the message bubbles up out of the receiver?
-        #e.g. OpenThigns.decode() would be applied to FSK incoming messages and build the header.
-        #the 4bit.decode() could do the same for OOK incoming messages?
-        #TODO: 4bit decoder needs a better name, it's really 2 bits per byte (1 bit per nibble)
+    def handle_message(self, address, payload):
 
-        address = "TODO"
-        #TODO: select handler
         if address in self.routes:
             ci = self.routes[address]
-            #TODO check if it has a handle_message method, debug print if not?
             ci.handle_message(payload)
 
         else: # unknown address

@@ -409,12 +409,6 @@ No Discovery yet in Registry
 --------------------------------------------------------------------------------
 TODO NEXT
 
-DONE
-* see if we can rewrite control_both.py using the new device classes
-  (this is tx only with a seeded registry)
-
-
-----
 * write the Router() as a table that routes messages to device
   class instances in the registry
 
