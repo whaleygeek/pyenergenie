@@ -243,7 +243,7 @@ class Router():
 
         if address in self.routes:
             ci = self.routes[address]
-            ci.handle_message(payload)
+            ci.incoming_message(payload)
 
         else: # unknown address
             self.handle_unknown(address, payload)

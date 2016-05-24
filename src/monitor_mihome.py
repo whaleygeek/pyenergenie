@@ -2,77 +2,62 @@
 #
 # Monitor Energine MiHome sockets
 
-# Note, this is *only* a test program, to exercise the lower level code.
-# Don't expect this to be a good starting point for an application.
-# Consider waiting for me to finish developing the device object interface first.
-#
-# However, it will log all messages from MiHome monitor, adaptor plus and house monitor
-# to a CSV log file, so could be the basis for a non-controlling energy logging app.
-
-from energenie import Registry, Devices, OpenThings, radio
-import time
+import energenie
 import Logger
-
-def warning(msg):
-    print("warning:%s" % str(msg))
-
-
-def trace(msg):
-    print("monitor:%s" % str(msg))
+import time
 
 
 #----- TEST APPLICATION -------------------------------------------------------
 
-def monitor_loop():
-    """Capture any incoming messages and log to CSV file"""
-
-    radio.receiver()
-
-    while True:
-        # See if there is a payload, and if there is, process it
-        if radio.is_receive_waiting():
-            trace("receiving payload")
-            payload = radio.receive()
-            now = time.time()
-            try:
-                decoded = OpenThings.decode(payload, receive_timestamp=now)
-            except OpenThings.OpenThingsException as e:
-                warning("Can't decode payload:" + str(e))
-                continue
-
-            #TODO: Consider putting a 'timestamp' in a received decoded message
-            print(now) #TODO: improve formatting of timestamp
-            ##print(decoded)
-            decoded.dump()
-            # Any device that reports will be added to the non-persistent directory
-            Registry.update(decoded)
-            ##trace(decoded)
-            Logger.logMessage(decoded)
-
-            # Process any JOIN messages by sending back a JOIN-ACK to turn the LED off
-            if len(decoded["recs"]) == 0:
-                # handle messages with zero recs in them silently
-                print("Empty record:%s" % decoded)
-            else:
-                # assume only 1 rec in a join, for now
-                #TODO: 'if OpenThings.PARAM_JOIN in decoded:'  - special magic handling for param_id
-                if decoded["recs"][0]["paramid"] == OpenThings.PARAM_JOIN:
-                    mfrid     = decoded.get("header_mfrid")
-                    productid = decoded.get("header_productid")
-                    sensorid  = decoded.get("header_sensorid")
-                    Devices.send_join_ack(radio, mfrid, productid, sensorid)
-
-
 if __name__ == "__main__":
     
-    trace("starting monitor tester")
-    radio.init()
-    OpenThings.init(Devices.CRYPT_PID)
+    print("starting monitor tester")
+    energenie.init()
+
+    # Manually seed the device registry and router with a known device address
+    purple = energenie.Devices.MIHO005(0x68b)
+    energenie.registry.add(purple, "purple")
+    energenie.fsk_router.add((energenie.Devices.MFRID_ENERGENIE, energenie.Devices.PRODUCTID_MIHO005,0x68b), purple)
+
+    def new_data(self, message):
+        print("new data for %s\n%s\n\n" % (self, message))
+        Logger.logMessage(message)
+    #TODO: Provide a notify callback for when our device gets new data
+    ##purple.when_incoming(new_data)
+
+    # Override the default unknown handler, so we can show data from unregistered devices
+    def unk(address, message):
+        print("Unknown device:%s\n%s\n\n" % (address, message))
+        #TODO: add device to registry and to fsk_router table
+        #note: requires auto class create from product_id to be working first
+        Logger.logMessage(message)
+    energenie.fsk_router.handle_unknown = unk
+    #TODO: Provide a better callback registration scheme
+    ##energenie.fsk_router.when_unknown(unk)
 
     try:
-        monitor_loop()
+        while True:
+            # Send a synthetic message to the device
+            msg = energenie.OpenThings.Message(energenie.Devices.MIHO005_REPORT)
+            msg[energenie.OpenThings.PARAM_VOLTAGE]["value"] = 240
+
+            # Poke the synthetic unknown reading into the router and let it route it to the device class instance
+            energenie.fsk_router.handle_message(
+                (energenie.Devices.MFRID_ENERGENIE, energenie.Devices.PRODUCTID_MIHO005, 0x111), msg)
+
+            # Poke the synthetic known reading into the router and let it route it to the device class instance
+            energenie.fsk_router.handle_message(
+                (energenie.Devices.MFRID_ENERGENIE, energenie.Devices.PRODUCTID_MIHO005, 0x68b), msg)
+
+            # Process any received messages from the real radio
+            ##energenie.loop()
+
+            print("purple voltage:%s" % purple.get_voltage())
+            time.sleep(1)
+
+
 
     finally:
-        radio.finished()
+        energenie.finished()
 
 # END

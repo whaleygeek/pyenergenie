@@ -22,6 +22,7 @@ except ImportError:
     import OpenThings
 
 registry = Registry.registry
+fsk_router = Registry.fsk_router
 
 def init():
     """Start the Energenie system running"""
