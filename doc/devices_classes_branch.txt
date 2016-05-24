@@ -410,10 +410,7 @@ No Discovery yet in Registry
 TODO NEXT
 
 DONE
-* see if we can rewrite switch.py using the new device classes
-  (might use a seeded registry and remove the join logic)
-
-* see if we can rewrite combined.py using the new device classes
+* see if we can rewrite control_both.py using the new device classes
   (this is tx only with a seeded registry)
 
 

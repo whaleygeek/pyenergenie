@@ -1,67 +1,44 @@
 # control_both.py  15/05/2016  D.J.Whale
 #
 # A simple demo of combining both FSK (MiHome) and OOK (green button legacy)
-#
-# NOTE: This is only a test harness.
-# If you really want a nice way to control these devices, wait for the 'device classes'
-# issues to be implemented and tested on top of the raw radio interface, as these
-# will be much nicer to use.
 
 import time
-from energenie import OpenThings, radio, TwoBit, Devices
+import energenie
 
-# build FSK messages for MiHome purple
+GREEN_ID  = 1 # using default house code of 0x6C6C6
+PURPLE_ID = 0x68b
 
-OpenThings.init(Devices.CRYPT_PID)
-
-PURPLE_ID = 0x68B # captured from a real device using Monitor.py
-m = OpenThings.Message(Devices.SWITCH)
-m.set(header_sensorid=PURPLE_ID, recs_SWITCH_STATE_value=1)
-purple_on = OpenThings.encode(m)
-
-m = OpenThings.Message(Devices.SWITCH)
-m.set(header_sensorid=PURPLE_ID, recs_SWITCH_STATE_value=0)
-purple_off = OpenThings.encode(m)
-
-# build OOK messages for legacy green button
-
-GREEN_ON  = TwoBit.encode_switch_message(True, device_address=1)
-GREEN_OFF = TwoBit.encode_switch_message(False, device_address=1)
-
+green  = energenie.Devices.ENER002(GREEN_ID)
+purple = energenie.Devices.MIHO005(PURPLE_ID)
 
 def switch_loop():
     print("Turning green ON")
-    radio.modulation(ook=True)
-    radio.transmit(GREEN_ON)
+    green.turn_on()
     time.sleep(0.5)
 
     print("Turning purple ON")
-    radio.modulation(fsk=True)
-    radio.transmit(purple_on, inner_times=2)
+    purple.turn_on()
     time.sleep(2)
 
     print("Turning green OFF")
-    radio.modulation(ook=True)
-    radio.transmit(GREEN_OFF)
+    green.turn_off()
     time.sleep(0.5)
 
     print("Turning purple OFF")
-    radio.modulation(fsk=True)
-    radio.transmit(purple_off, inner_times=2)
+    purple.turn_off()
     time.sleep(2)
 
 
 if __name__ == "__main__":
 
-    print("starting combined switch tester")
-    print("radio init")
-    radio.init()
+    print("starting combined socket tester")
+    energenie.init()
 
     try:
         while True:
             switch_loop()
 
     finally:
-        radio.finished()
+        energenie.finished()
 
 # END
