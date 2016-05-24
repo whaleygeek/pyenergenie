@@ -20,8 +20,8 @@ from lifecycle import *
 #TODO: Would like to add RSSI measurements and reporting to the metadata that
 #comes back with received packets.
 
-LIBNAME = "drv/radio_rpi.so"
-##LIBNAME = "drv/radio_mac.so" # testing
+##LIBNAME = "drv/radio_rpi.so"
+LIBNAME = "drv/radio_mac.so" # testing
 
 import time
 import ctypes

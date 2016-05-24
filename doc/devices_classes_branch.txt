@@ -409,21 +409,16 @@ No Discovery yet in Registry
 --------------------------------------------------------------------------------
 TODO NEXT
 
-* test on real hardware to make sure existing examples still work
-  with the new Message abstraction:
-
-  legacy.py monitor.py switch.py combined.py
-
-----
-
+DONE
 * see if we can rewrite legacy.py using the new device classes
-  (this is tx only with a seeded registry)
-
-* see if we can rewrite combined.py using the new device classes
   (this is tx only with a seeded registry)
 
 * see if we can rewrite switch.py using the new device classes
   (might use a seeded registry and remove the join logic)
+
+* see if we can rewrite combined.py using the new device classes
+  (this is tx only with a seeded registry)
+
 
 ----
 * write the Router() as a table that routes messages to device
@@ -433,7 +428,6 @@ TODO NEXT
   as this creates the need for a receiver Router() that routes
   incoming messages - probably a Router.loop() that is called
   by the main app loop (or wrapped in a thread later)
-
 
 * test a synthetic receive route to make sure receive messages
   can be routed and decoded by different device classes,
