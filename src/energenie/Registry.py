@@ -256,7 +256,8 @@ class Router():
 
 
 fsk_router = Router("fsk")
-ook_router = Router("ook")
+#OOK receive not yet written
+##ook_router = Router("ook")
 
 
 

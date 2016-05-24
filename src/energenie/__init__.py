@@ -6,6 +6,8 @@
 #
 # Future versions of this *might* also start receive monitor or scheduler threads.
 
+import time
+
 try:
     # Python 3
     from . import radio
@@ -25,6 +27,35 @@ def init():
     """Start the Energenie system running"""
     radio.init()
     OpenThings.init(Devices.CRYPT_PID)
+
+
+def loop(receive_time=1):
+    """Handle receive processing"""
+    radio.receiver(fsk=True)
+    timeout = time.time() + receive_time
+    handled = False
+
+    while True:
+        if radio.is_receive_waiting():
+            payload = radio.receive_cbp()
+            now = time.time()
+            try:
+                msg        = OpenThings.decode(payload, receive_timestamp=now)
+                hdr        = msg["header"]
+                mfr_id     = hdr["mfrid"]
+                product_id = hdr["productid"]
+                device_id  = hdr["sensorid"]
+                address    = (mfr_id, product_id, device_id)
+
+                Registry.fsk_router.handle_message(address, payload)
+                handled = True
+            except OpenThings.OpenThingsException:
+                print("Can't decode payload:%s" % payload)
+
+        now = time.time()
+        if now > timeout: break
+
+    return handled
 
 
 def finished():
