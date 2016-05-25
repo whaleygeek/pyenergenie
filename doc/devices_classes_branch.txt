@@ -408,13 +408,16 @@ No Discovery yet in Registry
 --------------------------------------------------------------------------------
 TODO NEXT
 
-
 DONE
-* consider a callback in the router for new_data, for all messages
-  regardless of if known or not (good for generic data logging)
-
-
 * design a way that a MIHO005 class instance can be auto generated from a product_id field
+
+DeviceFactory.get_device_from_name(name, device_id)
+DeviceFactory.get_device_from_id(productid) -> Device class instance, configured
+
+Will have to beef this up later with mfrid and other details such as the radio interface
+identifier, protocol identier, etc. But this is good enough (for now)
+
+
 
 ----
 

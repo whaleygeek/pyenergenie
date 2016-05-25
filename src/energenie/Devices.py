@@ -442,6 +442,10 @@ class ENER002(LegacyDevice):
         return "ENER002(%s,%s)" % (str(hex(self.device_id[0]), str(self.device_id[1])))
 
 
+class MIHO004(MiHomeDevice):
+    """Monitor only Adaptor"""
+    pass #TODO
+
 
 class MIHO005(MiHomeDevice):
     """An Energenie MiHome Adaptor Plus"""
@@ -653,16 +657,29 @@ class MIHO013(MiHomeDevice):
 # and a DeviceFactory could auto configure it's set of devices
 # with a specific air_interface for us.
 # i.e. this might be the EnergenieDeviceFactory, there might be others
+# for other product ranges like wirefree doorbells
 
 class DeviceFactory():
     """A place to come to, to get instances of device classes"""
-    devices = {
+    # If you know the name of the device, use this table
+    device_from_name = {
         # official name            friendly name
         "ENER002":     ENER002,    "GreenButton": ENER002,
         "MIHO005":     MIHO005,    "AdaptorPlus": MIHO005,
         "MIHO006":     MIHO006,    "HomeMonitor": MIHO006,
         "MIHO013":     MIHO013,    "eTRV":        MIHO013,
     }
+
+    #TODO: These are MiHome devices only, but might add in mfrid prefix too
+    # If you know the mfrid, productid of the device, use this table
+    device_from_id = {
+        PRODUCTID_MIHO004: MIHO004,
+        PRODUCTID_MIHO005: MIHO005,
+        PRODUCTID_MIHO006: MIHO006,
+        PRODUCTID_MIHO013: MIHO013
+        #ENER product range does not have deviceid, as it does not transmit
+    }
+
     default_air_interface = None
 
     @staticmethod
@@ -671,19 +688,33 @@ class DeviceFactory():
 
     @staticmethod
     def keys():
-        return DeviceFactory.devices.keys()
+        return DeviceFactory.device_from_name.keys()
 
     @staticmethod
-    def get_device(name, air_interface=None, device_id=None):
+    def get_device_from_name(name, device_id=None, air_interface=None):
         """Get a device by name, construct a new instance"""
-        if not name in DeviceFactory.devices:
+        # e.g. This is useful when creating device class instances from a human readable config
+        if not name in DeviceFactory.device_from_name:
             raise ValueError("Unsupported device:%s" % name)
 
-        c = DeviceFactory.devices[name]
+        c = DeviceFactory.device_from_name[name]
         if air_interface == None:
             air_interface = DeviceFactory.default_air_interface
-        #TODO: different devices have different init signatures at moment
-        return c(air_interface, device_id)
+        return c(device_id, air_interface)
+
+    @staticmethod
+    def get_device_from_id(id, device_id=None, air_interface=None):
+        """Get a device by it's id, construct a new instance"""
+        # e.g. This is useful when recreating device class instances from a persisted registry
+        if not id in DeviceFactory.device_from_id:
+            raise ValueError("Unsupported device id:%s" % id)
+
+        c = DeviceFactory.device_from_id[id]
+        if air_interface == None:
+            air_interface = DeviceFactory.default_air_interface
+        i = c(device_id, air_interface)
+        print(i)
+        return i
 
 # END
 

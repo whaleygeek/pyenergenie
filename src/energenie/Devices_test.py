@@ -17,18 +17,21 @@ radio.DEBUG = True
 
 def test_without_registry():
 
-    tv  = DeviceFactory.get_device("GreenButton", device_id=(0xC8C8C, 1))
-    fan = DeviceFactory.get_device("AdaptorPlus", device_id=0x68b)
+    tv   = DeviceFactory.get_device_from_name("GreenButton", device_id=(0xC8C8C, 1))
+    fan  = DeviceFactory.get_device_from_name("AdaptorPlus", device_id=0x68b)
+    xbox = DeviceFactory.get_device_from_id(PRODUCTID_MIHO005, device_id=10)
 
     while True:
         print("ON")
         tv.turn_on()
         fan.turn_off()
+        xbox.turn_off()
         time.sleep(2)
 
         print("OFF")
         tv.turn_off()
         fan.turn_on()
+        xbox.turn_on()
         time.sleep(1)
 
 
