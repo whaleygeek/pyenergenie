@@ -379,16 +379,16 @@ def discovery_auto():
     d = AutoDiscovery(registry, fsk_router)
     print("Using auto discovery")
 
-def discovery_ask():
-    d = ConfirmedDiscovery(registry, fsk_router)
+def discovery_ask(ask_fn):
+    d = ConfirmedDiscovery(registry, fsk_router, ask_fn)
     print("using confirmed discovery")
 
 def discovery_autojoin():
     d = JoinAutoDiscovery(registry, fsk_router)
     print("using auto join discovery")
 
-def discovery_askjoin():
-    d = JoinConfirmedDiscovery(registry, fsk_router)
+def discovery_askjoin(ask_fn):
+    d = JoinConfirmedDiscovery(registry, fsk_router, ask_fn)
     print("using confirmed join discovery")
 
 

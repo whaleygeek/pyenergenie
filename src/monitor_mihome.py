@@ -8,7 +8,7 @@ import time
 
 MY_SENSOR_ID    = 0x68b # manually captured from a previous run
 DUMMY_SENSOR_ID = 0x111 # for testing unknown messages
-
+APP_DELAY       = 5
 
 #----- TEST APPLICATION -------------------------------------------------------
 
@@ -30,12 +30,6 @@ if __name__ == "__main__":
     ##    Logger.logMessage(message)
     ##energenie.fsk_router.when_incoming(incoming)
 
-    # Provide an unknown message handler so we can show data from unregistered devices
-    # This is a useful hook point for later adding device discovery
-    def unknown(address, message):
-        print("\nUnknown device:%s" % str(address))
-        message.dump()
-    energenie.fsk_router.when_unknown(unknown)
 
     # Register for update callbacks on a single device when a new message comes in.
     # This is a useful way to add data logging on a per-device basis
@@ -53,11 +47,13 @@ if __name__ == "__main__":
         while True:
 
             #TESTING: Poke synthetic unknown into the router and let it route to unknown handler
+            print("synthetic unknown device")
             msg.set(header_sensorid=DUMMY_SENSOR_ID)
             energenie.fsk_router.incoming_message(
                 (energenie.Devices.MFRID_ENERGENIE, energenie.Devices.PRODUCTID_MIHO005, DUMMY_SENSOR_ID), msg)
 
             #TESTING: Poke synthetic known into the router and let it route to our class instance
+            print("synthetic known device")
             msg.set(header_sensorid=MY_SENSOR_ID)
             energenie.fsk_router.incoming_message(
                 (energenie.Devices.MFRID_ENERGENIE, energenie.Devices.PRODUCTID_MIHO005, MY_SENSOR_ID), msg)
@@ -67,7 +63,7 @@ if __name__ == "__main__":
             ##energenie.loop()
 
             print("voltage:%s" % purple.get_voltage())
-            time.sleep(1)
+            time.sleep(APP_DELAY)
 
     finally:
         energenie.finished()
