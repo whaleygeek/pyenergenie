@@ -403,18 +403,14 @@ PRESENT STATUS
 Router written and integrated in energenie.loop()
 
 Design for discovery done
+Test cases for 5 discovery variants done
 
 
 --------------------------------------------------------------------------------
 TODO NEXT
 
-DONE auto discovery, accept and reject
+Code up join auto and join ask, and get tests passing.
 
-
-* write test cases in Registry_test.py to test the 4 different discovery types
-  (might need some mocking to soft-test the join/ack mechanism, probably just
-  route in a synthetic join_req, and capture the tx log to see the join_ack
-  going out)
 
 
 ---- PERSISTENT REGISTRY
@@ -431,6 +427,8 @@ DONE auto discovery, accept and reject
   later iterate through all devices and decide what to do with them,
   such as displaying them all in a GUI selection list.
 
+  (Note, Registry.devices() already gives us the list and Registry.keys()
+  already gives us the name keys)
 
 ---- NOTIFY, UPDATE, or DATA SEQUENCE?
 
