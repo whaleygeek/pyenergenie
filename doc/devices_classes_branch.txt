@@ -408,18 +408,8 @@ No Discovery yet in Registry
 --------------------------------------------------------------------------------
 TODO NEXT
 
-DONE
-* design a way that a MIHO005 class instance can be auto generated from a product_id field
-
-DeviceFactory.get_device_from_name(name, device_id)
-DeviceFactory.get_device_from_id(productid) -> Device class instance, configured
-
-Will have to beef this up later with mfrid and other details such as the radio interface
-identifier, protocol identier, etc. But this is good enough (for now)
-
-
-
-----
+* think a bit about discovery, we might actually be able to get this
+  working as a separate service first time round
 
 * implement auto device registration in the router (poor mans discovery)
   when a message comes from an unknown sensorid,
@@ -434,11 +424,11 @@ identifier, protocol identier, etc. But this is good enough (for now)
   When an unknown device is found, add it to the registry
   if the discovery process is enabled, and route it's address.
 
+
 ----
 
-Test with real radio
+* Need the registry to be persistent with save and load
 
-* add back in the loop() call in the monitor_mihome.py program
 
 ----
 
@@ -459,6 +449,15 @@ when_updated callback)
 
 ----
 
-* Need the registry to be persistent with save and load
+Test with real radio
+
+* add back in the loop() call in the monitor_mihome.py program
+
+
+----
+At this point, probably ready to write a set of test cases,
+run the tests, and merge back to master to release this new
+functionality to the wild.
+
 
 END
