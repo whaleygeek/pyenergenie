@@ -268,6 +268,10 @@ class Router():
             print("Unknown address: %s" % str(address))
 
 
+#---- DISCOVERY AGENT ---------------------------------------------------------
+#
+# Handles the discovery process when new devices appear and send reports.
+
 class Discovery():
     """A Discovery agent that just reports any unknown devices"""
     def __init__(self, registry, router):
@@ -286,7 +290,8 @@ class Discovery():
         # override this method if you want special processing
 
     def accept_device(self, address, message):
-        pass
+        print("TODO: accept_device:%s" % str(address))
+        pass #TODO
         #    create device class instance from id information
         #    add to registry
         #    add to router
@@ -323,12 +328,13 @@ class JoinAutoDiscovery(Discovery):
         Discovery.__init__(self, registry, router)
 
     def unknown_device(self, address, message):
+        print("TODO: unknown device auto join %s" % str(address))
         # if it is not a join req
         #   route to unhandled message handler
         # if it is a join req
         #   accept the device
         #   send join ack back to device (using new device class instance?)
-        pass
+        pass #TODO
 
 
 class JoinConfirmedDiscovery(Discovery):
@@ -338,6 +344,7 @@ class JoinConfirmedDiscovery(Discovery):
         self.ask_fn = ask
 
     def unknown_device(self, address, message):
+        print("TODO: unknown device confirmed join %s" % str(address))
         # if it is not a join req
         #   route to unhandled message handler
         # if it is a join req
@@ -347,7 +354,9 @@ class JoinConfirmedDiscovery(Discovery):
         #     if yes
         #       accept device
         #       send join ack back to device (using new device class instance)
-        pass
+        pass #TODO
+
+
 
 
 # Might rename these, especially when we add in other protocols
@@ -360,5 +369,45 @@ fsk_router = Router("fsk")
 #OOK receive not yet written
 #It will be used to be able to learn codes from Energenie legacy hand remotes
 ##ook_router = Router("ook")
+
+
+#TODO: Improve this interface
+# (temporary) helpful methods to switch between different discovery methods
+# Note that the __init__ automaticall registers itself with router
+
+def discovery_auto():
+    d = AutoDiscovery(registry, fsk_router)
+    print("Using auto discovery")
+
+def discovery_ask():
+    d = ConfirmedDiscovery(registry, fsk_router)
+    print("using confirmed discovery")
+
+def discovery_autojoin():
+    d = JoinAutoDiscovery(registry, fsk_router)
+    print("using auto join discovery")
+
+def discovery_askjoin():
+    d = JoinConfirmedDiscovery(registry, fsk_router)
+    print("using confirmed join discovery")
+
+
+def ask(address, message):
+    MSG = "Do you want to register to device: %s" % str(address)
+    try:
+        y = raw_input(MSG)
+    except AttributeError:
+        y = input(MSG)
+    if y == "": return True
+    y = y.upper()
+    if y in ['Y', 'YES']: return True
+    return False
+
+
+# Default discovery mode, unless changed by app
+discovery_auto()
+##discovery_ask(ask)
+##discovery_autojoin()
+##discovery_askjoin(ask)
 
 # END
