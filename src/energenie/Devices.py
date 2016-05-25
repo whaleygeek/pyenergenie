@@ -259,6 +259,7 @@ class Device():
         self.config = Config()
         class Capabilities(): pass
         self.capabilities = Capabilities()
+        self.updated_cb = None
 
     def has_switch(self):
         return hasattr(self.capabilities, "switch")
@@ -281,13 +282,24 @@ class Device():
         pass
 
     def incoming_message(self, payload):
-        # incoming_message (OOK or OpenThings as appropriate, stripped of header? decrypted, decoded to pydict)
-        # default action of base class is to just print the payload
-        print("incoming(unhandled):%s" % payload)
+        """Entry point for a message to be processed"""
+        #This is the base-class entry point, don't  override this, but override handle_message
+        self.handle_message(payload)
+        if self.updated_cb != None:
+            self.updated_cb(self, payload)
+
+    def handle_message(self, payload):
+        """Default handling for a new message"""
+        print("incoming(unhandled): %s" % payload)
 
     def send_message(self, payload):
         print("send_message %s" % payload)
         # A raw device has no knowledge of how to send, the sub class provides that.
+
+    def when_updated(self, callback):
+        """Provide a callback handler to be called when a new message arrives"""
+        self.updated_cb = callback
+        # signature: update(self, message)
 
     def __repr__(self):
         return "Device()"
@@ -373,20 +385,8 @@ class MiHomeDevice(EnergenieDevice):
         """Send a join-ack to the real device"""
         self.send_message("join ack") # TODO
 
-    def incoming_message(self, payload):
-        #TODO: interface with air_interface
-        """Handle incoming messages for this device"""
-        #NOTE: we must have already decoded the message with OpenThings to be able to get the addresses out
-        # so payload at this point must be a pydict?
-
-        #we know at this point that it's a FSK message
-        #OpenThingsAirInterface has already decrypted and decoded
-        #so we get a pydict payload here with header and recs in it
-        #the header has the address which is used for routing
-
-        #TODO join request might be handled generically here
-        #TODO: subclass can override and call back to this if it wants to
-        raise RuntimeError("Method unimplemented") #TODO
+    #def handle_message(self, payload):
+    #override for any specific handling
 
     def send_message(self, payload):
         #TODO: interface with air_interface
@@ -465,8 +465,7 @@ class MIHO005(MiHomeDevice):
     def __repr__(self):
         return "MIHO005(%s)" % str(hex(self.device_id))
 
-
-    def incoming_message(self, payload):
+    def handle_message(self, payload):
         for rec in payload["recs"]:
             paramid = rec["paramid"]
             #TODO: consider making this table driven and allowing our base class to fill our readings in for us

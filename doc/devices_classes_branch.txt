@@ -408,9 +408,17 @@ No Discovery yet in Registry
 --------------------------------------------------------------------------------
 TODO NEXT
 
+DONE
 * provide a way that a device class instance can have a registered callback
   that passes the message that has just been handled, but without loosing
-  the reading update.
+  the reading update. The main purpose of this is for logging and notification
+  that new data has arrived (for event driven handling instead of polling)
+
+
+
+
+* implement neater unknown message handler in the router
+  do it as a callback rather than overwriting the default method
 
 * design a way that a MIHO005 class instance can be auto generated from a product_id field
 
