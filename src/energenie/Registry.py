@@ -233,6 +233,7 @@ class Router():
         self.name = name # probably FSK or OOK
         self.routes = {} # key(tuple of ids) -> value(device class instance)
         self.unknown_cb = None
+        self.incoming_cb = None
 
     def add(self, address, instance):
         """Add this device instance to the routing table"""
@@ -240,7 +241,9 @@ class Router():
         # address might be a string, a number, a tuple, but probably always the same for any one router
         self.routes[address] = instance
 
-    def handle_message(self, address, payload):
+    def incoming_message(self, address, payload):
+        if self.incoming_cb != None:
+            self.incoming_cb(address, payload)
 
         if address in self.routes:
             ci = self.routes[address]
@@ -248,6 +251,9 @@ class Router():
 
         else: # unknown address
             self.handle_unknown(address, payload)
+
+    def when_incoming(self, callback):
+        self.incoming_cb = callback
 
     def when_unknown(self, callback):
         """Register a callback for unknown messages"""
@@ -260,6 +266,8 @@ class Router():
         else:
             # Default action is just a debug message, and drop the payload
             print("Unknown address: %s" % str(address))
+
+
 
 
 # Might rename these, especially when we add in other protocols

@@ -408,14 +408,11 @@ No Discovery yet in Registry
 --------------------------------------------------------------------------------
 TODO NEXT
 
+
 DONE
-* implement neater unknown message handler in the router
-  do it as a callback rather than overwriting the default method
-
-
-
 * consider a callback in the router for new_data, for all messages
   regardless of if known or not (good for generic data logging)
+
 
 * design a way that a MIHO005 class instance can be auto generated from a product_id field
 
