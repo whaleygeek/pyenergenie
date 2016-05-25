@@ -232,6 +232,7 @@ class Router():
     def __init__(self, name):
         self.name = name # probably FSK or OOK
         self.routes = {} # key(tuple of ids) -> value(device class instance)
+        self.unknown_cb = None
 
     def add(self, address, instance):
         """Add this device instance to the routing table"""
@@ -248,17 +249,28 @@ class Router():
         else: # unknown address
             self.handle_unknown(address, payload)
 
+    def when_unknown(self, callback):
+        """Register a callback for unknown messages"""
+        #NOTE: this is the main hook point for auto discovery and registration
+        self.unknown_cb = callback
+
     def handle_unknown(self, address, payload):
-        #TODO: route to something that handles unknown addresses, e.g. discovery agent
-        #discovery agent could be configured by overriding handle_unknown at construction time, below
-        print("unknown address: %s" % address)
-        print("ignored payload: %s" % payload)
+        if self.unknown_cb != None:
+            self.unknown_cb(address, payload)
+        else:
+            # Default action is just a debug message, and drop the payload
+            print("Unknown address: %s" % str(address))
 
 
+# Might rename these, especially when we add in other protocols
+# such as devices that are 868 wirefree doorbells etc.
+
+#TODO: Name is not completely representative of function.
+# This is the Energenie 433.92MHz with OpenThings
 fsk_router = Router("fsk")
+
 #OOK receive not yet written
+#It will be used to be able to learn codes from Energenie legacy hand remotes
 ##ook_router = Router("ook")
-
-
 
 # END

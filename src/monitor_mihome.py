@@ -23,22 +23,20 @@ if __name__ == "__main__":
     energenie.registry.add(purple, "purple")
     energenie.fsk_router.add((energenie.Devices.MFRID_ENERGENIE, energenie.Devices.PRODUCTID_MIHO005, MY_SENSOR_ID), purple)
 
+    # Register for update callbacks when a new message comes in for the purple device
+    # This is a useful way to add data logging on a per-device basis
     def new_data(self, message):
-        print("new data for %s" % self)
+        print("\nnew data for %s" % self)
         message.dump()
         Logger.logMessage(message)
     purple.when_updated(new_data)
 
     # Override the default unknown handler, so we can show data from unregistered devices
-    def unk(address, message):
-        print("Unknown device:%s" % str(hex(address[2])))
+    # This is a useful hook point for later adding device discovery
+    def unknown(address, message):
+        print("\nUnknown device:%s" % str(hex(address[2])))
         message.dump()
-        #TODO: add device to registry and to fsk_router table
-        #note: requires auto class create from product_id to be working first
-        Logger.logMessage(message)
-    energenie.fsk_router.handle_unknown = unk
-    #TODO: Provide a better callback registration scheme
-    ##energenie.fsk_router.when_unknown(unk)
+    energenie.fsk_router.when_unknown(unknown)
 
     try:
         while True:
