@@ -402,33 +402,27 @@ PRESENT STATUS
 
 Router written and integrated in energenie.loop()
 
-No Discovery yet in Registry
+Design for discovery done
 
 
 --------------------------------------------------------------------------------
 TODO NEXT
 
-* think a bit about discovery, we might actually be able to get this
-  working as a separate service first time round
+* check design for discovery with user requirements
 
-* implement auto device registration in the router (poor mans discovery)
-  when a message comes from an unknown sensorid,
-  build a device class instance wrapper for it
-  put it in the registry
-  knit it to the router
-  then call it's receive handler
+* implement discovery code
 
-* make the above auto device registration optional with a config flag in router
+* write test cases in Registry_test.py to test the 4 different discovery types
 
-* Write discovery properly as a service in Registry
-  When an unknown device is found, add it to the registry
-  if the discovery process is enabled, and route it's address.
+* put a discovery agent configuration in monitor_mihome.py and re test
+
 
 
 ----
 
 * Need the registry to be persistent with save and load
-
+  choose a file format that is human readable, like a config file?
+  mostly the registry is read, occasionally it is written
 
 ----
 
@@ -441,23 +435,14 @@ when_updated callback)
 
 ----
 
-* when a join request comes in, should optionally schedule a join_ack
-  going back, so that the device turns it's light off. This could also
-  be a way to manually pair up devices with an app, as it means
-  the user has pressed the join button, so they have physical
-  sight of the device.
-
-----
-
 Test with real radio
 
 * add back in the loop() call in the monitor_mihome.py program
 
+-----
 
-----
-At this point, probably ready to write a set of test cases,
-run the tests, and merge back to master to release this new
-functionality to the wild.
+* update the test instructions and re-test everything before merge
 
+* merge to master after test
 
 END

@@ -241,16 +241,16 @@ class Router():
         # address might be a string, a number, a tuple, but probably always the same for any one router
         self.routes[address] = instance
 
-    def incoming_message(self, address, payload):
+    def incoming_message(self, address, message):
         if self.incoming_cb != None:
-            self.incoming_cb(address, payload)
+            self.incoming_cb(address, message)
 
         if address in self.routes:
             ci = self.routes[address]
-            ci.incoming_message(payload)
+            ci.incoming_message(message)
 
         else: # unknown address
-            self.handle_unknown(address, payload)
+            self.handle_unknown(address, message)
 
     def when_incoming(self, callback):
         self.incoming_cb = callback
@@ -260,14 +260,94 @@ class Router():
         #NOTE: this is the main hook point for auto discovery and registration
         self.unknown_cb = callback
 
-    def handle_unknown(self, address, payload):
+    def handle_unknown(self, address, message):
         if self.unknown_cb != None:
-            self.unknown_cb(address, payload)
+            self.unknown_cb(address, message)
         else:
-            # Default action is just a debug message, and drop the payload
+            # Default action is just a debug message, and drop the message
             print("Unknown address: %s" % str(address))
 
 
+class Discovery():
+    """A Discovery agent that just reports any unknown devices"""
+    def __init__(self, registry, router):
+        self.registry = registry
+        self.router   = router
+        router.when_unknown(self.unknown_device)
+
+    def unknown_device(self, address, message):
+        print("message from unknown device:%s" % str(address))
+        # default action is to drop message
+        # override this method in sub classes if you want special processing
+
+    def reject_device(self, address, message):
+        print("message rejected from:%s" % (str(address)))
+        # default action is to drop message
+        # override this method if you want special processing
+
+    def accept_device(self, address, message):
+        pass
+        #    create device class instance from id information
+        #    add to registry
+        #    add to router
+        #    forward message to new class instance for processing
+        #TODO: return the new device class instance to caller
+
+
+class AutoDiscovery(Discovery):
+    """A discovery agent that auto adds unknown devices"""
+    def __init__(self, registry, router):
+        Discovery.__init__(self, registry, router)
+
+    def unknown_device(self, address, message):
+        self.accept_device(address, message)
+
+
+class ConfirmedDiscovery(Discovery):
+    """A discovery agent that asks the app before accepting/rejecting"""
+    def __init__(self, registry, router, ask):
+        Discovery.__init__(self, registry, router)
+        self.ask_fn = ask
+
+    def unknown_device(self, address, message):
+        y = self.ask_fn(address, message)
+        if y:
+            self.accept_device(address, message)
+        else:
+            self.reject_device(address, message)
+
+
+class JoinAutoDiscovery(Discovery):
+    """A discovery agent that looks for join requests, and auto adds"""
+    def __init__(self, registry, router):
+        Discovery.__init__(self, registry, router)
+
+    def unknown_device(self, address, message):
+        # if it is not a join req
+        #   route to unhandled message handler
+        # if it is a join req
+        #   accept the device
+        #   send join ack back to device (using new device class instance?)
+        pass
+
+
+class JoinConfirmedDiscovery(Discovery):
+    """A discovery agent that looks for join requests, and auto adds"""
+    def __init__(self, registry, router, ask):
+        Discovery.__init__(self, registry, router)
+        self.ask_fn = ask
+
+    def unknown_device(self, address, message):
+        # if it is not a join req
+        #   route to unhandled message handler
+        # if it is a join req
+        #     ask app
+        #     if no
+        #       reject device
+        #     if yes
+        #       accept device
+        #       send join ack back to device (using new device class instance)
+        pass
 
 
 # Might rename these, especially when we add in other protocols

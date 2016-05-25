@@ -46,10 +46,11 @@ if __name__ == "__main__":
     purple.when_updated(new_data)
 
     try:
+        #TESTING: build a synthetic message
+        msg = energenie.OpenThings.Message(energenie.Devices.MIHO005_REPORT)
+        msg[energenie.OpenThings.PARAM_VOLTAGE]["value"] = 240
+
         while True:
-            #TESTING: build a synthetic message
-            msg = energenie.OpenThings.Message(energenie.Devices.MIHO005_REPORT)
-            msg[energenie.OpenThings.PARAM_VOLTAGE]["value"] = 240
 
             #TESTING: Poke synthetic unknown into the router and let it route to unknown handler
             msg.set(header_sensorid=DUMMY_SENSOR_ID)
