@@ -383,7 +383,9 @@ class MiHomeDevice(EnergenieDevice):
 
     def join_ack(self):
         """Send a join-ack to the real device"""
-        self.send_message("join ack") # TODO
+        msg = OpenThings.Message(header_mfrid=MFRID_ENERGENIE, header_productid=self.product_id, header_sensorid=self.device_id)
+        msg[OpenThings.PARAM_JOIN] = {"wr":False, "typeid":OpenThings.Value.UINT, "length":0}
+        self.send_message(msg)
 
     #def handle_message(self, payload):
     #override for any specific handling

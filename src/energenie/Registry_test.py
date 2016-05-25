@@ -145,9 +145,10 @@ class TestDiscovery(unittest.TestCase):
 
         # Poke synthetic unknown JOIN into the router and let it route to unknown handler
         self.msg = OpenThings.Message(header_mfrid=Devices.MFRID_ENERGENIE,
-                                      header_productid=Devices.MIHO005,
+                                      header_productid=Devices.PRODUCTID_MIHO005,
                                       header_sensorid=UNKNOWN_SENSOR_ID)
         self.msg[OpenThings.PARAM_JOIN] = {}
+        ##print(self.msg)
 
         fsk_router.incoming_message(
             (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), self.msg)

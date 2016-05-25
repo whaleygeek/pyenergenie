@@ -8,11 +8,14 @@ from lifecycle import *
 
 import time
 try:
-    import Devices # python 2
+    # Python 2
+    import Devices
+    import OpenThings
 except ImportError:
-    from . import Devices # python 3
+    # Python 3
+    from . import Devices
+    from . import OpenThings
 
-import Devices
 
 directory = {}
 
@@ -294,7 +297,7 @@ class Discovery():
         # default action is to drop message
         # override this method if you want special processing
 
-    def accept_device(self, address, message):
+    def accept_device(self, address, message, forward=True):
         print("accept_device:%s" % str(address))
         # At moment, intentionally assume everything is mfrid=Energenie
         product_id = address[1]
@@ -305,11 +308,13 @@ class Discovery():
         self.router.add(address, ci)
 
         # Finally, forward the first message to the new device class instance
-        print("**** routing first message to class instance")
-        ci.incoming_message(message)
+        if forward:
+            print("**** routing first message to class instance")
+            ci.incoming_message(message)
 
         ##self.registry.list()
         ##self.router.list()
+        return ci # The new device class instance that we created
 
 
 class AutoDiscovery(Discovery):
@@ -341,13 +346,22 @@ class JoinAutoDiscovery(Discovery):
         Discovery.__init__(self, registry, router)
 
     def unknown_device(self, address, message):
-        print("TODO: unknown device auto join %s" % str(address))
-        # if it is not a join req
-        #   route to unhandled message handler
-        # if it is a join req
-        #   accept the device
-        #   send join ack back to device (using new device class instance?)
-        pass #TODO
+        print("unknown device auto join %s" % str(address))
+
+        #TODO: need to make this work with correct meta methods
+        ##if not OpenThings.PARAM_JOIN in message:
+        try:
+            j = message[OpenThings.PARAM_JOIN]
+        except KeyError:
+            j = None
+
+        if j == None: # not a join
+            self.unknown_device(address, message)
+        else: # it is a join
+            # but don't forward the join request as it will be malformed with no value
+            ci = self.accept_device(address, message, forward=False)
+            ci.join_ack() # Ask new class instance to send a join_ack back to physical device
+            #TODO: MiHomeDevice needs this join_ack() added to it
 
 
 class JoinConfirmedDiscovery(Discovery):

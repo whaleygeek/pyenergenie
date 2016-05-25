@@ -409,7 +409,10 @@ Test cases for 5 discovery variants done
 --------------------------------------------------------------------------------
 TODO NEXT
 
-Code up join auto and join ask, and get tests passing.
+joinauto with join_ack is working
+
+Code up and test join_autoask
+
 
 
 

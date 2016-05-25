@@ -655,7 +655,7 @@ class Message():
 				paramid = rec["paramid"]
 				if paramid == key:
 					return rec
-		raise RuntimeError("no paramid found for %s" % str(hex(key)))
+		raise KeyError("no paramid found for %s" % str(hex(key)))
 
 
 	def __setitem__(self, key, value):
