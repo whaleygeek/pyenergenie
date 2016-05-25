@@ -408,13 +408,16 @@ Design for discovery done
 --------------------------------------------------------------------------------
 TODO NEXT
 
-* check design for discovery with user requirements
-
 * implement discovery code
 
 * write test cases in Registry_test.py to test the 4 different discovery types
+  (might need some mocking to soft-test the join/ack mechanism, probably just
+  route in a synthetic join_req, and capture the tx log to see the join_ack
+  going out)
 
-* put a discovery agent configuration in monitor_mihome.py and re test
+* put a discovery agent configuration in monitor_mihome.py and re test,
+  specifically to see if the default flow is simple for a new user to set up
+  (with lots of sensible defaults, perhaps JoinAuto as the default).
 
 
 
@@ -422,7 +425,15 @@ TODO NEXT
 
 * Need the registry to be persistent with save and load
   choose a file format that is human readable, like a config file?
-  mostly the registry is read, occasionally it is written
+  mostly the registry is read, occasionally it is written.
+
+  Remember that when restoring the registry in a new run, it can
+  be told to auto-create device object variables.
+
+* consider with registry auto-create also auto-creating, or returning,
+  a list of all the configured devices. This then allows an app to
+  later iterate through all devices and decide what to do with them,
+  such as displaying them all in a GUI selection list.
 
 ----
 
