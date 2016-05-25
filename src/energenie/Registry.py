@@ -12,6 +12,7 @@ try:
 except ImportError:
     from . import Devices # python 3
 
+import Devices
 
 directory = {}
 
@@ -146,14 +147,13 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
 
     def list(self):
         """List the registry in a vaguely printable format, mostly for debug"""
+        print("REGISTERED DEVICES:")
         for k in self.store.keys():
-            print("DEVICE %s" % k)
-            print("  %s" % self.store[k])
+            print("  %s -> %s" % (k, self.store[k]))
 
     def size(self):
         """How many entries are there in the registry?"""
         return self.store.size()
-
 
     def devices(self):
         """Get a list of all device classes in the registry"""
@@ -241,6 +241,11 @@ class Router():
         # address might be a string, a number, a tuple, but probably always the same for any one router
         self.routes[address] = instance
 
+    def list(self):
+        print("ROUTES:")
+        for address in self.routes:
+            print("  %s->%s" % (str(address), str(self.routes[address])))
+
     def incoming_message(self, address, message):
         if self.incoming_cb != None:
             self.incoming_cb(address, message)
@@ -290,13 +295,21 @@ class Discovery():
         # override this method if you want special processing
 
     def accept_device(self, address, message):
-        print("TODO: accept_device:%s" % str(address))
-        pass #TODO
-        #    create device class instance from id information
-        #    add to registry
-        #    add to router
-        #    forward message to new class instance for processing
-        #TODO: return the new device class instance to caller
+        print("accept_device:%s" % str(address))
+        # At moment, intentionally assume everything is mfrid=Energenie
+        product_id = address[1]
+        device_id  = address[2]
+        print("**** wiring up registry and router for %s" % str(address))
+        ci = Devices.DeviceFactory.get_device_from_id(product_id, device_id)
+        self.registry.add(ci, "auto_%s_%s" % (str(hex(product_id)), str(hex(device_id))))
+        self.router.add(address, ci)
+
+        # Finally, forward the first message to the new device class instance
+        print("**** routing first message to class instance")
+        ci.incoming_message(message)
+
+        ##self.registry.list()
+        ##self.router.list()
 
 
 class AutoDiscovery(Discovery):
@@ -375,6 +388,9 @@ fsk_router = Router("fsk")
 # (temporary) helpful methods to switch between different discovery methods
 # Note that the __init__ automaticall registers itself with router
 
+def discovery_none():
+    fsk_router.when_unknown(None)
+
 def discovery_auto():
     d = AutoDiscovery(registry, fsk_router)
     print("Using auto discovery")
@@ -405,6 +421,7 @@ def ask(address, message):
 
 
 # Default discovery mode, unless changed by app
+##discovery_none()
 discovery_auto()
 ##discovery_ask(ask)
 ##discovery_autojoin()

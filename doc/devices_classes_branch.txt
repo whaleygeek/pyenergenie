@@ -408,20 +408,16 @@ Design for discovery done
 --------------------------------------------------------------------------------
 TODO NEXT
 
-* implement discovery code
+DONE auto discovery, accept and reject
+
 
 * write test cases in Registry_test.py to test the 4 different discovery types
   (might need some mocking to soft-test the join/ack mechanism, probably just
   route in a synthetic join_req, and capture the tx log to see the join_ack
   going out)
 
-* put a discovery agent configuration in monitor_mihome.py and re test,
-  specifically to see if the default flow is simple for a new user to set up
-  (with lots of sensible defaults, perhaps JoinAuto as the default).
 
-
-
-----
+---- PERSISTENT REGISTRY
 
 * Need the registry to be persistent with save and load
   choose a file format that is human readable, like a config file?
@@ -435,7 +431,8 @@ TODO NEXT
   later iterate through all devices and decide what to do with them,
   such as displaying them all in a GUI selection list.
 
-----
+
+---- NOTIFY, UPDATE, or DATA SEQUENCE?
 
 Consider whether there is a need for a general update notify
 mechanism - perhaps could have a message sequence counter that
@@ -444,13 +441,14 @@ device state has updated (independently of using the
 when_updated callback)
 
 
-----
+---- HARDWARE TESTING
 
 Test with real radio
 
 * add back in the loop() call in the monitor_mihome.py program
 
------
+
+----- RELEASE TESTING AND RELEASE
 
 * update the test instructions and re-test everything before merge
 

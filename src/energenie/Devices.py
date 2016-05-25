@@ -470,6 +470,7 @@ class MIHO005(MiHomeDevice):
         return "MIHO005(%s)" % str(hex(self.device_id))
 
     def handle_message(self, payload):
+        ##print("MIHO005 new data %s" % self.device_id)
         for rec in payload["recs"]:
             paramid = rec["paramid"]
             #TODO: consider making this table driven and allowing our base class to fill our readings in for us
