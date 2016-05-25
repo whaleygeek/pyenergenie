@@ -138,9 +138,8 @@ class TestDiscovery(unittest.TestCase):
         registry.list()
         fsk_router.list()
 
-    #---- HERE ----
 
-    def test_discovery_autojoin(self):
+    def XXXtest_discovery_autojoin(self):
         discovery_autojoin()
 
         # Poke synthetic unknown JOIN into the router and let it route to unknown handler
@@ -148,17 +147,17 @@ class TestDiscovery(unittest.TestCase):
                                       header_productid=Devices.PRODUCTID_MIHO005,
                                       header_sensorid=UNKNOWN_SENSOR_ID)
         self.msg[OpenThings.PARAM_JOIN] = {}
-        ##print(self.msg)
 
         fsk_router.incoming_message(
             (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), self.msg)
 
-        ####FAIL - join detect is not written
         # expect auto accept and join_ack logic to fire
-        ##registry.list()
-        ##fsk_router.list()
+        registry.list()
+        fsk_router.list()
 
-    def XXXXtest_discovery_askjoin(self):
+    #----- HERE -----
+
+    def test_discovery_askjoin(self):
         def no(a,b): return False
         def yes(a,b): return True
 
@@ -166,24 +165,22 @@ class TestDiscovery(unittest.TestCase):
 
         # Poke synthetic unknown JOIN into the router and let it route to unknown handler
         self.msg = OpenThings.Message(header_mfrid=Devices.MFRID_ENERGENIE,
-                                      header_productid=Devices.MIHO005,
+                                      header_productid=Devices.PRODUCTID_MIHO005,
                                       header_sensorid=UNKNOWN_SENSOR_ID)
         self.msg[OpenThings.PARAM_JOIN] = {}
 
         fsk_router.incoming_message(
             (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), self.msg)
 
-        ####FAIL - join detect is not written
-        # expect auto accept and join_ack logic to fire
+        # expect reject
         ##registry.list()
         ##fsk_router.list()
 
-        discovery_askjoin(no)
+        ##discovery_askjoin(no)
 
-        fsk_router.incoming_message(
-            (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), self.msg)
+        ##fsk_router.incoming_message(
+        ##    (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), self.msg)
 
-        ####FAIL - join detect is not written
         # expect auto accept and join_ack logic to fire
         ##registry.list()
         ##fsk_router.list()

@@ -371,6 +371,7 @@ class JoinConfirmedDiscovery(Discovery):
         self.ask_fn = ask
 
     def unknown_device(self, address, message):
+        ####HERE####
         print("TODO: unknown device confirmed join %s" % str(address))
         # if it is not a join req
         #   route to unhandled message handler
