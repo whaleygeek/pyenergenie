@@ -66,16 +66,14 @@ def get_info(sensor_id):
 #----- GENERIC KEY VALUE STORE ------------------------------------------------
 
 class KVS():
-    DEFAULT_FILENAME='registry.kvs'
-
-    def __init__(self, filename=None, context=None):
-        if filename == None: filename = KVS.DEFAULT_FILENAME
-        # context is the namespace consulted to get class variables from when creating objects
-        self.context = context
+    """A persistent key value store"""
+    def __init__(self, filename=None):
+        self.filename = filename
         self.store = {}
 
-    def load(self):
+    def load(self, factory):
         """Load the whole file into an in-memory cache"""
+        # The 'factory' is a place to go to turn device type names into actual class instances
         pass #TODO
         # open file for read
         # for each line read
@@ -139,6 +137,12 @@ class KVS():
         del self.store[key]
         self.remove(key)
 
+    def keys(self):
+        return self.store.keys()
+
+    def size(self):
+        return len(self.store)
+
     def append(self, key, values):
         """Append a new record to the persistent file"""
         pass #TODO
@@ -175,60 +179,47 @@ class KVS():
 
 #----- NEW DEVICE REGISTRY ----------------------------------------------------
 
-
-
-
-
-
 # Done as a class, so we can have multiple registries if we want.
-
-# TODO: file format? platform dependent database format, like dbm but there is
-# a platform dependent one - but need the licence to be MIT so we can
-# just embed it here to have zero dependencies.
-
-# TODO: serialisation format for the individual device meta record? json?
-
-
-class RegistryStore(): # This is data storage, so it it just the 'RegistRY'??
-    """A mock in-memory only store, for testing and debugging"""
-    def __init__(self, filename):
-        self.filename = filename #TODO: Intentionally not used elsewhere
-        self.store = {}
-
-    #@log_method
-    def __setitem__(self, key, value):
-        self.store[key] = value
-
-    #@log_method
-    def __getitem__(self, key):
-        return self.store[key]
-
-    #@log_method
-    def __delitem__(self, key):
-        del self.store[key]
-
-    #@log_method
-    def keys(self):
-        return self.store.keys()
-
-    def size(self):
-        return len(self.store)
-
 
 class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
     """A persistent registry for device class instance configurations"""
-    def __init__(self, filename):
-        self.store = RegistryStore(filename) # A dummy store, for testing
+
+    DEFAULT_FILENAME = "registry.kvs"
+
+    def __init__(self):
+        pass # nothing to do
+        # There is intentionally no self.store until load_from is called.
+        # This ensures you can't use the registry until you create a file.
+
+    @untested
+    def load_from(self, filename=None):
+        """Start with a blank in memory registry, and load from the given filename"""
+        if filename == None: filename = DeviceRegistry.DEFAULT_FILENAME
+        # Create a new in memory store, effectively removing any existing in memory device class instances
+        #TODO: Not good if there are routes to those class instances?
+        self.store = KVS(filename) #TODO: later we might make it possible to load_from multiple files
+        self.store.load(Devices.DeviceFactory)
 
     @unimplemented
-    def load(self):
-        pass
-        # load registry from disk/parse it
+    def reload(self):
+        pass #TODO: reload from the persisted version
+        #TODO: need to know what file it was previously loaded from
+        #TODO: What about existing receive routes??
 
     @unimplemented
-    def save(self):
-        pass
-        # persist registry to disk/write back new entries
+    def rewrite(self):
+        """Rewrite the persisted version from the in memory version"""
+        pass #TODO: self.store.rewrite()
+
+    def load_into(self, context):
+        """auto-create variables in the provided context, for all persisted registry entries"""
+        if context == None:
+            raise ValueError("Must provide a context to hold new variables")
+
+        for name in self.store.keys():
+            c = self.get(name)
+            # This creates a variable inside the context of this name, points to class instance
+            setattr(context, name, c)
 
     def add(self, device, name):
         """Add a device class instance to the registry, with a friendly name"""
@@ -237,30 +228,13 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
     def get(self, name): # -> Device
         """Get the description for a device class from the store, and construct a class instance"""
         c = self.store[name]
-        #TODO: Construct a new device class that is configured as per this data
-        #for now, just return the RAM class instance as it is mocked
 
-        #TODO: work out what type of device it is (fsk, ook)
-        #TODO: decide which router to use for incoming messages
-        #TODO: configure the message router so it will route to the device class instance for us
-        #TODO: at what point is the payload decoded to get the address out?
-        # OpenThings.decode() or TwoBit.decode() - where do those protocol handlers go in the pipeline?
+        #TODO: need to configure the correct router if device.can_receive()==True
         return c
 
     def delete(self, name):
         """Delete the named class instance"""
         del self.store[name]
-        #TODO: delete from the RAM route too.
-
-    def auto_create(self, context):
-        """auto-create variables in the provided context, for all persisted registry entries"""
-        if context == None:
-            raise ValueError("Must provide a context to hold new variables")
-
-        for name in self.store.keys():
-            c = self.get(name) #TODO: should return an instantiated class
-            # This creates a variable inside the context of this name, points to class instance
-            setattr(context, name, c)
 
     def list(self):
         """List the registry in a vaguely printable format, mostly for debug"""

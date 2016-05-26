@@ -5,15 +5,15 @@
 def unimplemented(m):
     print("warning: unimplemented method %s" % str(m))
     def inner(*args, **kwargs):
-        print("warning: unimplemented method %s" % str(m))
-        return m()
+        raise RuntimeError("Method is unimplemented: %s" % str(m))
     return inner
 
 
 def disabled(m):
     """Load-time waring about disabled function"""
     print("warning: method is disabled:%s" % m)
-    def nothing(*args, **kwargs):pass
+    def nothing(*args, **kwargs):
+        print("warning: Calling disabled method %s does nothing" % str(m))
     return nothing
 
 

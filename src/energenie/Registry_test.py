@@ -15,6 +15,23 @@ from lifecycle import *
 
 radio.DEBUG=True
 
+class TestRegistry(unittest.TestCase):
+    pass
+
+    # add some devices to the registry
+    # persist it to a file
+    # see what the file looks like
+
+    # load from a persisted registry
+    # list the registry in memory
+    # see that each item is instantiated and has a route
+
+    # load from a persisted registry
+    # load_into some context
+    # make sure all the loaded context variables point to the right thing
+
+
+#TODO: This is not realy a registry tester, it's a device class/router tester??
 class Dis:
 ##class TestRegistry(unittest.TestCase):
     def setUp(self):
@@ -25,7 +42,7 @@ class Dis:
         # test the auto create mechanism
         registry.auto_create(self)
 
-    @test_1
+    @test_0
     def test_capabilities(self):
         print("tv switch:%s"  % self.tv.has_switch())
         print("tv send:%s"    % self.tv.can_send())
@@ -35,21 +52,21 @@ class Dis:
         print("fan send:%s"    % self.fan.can_send())
         print("fan receive:%s" % self.fan.can_receive())
 
-    @test_1
+    @test_0
     def test_ook_tx(self):
         """Test the transmit pipeline"""
 
         self.fan.turn_on()
         self.fan.turn_off()
 
-    @test_1
+    @test_0
     def test_fsk_tx(self):
         """Test the transmit pipeline for MiHome FSK devices"""
 
         self.tv.turn_on()
         self.tv.turn_off()
 
-    @test_1
+    @test_0
     def test_fsk_rx(self):
         """Test the receive pipeline for FSK MiHome adaptor"""
 
