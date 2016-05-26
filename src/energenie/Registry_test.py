@@ -153,7 +153,7 @@ class TestDiscovery(unittest.TestCase):
         discovery_autojoin()
 
         # Poke synthetic unknown JOIN into the router and let it route to unknown handler
-        msg = Devices.MIHO005.get_join_req(Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID)
+        msg = Devices.MIHO005.get_join_req(UNKNOWN_SENSOR_ID)
 
         fsk_router.incoming_message(
             (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), msg)
@@ -170,7 +170,7 @@ class TestDiscovery(unittest.TestCase):
         discovery_askjoin(no)
 
         # Poke synthetic unknown JOIN into the router and let it route to unknown handler
-        msg = Devices.MIHO005.get_join_req(Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID)
+        msg = Devices.MIHO005.get_join_req(UNKNOWN_SENSOR_ID)
         fsk_router.incoming_message(
             (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), msg)
 

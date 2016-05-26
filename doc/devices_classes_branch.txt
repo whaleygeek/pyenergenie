@@ -404,35 +404,21 @@ Router written and integrated in energenie.loop()
 
 Design for discovery done
 Test cases for 5 discovery variants done and work
+monitor_mihome works with a synthetic join and toggles switches
 
 
 --------------------------------------------------------------------------------
 TODO NEXT
 
-Add auto join semantics to monitor_mihome
-(might just work with the defaults - set default to discovery_joinauto
-
-Change monitor_mihome so that it sends a switch on/off message on a flag
-to all devices currently in the registry that have a switch
-
-
 
 ---- PERSISTENT REGISTRY
 
-* Need the registry to be persistent with save and load
-  choose a file format that is human readable, like a config file?
-  mostly the registry is read, occasionally it is written.
+* choose a file format for the registry that is human readable like a config file
+  but also easy to read and occasionally write from a program
 
   Remember that when restoring the registry in a new run, it can
   be told to auto-create device object variables.
 
-* consider with registry auto-create also auto-creating, or returning,
-  a list of all the configured devices. This then allows an app to
-  later iterate through all devices and decide what to do with them,
-  such as displaying them all in a GUI selection list.
-
-  (Note, Registry.devices() already gives us the list and Registry.keys()
-  already gives us the name keys)
 
 ---- NOTIFY, UPDATE, or DATA SEQUENCE?
 

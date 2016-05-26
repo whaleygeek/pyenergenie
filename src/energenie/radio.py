@@ -114,9 +114,9 @@ def transmit(payload, outer_times=1, inner_times=8, outer_delay=0):
 
     if DEBUG:
         print("***TX %s" % payload)
-        ##import OpenThings
-        ##if payload[0] < 20: # crude way to reject ook messages
-        ##    print("PAYLOAD: %s" % OpenThings.decode(payload))
+        import OpenThings
+        if payload[0] < 20: # crude way to reject ook messages
+            print("PAYLOAD: %s" % OpenThings.decode(payload))
         # remember that the sensorId is encrypted too
 
     framelen = len(payload)

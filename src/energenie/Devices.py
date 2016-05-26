@@ -496,6 +496,11 @@ class MIHO005(MiHomeDevice):
     def __repr__(self):
         return "MIHO005(%s)" % str(hex(self.device_id))
 
+    @staticmethod
+    def get_join_req(deviceid):
+        """Get a synthetic join request from this device, for testing"""
+        return MiHomeDevice.get_join_req(MFRID_ENERGENIE, PRODUCTID_MIHO004, deviceid)
+
     def handle_message(self, payload):
         ##print("MIHO005 new data %s" % self.device_id)
         for rec in payload["recs"]:
