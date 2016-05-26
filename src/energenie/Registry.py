@@ -153,15 +153,18 @@ class KVS():
     def size(self):
         return len(self.store)
 
-    @unimplemented
+    @untested
     def append(self, key, values):
+        print("####HERE")
+        print(values, type(values))
         """Append a new record to the persistent file"""
-        pass #TODO
-        # open file for append
-        # write ADD key
-        # for all values
-        #   write k=v
-        # close file
+        with open(self.filename, 'w+') as f:
+            f.write("ADD %s\n" % key)
+            for k in values:
+                v = values[k]
+                f.write("%s=%s\n" % (k, v))
+            f.write("\n")
+
 
     @unimplemented
     def remove(self, key):
@@ -235,7 +238,19 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
 
     def add(self, device, name):
         """Add a device class instance to the registry, with a friendly name"""
-        self.store[name] = device
+        ####HERE
+        #TODO: this is a Device class instance
+        #need to get appropriate data out from it as a map
+        #TODO: This is correct for a MiHomeDevice
+        #but not for a LegacyDevice
+        #TODO: Also, need the class name
+        values = {
+            "type":                Devices.MiHomeDevice, ##TODO MIHO005 ??
+            "manufacturer_id":     device.manufacturer_id,
+            "product_id":          device.product_id,
+            "device_id":           device.device_id
+        }
+        self.store[name] = values
 
     def get(self, name): # -> Device
         """Get the description for a device class from the store, and construct a class instance"""
