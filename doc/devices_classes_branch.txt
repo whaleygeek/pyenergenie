@@ -410,6 +410,30 @@ monitor_mihome works with a synthetic join and toggles switches
 --------------------------------------------------------------------------------
 TODO NEXT
 
+KVS - key value store
+
+first line is a command, next lines are data, type is the class to instantiate,
+other parameters passed as kwargs. Pass parameter as string, constructor
+recognizes hex inside string and base16 parses it to an int first. If no 0x,
+it parses as base 10. Record terminated by blank line or EOF.
+Multiple blank lines ignored. # at start of command line ignores the whole rec,
+allowing user to comment it out temporarily
+
+ADD tv
+type=ENER005
+device_id=0x68b
+
+First parse is read only open scan of whole file
+
+If user calls del kvs["tv"]
+file opened in read write
+first instance of 'tv' found
+ADD command changed to IGN (ignore) (same number of chars, so no file size change)
+file closed
+
+When the parser processes it next time, the IGN command just skips
+everything until blank line or EOF.
+
 
 ---- PERSISTENT REGISTRY
 
@@ -418,6 +442,18 @@ TODO NEXT
 
   Remember that when restoring the registry in a new run, it can
   be told to auto-create device object variables.
+
+contents (to allow auto creation)
+  key: user assigned name
+  values: fsk or ook selector (others in the future)
+          address(mfrid, productid, deviceid)
+          date/time added to registry?
+
+If the user creates a wrapping class around this, we won't store that.
+Also no device state will be persisted, it's just a registry of devices
+with enough info to auto-create variables for each, correctly bound to
+the right device class instances and the correct incoming message router
+and outgoing message encoder/modulator.
 
 
 ---- NOTIFY, UPDATE, or DATA SEQUENCE?
