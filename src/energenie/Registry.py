@@ -71,6 +71,7 @@ class KVS():
         self.filename = filename
         self.store = {}
 
+    @unimplemented
     def load(self, factory):
         """Load the whole file into an in-memory cache"""
         # The 'factory' is a place to go to turn device type names into actual class instances
@@ -93,12 +94,14 @@ class KVS():
         #   process command,key,values, if it command is not empty
         # close file
 
+    @unimplemented
     def process(self, command, key, values):
         """Process the temporary object"""
         pass #TODO
         # getattr method associated with the command name, error if no method
         # pass the key,values to that method to let it be processed
 
+    @unimplemented
     def ADD(self, key, values):
         """Add a new item to the kvs"""
         # The ADD command process the next type= parameter as the class name in context
@@ -111,6 +114,7 @@ class KVS():
         #   write k=v
         # close file
 
+    @unimplemented
     def IGN(self, key, values=None):
         """Ignore the whole record"""
         # The IGN command is the same length as ADD, allowing a seek/write to change any
@@ -118,6 +122,7 @@ class KVS():
         # so that the record is deleted.
         pass # There is nothing to do with this command
 
+    @unimplemented
     def DEL(self, key, values=None):
         """Delete the key from the store"""
         # The DEL command deletes the rec from the store.
@@ -126,23 +131,29 @@ class KVS():
         pass #TODO
         # find key in object store, delete it
 
-    def __getattr__(self, key):
+    @untested
+    def __getitem__(self, key):
         return self.store[key]
 
-    def __setattr__(self, key, value):
+    @untested
+    def __setitem__(self, key, value):
         self.store[key] = value
         self.append(key, value)
 
+    @untested
     def __delitem__(self, key):
         del self.store[key]
         self.remove(key)
 
+    @untested
     def keys(self):
         return self.store.keys()
 
+    @untested
     def size(self):
         return len(self.store)
 
+    @unimplemented
     def append(self, key, values):
         """Append a new record to the persistent file"""
         pass #TODO
@@ -152,6 +163,7 @@ class KVS():
         #   write k=v
         # close file
 
+    @unimplemented
     def remove(self, key):
         """Remove reference to this key in the file, and remove from in memory store"""
         pass #TODO
@@ -163,6 +175,7 @@ class KVS():
         #   keep going in case of duplicates
         # close file
 
+    @unimplemented
     def rewrite(self):
         """Rewrite the whole in memory cache over the top of the external file"""
         # useful if you have updated the in memory copy only and want to completely regenerate
@@ -186,10 +199,9 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
 
     DEFAULT_FILENAME = "registry.kvs"
 
-    def __init__(self):
-        pass # nothing to do
-        # There is intentionally no self.store until load_from is called.
-        # This ensures you can't use the registry until you create a file.
+    def __init__(self, filename=None):
+        if filename != None:
+            self.store = KVS(filename)
 
     @untested
     def load_from(self, filename=None):
@@ -206,10 +218,10 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
         #TODO: need to know what file it was previously loaded from
         #TODO: What about existing receive routes??
 
-    @unimplemented
+    @untested
     def rewrite(self):
         """Rewrite the persisted version from the in memory version"""
-        pass #TODO: self.store.rewrite()
+        self.store.rewrite()
 
     def load_into(self, context):
         """auto-create variables in the provided context, for all persisted registry entries"""
@@ -257,7 +269,8 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
         return dl
 
 
-registry = DeviceRegistry("registry.txt")
+registry = DeviceRegistry()
+#TODO: registry.reload??
 
 
 # This will create all class instance variables in the module that imports the registry.

@@ -16,19 +16,36 @@ from lifecycle import *
 radio.DEBUG=True
 
 class TestRegistry(unittest.TestCase):
-    pass
 
-    # add some devices to the registry
-    # persist it to a file
-    # see what the file looks like
+    @test_1
+    def test_create(self):
+        registry = DeviceRegistry("registry.kvs")
 
-    # load from a persisted registry
-    # list the registry in memory
-    # see that each item is instantiated and has a route
+        # add some devices to the registry, it should auto update the file
+        registry.add(Devices.MIHO005(device_id=0x68b), "tv")
+        registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
 
-    # load from a persisted registry
-    # load_into some context
-    # make sure all the loaded context variables point to the right thing
+        # see what the file looks like
+        with open(registry.DEFAULT_FILENAME) as f:
+            print(f.readlines())
+
+    @test_0
+    def test_load(self):
+        pass #TODO
+        # load from a persisted registry
+        # list the registry in memory
+        # see that each item is instantiated and has a route
+
+    @test_0
+    def test_load_into(self):
+        pass #TODO
+        # load from a persisted registry
+        # load_into some context
+        # make sure all the loaded context variables point to the right thing
+
+
+
+
 
 
 #TODO: This is not realy a registry tester, it's a device class/router tester??
@@ -179,7 +196,7 @@ class TestDiscovery(unittest.TestCase):
         registry.list()
         fsk_router.list()
 
-    @test_1
+    @test_0
     def test_discovery_askjoin(self):
         def no(a,b): return False
         def yes(a,b): return True
