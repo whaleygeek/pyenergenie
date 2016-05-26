@@ -403,18 +403,13 @@ PRESENT STATUS
 Router written and integrated in energenie.loop()
 
 Design for discovery done
-Test cases for 5 discovery variants done
+Test cases for 5 discovery variants done and work
 
 
 --------------------------------------------------------------------------------
 TODO NEXT
 
-joinauto with join_ack is working
-
-Code up and test join_autoask
-
-
-
+Add auto join semantics to monitor_mihome
 
 ---- PERSISTENT REGISTRY
 

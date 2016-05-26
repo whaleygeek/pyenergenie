@@ -8,6 +8,7 @@
 from OpenThings import *
 import pprint
 import unittest
+from lifecycle import *
 
 
 def printhex(payload):
@@ -153,32 +154,7 @@ import Devices
 
 
 #TODO: Break dependence on Devices.MIHO005_REPORT (makes tests brittle)
-#i.e. put a test vector in this test harness
-#TODO: Capture and compare outputs from each method (using decorators??)
 
-def test_0(m):
-	#print("test disabled:%s" % m)
-	def run(*args, **kwargs):
-		print("running:%s" % m)
-		r = m(*args, **kwargs)
-		print("finished:%s" % m)
-		return r
-
-	def nothing(*args, **kwargs):
-		print("test disabled:%s" % m)
-		return None
-
-	##return nothing # DISABLE
-	return run # ENABLE ALL
-
-def test_1(m):
-	def run(*args, **kwargs):
-		print("running:%s" % m)
-		r = m(*args, **kwargs)
-		print("finished:%s" % m)
-		return r
-	
-	return run
 
 
 class TestMessage(unittest.TestCase):

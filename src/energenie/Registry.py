@@ -288,28 +288,28 @@ class Discovery():
         router.when_unknown(self.unknown_device)
 
     def unknown_device(self, address, message):
-        print("message from unknown device:%s" % str(address))
+        pass##print("message from unknown device:%s" % str(address))
         # default action is to drop message
         # override this method in sub classes if you want special processing
 
     def reject_device(self, address, message):
-        print("message rejected from:%s" % (str(address)))
+        pass##print("message rejected from:%s" % (str(address)))
         # default action is to drop message
         # override this method if you want special processing
 
     def accept_device(self, address, message, forward=True):
-        print("accept_device:%s" % str(address))
+        ##print("accept_device:%s" % str(address))
         # At moment, intentionally assume everything is mfrid=Energenie
         product_id = address[1]
         device_id  = address[2]
-        print("**** wiring up registry and router for %s" % str(address))
+        ##print("**** wiring up registry and router for %s" % str(address))
         ci = Devices.DeviceFactory.get_device_from_id(product_id, device_id)
         self.registry.add(ci, "auto_%s_%s" % (str(hex(product_id)), str(hex(device_id))))
         self.router.add(address, ci)
 
         # Finally, forward the first message to the new device class instance
         if forward:
-            print("**** routing first message to class instance")
+            ##print("**** routing first message to class instance")
             ci.incoming_message(message)
 
         ##self.registry.list()
@@ -346,7 +346,7 @@ class JoinAutoDiscovery(Discovery):
         Discovery.__init__(self, registry, router)
 
     def unknown_device(self, address, message):
-        print("unknown device auto join %s" % str(address))
+        ##print("unknown device auto join %s" % str(address))
 
         #TODO: need to make this work with correct meta methods
         ##if not OpenThings.PARAM_JOIN in message:
@@ -361,7 +361,6 @@ class JoinAutoDiscovery(Discovery):
             # but don't forward the join request as it will be malformed with no value
             ci = self.accept_device(address, message, forward=False)
             ci.join_ack() # Ask new class instance to send a join_ack back to physical device
-            #TODO: MiHomeDevice needs this join_ack() added to it
 
 
 class JoinConfirmedDiscovery(Discovery):
@@ -371,20 +370,25 @@ class JoinConfirmedDiscovery(Discovery):
         self.ask_fn = ask
 
     def unknown_device(self, address, message):
-        ####HERE####
-        print("TODO: unknown device confirmed join %s" % str(address))
-        # if it is not a join req
-        #   route to unhandled message handler
-        # if it is a join req
-        #     ask app
-        #     if no
-        #       reject device
-        #     if yes
-        #       accept device
-        #       send join ack back to device (using new device class instance)
-        pass #TODO
+        print("**** unknown device confirmed join %s" % str(address))
 
+        #TODO: need to make this work with correct meta methods
+        ##if not OpenThings.PARAM_JOIN in message:
+        try:
+            j = message[OpenThings.PARAM_JOIN]
+        except KeyError:
+            j = None
 
+        if j == None: # not a join
+            self.unknown_device(address, message)
+        else: # it is a join
+            y = self.ask_fn(address, message)
+            if y:
+                # but don't forward the join request as it will be malformed with no value
+                ci = self.accept_device(address, message, forward=False)
+                ci.join_ack() # Ask new class instance to send a join_ack back to physical device
+            else:
+                self.reject_device(address, message)
 
 
 # Might rename these, especially when we add in other protocols

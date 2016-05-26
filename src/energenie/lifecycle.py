@@ -9,15 +9,18 @@ def unimplemented(m):
         return m()
     return inner
 
+
 def disabled(m):
     """Load-time waring about disabled function"""
     print("warning: method is disabled:%s" % m)
     def nothing(*args, **kwargs):pass
     return nothing
 
+
 def untested(m):
     print("warning: untested method %s" % str(m))
     return m
+
 
 def log_method(m):
     def inner(*args, **kwargs):
@@ -27,9 +30,36 @@ def log_method(m):
         return r
     return inner
 
+
 def deprecated(m):
     print("warning: deprecated method %s" % str(m))
     return m
+
+
+def test_0(m):
+    #print("test disabled:%s" % m)
+    #def run(*args, **kwargs):
+    #    print("running:%s" % m)
+    #    r = m(*args, **kwargs)
+    #    print("finished:%s" % m)
+    #    return r
+
+    def nothing(*args, **kwargs):
+        print("test disabled:%s" % m)
+        return None
+
+    return nothing # DISABLE
+    ##return run # ENABLE ALL
+
+
+def test_1(m):
+    def run(*args, **kwargs):
+        print("running:%s" % m)
+        r = m(*args, **kwargs)
+        print("finished:%s" % m)
+        return r
+
+    return run
 
 # END
 

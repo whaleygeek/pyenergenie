@@ -11,6 +11,7 @@
 import unittest
 from Registry import *
 import radio
+from lifecycle import *
 
 radio.DEBUG=True
 
@@ -24,6 +25,7 @@ class Dis:
         # test the auto create mechanism
         registry.auto_create(self)
 
+    @test_1
     def test_capabilities(self):
         print("tv switch:%s"  % self.tv.has_switch())
         print("tv send:%s"    % self.tv.can_send())
@@ -33,18 +35,21 @@ class Dis:
         print("fan send:%s"    % self.fan.can_send())
         print("fan receive:%s" % self.fan.can_receive())
 
+    @test_1
     def test_ook_tx(self):
         """Test the transmit pipeline"""
 
         self.fan.turn_on()
         self.fan.turn_off()
 
+    @test_1
     def test_fsk_tx(self):
         """Test the transmit pipeline for MiHome FSK devices"""
 
         self.tv.turn_on()
         self.tv.turn_off()
 
+    @test_1
     def test_fsk_rx(self):
         """Test the receive pipeline for FSK MiHome adaptor"""
 
@@ -92,7 +97,8 @@ class TestDiscovery(unittest.TestCase):
         self.msg = OpenThings.Message(Devices.MIHO005_REPORT)
         self.msg[OpenThings.PARAM_VOLTAGE]["value"] = 240
 
-    def XXtest_discovery_none(self):
+    @test_0
+    def test_discovery_none(self):
         discovery_none()
 
         # Poke synthetic unknown into the router and let it route to unknown handler
@@ -102,7 +108,8 @@ class TestDiscovery(unittest.TestCase):
 
         # expect unknown handler to fire
 
-    def XXtest_discovery_auto(self):
+    @test_0
+    def test_discovery_auto(self):
         discovery_auto()
 
         # Poke synthetic unknown into the router and let it route to unknown handler
@@ -114,7 +121,8 @@ class TestDiscovery(unittest.TestCase):
         registry.list()
         fsk_router.list()
 
-    def XXtest_discovery_ask(self):
+    @test_0
+    def test_discovery_ask(self):
         def yes(a,b): return True
         def no(a,b):  return False
 
@@ -138,8 +146,8 @@ class TestDiscovery(unittest.TestCase):
         registry.list()
         fsk_router.list()
 
-
-    def XXXtest_discovery_autojoin(self):
+    @test_0
+    def test_discovery_autojoin(self):
         discovery_autojoin()
 
         # Poke synthetic unknown JOIN into the router and let it route to unknown handler
@@ -155,8 +163,7 @@ class TestDiscovery(unittest.TestCase):
         registry.list()
         fsk_router.list()
 
-    #----- HERE -----
-
+    @test_1
     def test_discovery_askjoin(self):
         def no(a,b): return False
         def yes(a,b): return True
@@ -173,17 +180,17 @@ class TestDiscovery(unittest.TestCase):
             (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), self.msg)
 
         # expect reject
-        ##registry.list()
-        ##fsk_router.list()
+        registry.list()
+        fsk_router.list()
 
-        ##discovery_askjoin(no)
+        discovery_askjoin(yes)
 
-        ##fsk_router.incoming_message(
-        ##    (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), self.msg)
+        fsk_router.incoming_message(
+            (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), self.msg)
 
         # expect auto accept and join_ack logic to fire
-        ##registry.list()
-        ##fsk_router.list()
+        registry.list()
+        fsk_router.list()
 
 
 if __name__ == "__main__":
