@@ -128,6 +128,22 @@ SWITCH = {
     ]
 }
 
+JOIN_REQ = {
+    "header": {
+        "mfrid":       0, # FILL IN
+        "productid":   0, # FILL IN
+        "encryptPIP":  CRYPT_PIP,
+        "sensorid":    0 # FILL IN
+    },
+    "recs": [
+        {
+            "wr":      False,
+            "paramid": OpenThings.PARAM_JOIN,
+            "typeid":  OpenThings.Value.UINT,
+            "length":  0
+        }
+    ]
+}
 
 JOIN_ACK = {
     "header": {
@@ -380,6 +396,15 @@ class MiHomeDevice(EnergenieDevice):
 
     def get_product_id(self): # -> id:int
         return self.product_id
+
+    @staticmethod
+    def get_join_req(mfrid, productid, deviceid):
+        """Used for testing, synthesises a JOIN_REQ message from this device"""
+        msg = OpenThings.Message(JOIN_REQ)
+        msg["header_mfrid"]     = mfrid
+        msg["header_productid"] = productid
+        msg["header_sensorid"]  = deviceid
+        return msg
 
     def join_ack(self):
         """Send a join-ack to the real device"""

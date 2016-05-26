@@ -87,9 +87,11 @@ class Dis:
         print("switch %s"     % switch)
 
 
-import OpenThings
 
 UNKNOWN_SENSOR_ID = 0x111
+
+#TODO: Due to use of the fsk_router and registry instances,
+#these tests will not run back to back yet. Have to run them one at a time.
 
 class TestDiscovery(unittest.TestCase):
     def setUp(self):
@@ -151,13 +153,10 @@ class TestDiscovery(unittest.TestCase):
         discovery_autojoin()
 
         # Poke synthetic unknown JOIN into the router and let it route to unknown handler
-        self.msg = OpenThings.Message(header_mfrid=Devices.MFRID_ENERGENIE,
-                                      header_productid=Devices.PRODUCTID_MIHO005,
-                                      header_sensorid=UNKNOWN_SENSOR_ID)
-        self.msg[OpenThings.PARAM_JOIN] = {}
+        msg = Devices.MIHO005.get_join_req(Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID)
 
         fsk_router.incoming_message(
-            (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), self.msg)
+            (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), msg)
 
         # expect auto accept and join_ack logic to fire
         registry.list()
@@ -171,13 +170,9 @@ class TestDiscovery(unittest.TestCase):
         discovery_askjoin(no)
 
         # Poke synthetic unknown JOIN into the router and let it route to unknown handler
-        self.msg = OpenThings.Message(header_mfrid=Devices.MFRID_ENERGENIE,
-                                      header_productid=Devices.PRODUCTID_MIHO005,
-                                      header_sensorid=UNKNOWN_SENSOR_ID)
-        self.msg[OpenThings.PARAM_JOIN] = {}
-
+        msg = Devices.MIHO005.get_join_req(Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID)
         fsk_router.incoming_message(
-            (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), self.msg)
+            (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), msg)
 
         # expect reject
         registry.list()
@@ -186,7 +181,7 @@ class TestDiscovery(unittest.TestCase):
         discovery_askjoin(yes)
 
         fsk_router.incoming_message(
-            (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), self.msg)
+            (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), msg)
 
         # expect auto accept and join_ack logic to fire
         registry.list()

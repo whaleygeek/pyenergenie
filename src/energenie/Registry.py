@@ -441,9 +441,9 @@ def ask(address, message):
 
 # Default discovery mode, unless changed by app
 ##discovery_none()
-discovery_auto()
+##discovery_auto()
 ##discovery_ask(ask)
-##discovery_autojoin()
+discovery_autojoin()
 ##discovery_askjoin(ask)
 
 # END

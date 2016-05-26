@@ -410,6 +410,12 @@ Test cases for 5 discovery variants done and work
 TODO NEXT
 
 Add auto join semantics to monitor_mihome
+(might just work with the defaults - set default to discovery_joinauto
+
+Change monitor_mihome so that it sends a switch on/off message on a flag
+to all devices currently in the registry that have a switch
+
+
 
 ---- PERSISTENT REGISTRY
 
