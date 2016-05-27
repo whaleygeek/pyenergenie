@@ -158,6 +158,10 @@ class TestKVSPersisted(unittest.TestCase):
         kvs = KVS(self.KVS_FILENAME)
 
         kvs["tv1"] = TV(1)
+        kvs["tv2"] = TV(2)
+        kvs["tv3"] = TV(3)
+        kvs["tv4"] = TV(4)
+
         show_file(self.KVS_FILENAME)
 
         del kvs["tv1"] ####FAIL remove() needs implementing

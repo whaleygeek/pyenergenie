@@ -120,21 +120,28 @@ class KVS():
                     f.write("%s=%s\n" % (k, v))
                 f.write("\n")
 
-    @unimplemented
+    @untested
     def remove(self, key):
-        """Remove reference to this key in the file, and remove from in memory store"""
-        if self.filename != None:
-            pass #TODO
+        """Remove reference to this key in the file"""
+        if self.filename == None:
+            return # No file, nothing to do
 
-        ####HERE####
-
-        # open file for read write
-        # search line at a time, process each command
-        #   when we find the command 'ADD key'
-        #   reseek to start of line
-        #   write overwrite ADD with IGN
-        #   keep going in case of duplicates
-        # close file
+        with open(self.filename, 'r+') as f: # read and write mode
+            while True:
+                start = f.tell() # start of current line
+                line = f.readline()
+                end = f.tell() # position just beyond end of line
+                if line == "": break # EOF
+                # don't worry about cmd/data, space in search string disambiguates
+                if line.startswith("ADD "): # space after is critical to simplify parser
+                    line = line.strip() # remove nl
+                    cmd, this_key = line.split(" ", 1)
+                    if this_key == key:
+                        print("found: %s %s" % (cmd, this_key))
+                        f.seek(start) # back to start of line
+                        f.write('IGN') # patch it to be an ignore record but leave record intact
+                        f.seek(end) # back to end of line, to process next lines
+                        print("Patched to IGN rec")
 
     def write(self, filename=None):
         """Rewrite the whole in memory cache over the top of the external file"""
