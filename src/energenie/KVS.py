@@ -4,7 +4,7 @@
 
 from lifecycle import *
 
-class KVSFile():
+class KVS():
     """A persistent key value store"""
     def __init__(self, filename=None):
         self.filename = filename
@@ -71,42 +71,39 @@ class KVSFile():
         pass #TODO
         # find key in object store, delete it
 
-    @untested
     def __getitem__(self, key):
         return self.store[key]
 
-    @untested
     def __setitem__(self, key, value):
         self.store[key] = value
         self.append(key, value)
 
-    @untested
     def __delitem__(self, key):
         del self.store[key]
         self.remove(key)
+
+    def __len__(self):
+        return len(self.store)
 
     @untested
     def keys(self):
         return self.store.keys()
 
-    @untested
-    def size(self):
-        return len(self.store)
-
     def append(self, key, values):
         """Append a new record to the persistent file"""
-        with open(self.filename, 'a') as f:
-            f.write("ADD %s\n" % key)
-            for k in values:
-                v = values[k]
-                f.write("%s=%s\n" % (k, v))
-            f.write("\n")
+        if self.filename != None:
+            with open(self.filename, 'a') as f:
+                f.write("ADD %s\n" % key)
+                for k in values:
+                    v = values[k]
+                    f.write("%s=%s\n" % (k, v))
+                f.write("\n")
 
-
-    @unimplemented
+    @untested
     def remove(self, key):
         """Remove reference to this key in the file, and remove from in memory store"""
-        pass #TODO
+        if self.filename != None:
+            pass #TODO
         # open file for read write
         # search line at a time, process each command
         #   when we find the command 'ADD key'

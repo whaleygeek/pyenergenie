@@ -4,43 +4,85 @@
 
 import unittest
 from lifecycle import *
+from KVS import KVS
+
+# A dummy test class
+
+class TV():
+    def __init__(self, id):
+        self.id = id
+
+    def __repr__(self):
+        return "TV(%s)" % self.id
+
 
 class TestKVSMemory(unittest.TestCase):
 
     @test_0
     def test_create_blank(self):
-        pass #TODO: create a blank registry not bound to a file
-        #init
+        """Create a blank kvs, not bound to any external file"""
+        kvs = KVS()
+        # it should not fall over
 
     @test_0
     def test_add(self):
-        pass #TODO: add an object into the store
-        #setitem
+        """Add an object into the kvs store"""
+        kvs = KVS()
+
+        kvs["tv1"] = TV(1)
+        kvs["tv2"] = TV(2)
+
+        print(kvs.store)
 
     @test_0
     def test_change(self):
-        pass #TODO: if we change the value associated with a key, does it get updated?
-        #setitem
+        """Change the value associated with an existing key"""
+        kvs = KVS()
+        kvs["tv1"] = TV(1)
+        kvs["tv1"] = TV(111) # change it
+
+        print(kvs.store)
 
     @test_0
     def test_get(self):
-        pass #TODO: get an object by it's key name
-        #getitem
+        """Get the object associated with a key in the store"""
+        kvs = KVS()
+        kvs["tv1"] = TV(1)
+        t = kvs["tv1"]
+        print(t)
 
     @test_0
     def test_delete(self):
-        pass #TODO: delete an object by it's key name
-        #delitem
+        """Delete an existing key in the store, and a missing key for error"""
+        kvs = KVS()
+        kvs["tv1"] = TV(1)
+        del kvs["tv1"]
+        print(kvs.store)
+
+        try:
+            del kvs["tv1"] # expect error
+            self.fail("Did not get expected KeyError exception")
+        except KeyError:
+            pass # expected
 
     @test_0
     def test_size(self):
-        pass #TODO: how big is the kvs
-        # size
+        """How big is the kvs"""
+        kvs = KVS()
+        kvs["tv1"] = TV(1)
+        print(len(kvs))
+        kvs["tv2"] = TV(2)
+        print(len(kvs))
 
     @test_0
     def test_keys(self):
-        pass #TODO: get all keys
-        # keys
+        """Get out all keys of the kvs"""
+        kvs = KVS()
+        kvs["tv1"] = TV(1)
+        kvs["tv2"] = TV(2)
+        kvs["tv3"] = TV(3)
+        print(kvs.keys())
+
 
 class TestKVSPersisted(unittest.TestCase):
 
@@ -53,11 +95,18 @@ class TestKVSPersisted(unittest.TestCase):
     def test_load(self):
         pass #TODO: load a blank kvs from an external file
         # load
+        # callback for object creation needs to be passed in
+        # want to test that kvp's could be used to pass to kwargs to construct
+        # data must be passed in string format
 
     @test_0
     def test_add(self):
         pass #TODO: does persistent version change as well?
         # setitem
+
+    @test_0
+    def test_change(self):
+        pass #TODO: change the value associated with an existing key
 
     @test_0
     def test_delete(self):
