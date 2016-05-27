@@ -4,7 +4,7 @@
 
 import unittest
 from lifecycle import *
-from KVS import KVS
+from KVS import KVS, NotPersistableError
 
 # A dummy test class
 
@@ -21,12 +21,21 @@ class TV():
             "id": self.id
         }
 
+class FACTORY():
+    @staticmethod
+    def get(name, **kwargs):
+        if name == "TV": return TV(**kwargs)
+        else:
+            raise ValueError("Unknown device name %s" % name)
+
 
 
 def remove_file(filename):
     import os
-    os.unlink(filename)
-
+    try:
+        os.unlink(filename)
+    except OSError:
+        pass # ignore
 
 def show_file(filename):
     """Show the contents of a file on screen"""
@@ -35,16 +44,22 @@ def show_file(filename):
                 l = l.strip() # remove nl
                 print(l)
 
+def write_file(filename, contents):
+    with open(filename, "w") as f:
+        lines = contents.split("\n")
+        for line in lines:
+            f.write(line + '\n')
+
 
 class TestKVSMemory(unittest.TestCase):
 
-    @test_0
+    @test_1
     def test_create_blank(self):
         """Create a blank kvs, not bound to any external file"""
         kvs = KVS()
         # it should not fall over
 
-    @test_0
+    @test_1
     def test_add(self):
         """Add an object into the kvs store"""
         kvs = KVS()
@@ -54,7 +69,7 @@ class TestKVSMemory(unittest.TestCase):
 
         print(kvs.store)
 
-    @test_0
+    @test_1
     def test_change(self):
         """Change the value associated with an existing key"""
         kvs = KVS()
@@ -63,7 +78,7 @@ class TestKVSMemory(unittest.TestCase):
 
         print(kvs.store)
 
-    @test_0
+    @test_1
     def test_get(self):
         """Get the object associated with a key in the store"""
         kvs = KVS()
@@ -71,7 +86,7 @@ class TestKVSMemory(unittest.TestCase):
         t = kvs["tv1"]
         print(t)
 
-    @test_0
+    @test_1
     def test_delete(self):
         """Delete an existing key in the store, and a missing key for error"""
         kvs = KVS()
@@ -85,7 +100,7 @@ class TestKVSMemory(unittest.TestCase):
         except KeyError:
             pass # expected
 
-    @test_0
+    @test_1
     def test_size(self):
         """How big is the kvs"""
         kvs = KVS()
@@ -94,7 +109,7 @@ class TestKVSMemory(unittest.TestCase):
         kvs["tv2"] = TV(2)
         print(len(kvs))
 
-    @test_0
+    @test_1
     def test_keys(self):
         """Get out all keys of the kvs"""
         kvs = KVS()
@@ -108,7 +123,7 @@ class TestKVSPersisted(unittest.TestCase):
 
     KVS_FILENAME = "test.kvs"
 
-    @test_0
+    @test_1
     def test_write(self):
         """Write an in memory KVS to a file"""
         remove_file(self.KVS_FILENAME)
@@ -118,7 +133,7 @@ class TestKVSPersisted(unittest.TestCase):
 
         show_file(self.KVS_FILENAME)
 
-    @test_0
+    @test_1
     def test_load_cache(self):
         """Load record from a kvs file into the kvs cache"""
         # create a file to test against
@@ -138,7 +153,7 @@ class TestKVSPersisted(unittest.TestCase):
         # check state of the kvs file at end
         show_file(self.KVS_FILENAME)
 
-    @test_0
+    @test_1
     def test_add(self):
         """Add a new record to a persisted KVS"""
         remove_file(self.KVS_FILENAME)
@@ -149,7 +164,7 @@ class TestKVSPersisted(unittest.TestCase):
         print(kvs.store)
         show_file(self.KVS_FILENAME)
 
-    @test_0
+    @test_1
     def test_delete(self):
         """Delete an existing key from the persistent version"""
 
@@ -165,7 +180,7 @@ class TestKVSPersisted(unittest.TestCase):
 
         del kvs["tv1"]
 
-    @test_0
+    @test_1
     def test_change(self):
         """Change an existing record in a persisted KVS"""
         remove_file(self.KVS_FILENAME)
@@ -177,9 +192,7 @@ class TestKVSPersisted(unittest.TestCase):
         kvs["tv1"] = TV(2) ####HERE###
         show_file(self.KVS_FILENAME)
 
-    #---- HERE ----
-
-    @test_0
+    @test_1
     def test_ADD_nofactory(self):
         #NOTE: This is an under the bonnet test of parsing an ADD record from the file
 
@@ -194,7 +207,7 @@ class TestKVSPersisted(unittest.TestCase):
         # expected result: object described as a kvp becomes a kvp in the store if no factory callback
         print(kvs.store)
 
-    @test_0
+    @test_1
     def test_ADD_factory(self):
         #NOTE: This is an under the bonnet test of parsing an ADD record from the file
         obj = {
@@ -202,21 +215,13 @@ class TestKVSPersisted(unittest.TestCase):
             "id":        1234
         }
         kvs = KVS(self.KVS_FILENAME)
-
-        class FACTORY():
-            @staticmethod
-            def get(name, **kwargs):
-                if name == "TV": return TV(**kwargs)
-                else:
-                    raise ValueError("Unknown device name %s" % name)
-
-        kvs.ADD("tv1", obj, FACTORY)
+        kvs.ADD("tv1", obj, create_fn=FACTORY.get)
 
         # expected result: object described as a kvp becomes a configured object instance in store
         print(kvs.store)
 
 
-    @test_0
+    @test_1
     def test_IGN(self):
         #NOTE: This is an under the bonnet test of parsing an IGN record from the file
         obj = {
@@ -229,7 +234,6 @@ class TestKVSPersisted(unittest.TestCase):
         # expected result: no change to the in memory data structures
         print(kvs.store)
 
-    #---- HERE ----
 
     @test_1
     def test_DEL(self):
@@ -256,22 +260,45 @@ class TestKVSPersisted(unittest.TestCase):
         # expected result: error if it was not in the store in the first place
         print(kvs.store)
 
-    @test_0
+
+    @test_1
     def test_load_process(self):
         """Load and process a file with lots of records in it"""
-        #including ADD, IGN, DEL
-        #make sure callback processing is working too for object creation
-        #as the callback will create the object that is stored in the cache
-        pass #TODO
+        CONTENTS = """\
+ADD tv
+type=TV
+id=1
 
+IGN fan
+type=TV
+id=2
 
-#TODO: Other tests - for integrating with the registry later
-#pass in an object creator callback, should turn kvp into object instance
-#when persisting, try to call get_config(), if it works, persist the kvp,
-#if there is no get_config(), decide what to persist, if anything,
-#or throw a NotPersistable error perhaps?
-#Look to see if there is a pythonic way to do this, perhaps with one of
-#the meta methods?
+DEL tv
+
+ADD fridge
+type=TV
+id=99
+"""
+        write_file(self.KVS_FILENAME, CONTENTS)
+
+        kvs = KVS(self.KVS_FILENAME)
+        kvs.load(create_fn=FACTORY.get)
+
+        print(kvs.store)
+
+    @test_1
+    def test_not_persistable(self):
+        class NPC():
+            pass
+        remove_file(self.KVS_FILENAME)
+        kvs = KVS(self.KVS_FILENAME)
+
+        try:
+            kvs["npc"] = NPC() # should throw NotPersistableError
+            self.fail("Did not get expected NotPersistableError")
+        except NotPersistableError:
+            pass # expected
+
 
 if __name__ == "__main__":
     unittest.main()

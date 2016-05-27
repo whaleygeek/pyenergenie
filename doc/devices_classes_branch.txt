@@ -406,15 +406,20 @@ Design for discovery done
 Test cases for 5 discovery variants done and work
 monitor_mihome works with a synthetic join and toggles switches
 
+KVS implementation completed and all tests pass
+
 
 --------------------------------------------------------------------------------
 TODO NEXT
-KVS - key value store
-
 
 ---- PERSISTENT REGISTRY
 
-implement and test code (write a test harness)
+Knit KVS into Registry
+Re-test persistent use cases with Registry_test
+
+
+
+
 
 ---- NOTIFY, UPDATE, or DATA SEQUENCE?
 

@@ -4,18 +4,21 @@
 
 from lifecycle import *
 
+class NotPersistableError(Exception):
+    pass
+
 class KVS():
     """A persistent key value store"""
     def __init__(self, filename=None):
         self.filename = filename
         self.store = {}
 
-    def load(self, filename=None, factory_cb=None):
+    def load(self, filename=None, create_fn=None):
         """Load the whole file into an in-memory cache"""
 
         # use new filename if provided, else use existing filename
         if filename == None:
-            filename == self.filename
+            filename = self.filename
         if filename == None:
             raise ValueError("No filename specified")
 
@@ -51,44 +54,44 @@ class KVS():
                             k,v = line.split("=", 1)
                             obj[k] = v
                         else: # is blank
-                            self.process(command, key, obj, factory_cb)
+                            self.process(command, key, obj, create_fn)
                             command = None
                             is_cmd = True
 
         self.filename = filename # remember filename if it was provided
 
-    def process(self, command, key, obj, factory_cb):
+    def process(self, command, key, obj, create_fn):
         """Process the temporary object"""
         m = getattr(self, command)
         #If command is not found? get AttributeError - that's fine
-        m(key, obj, factory_cb)
+        m(key, obj, create_fn)
 
-    def ADD(self, key, obj, factory=None):
+    def ADD(self, key, obj, create_fn=None):
         """Add a new item to the kvs"""
         # The ADD command processes the next type= parameter as the class name in context
         # all other parameters are read as strings and passed to class constructor as kwargs
 
-        if factory != None:
-            print("*** calling factory to turn into a class instance")
+        if create_fn != None:
+            ##print("calling create_fn to turn into a class instance")
             type = obj["type"]
             del obj["type"] # don't pass to constructor
-            obj = factory.get(type, **obj)
+            obj = create_fn(type, **obj)
             # If this fails, then this is an error, so just let it bubble out
         else:
-            print("*** no factory configured, just storing kvp")
+            pass ##print("no create_fn configured, just storing kvp")
 
-        print("*** object: %s" % obj)
+        ##print("object: %s" % obj)
         # store kvp or class instance appropriately
         self.store[key] = obj
 
-    def IGN(self, key, obj=None, factory=None):
+    def IGN(self, key, obj=None, create_fn=None):
         """Ignore the whole record"""
         # The IGN command is the same length as ADD, allowing a seek/write to change any
         # command into IGN without changing the file size, effectively patching the file
         # so that the record is deleted.
         pass # There is nothing to do with this command
 
-    def DEL(self, key, obj=None, factory=None):
+    def DEL(self, key, obj=None, create_fn=None):
         """Delete the key from the store"""
         # The DEL command deletes the rec from the store.
         # This is useful to build temporary objects and delete them later.
@@ -103,8 +106,10 @@ class KVS():
             self.remove(key) # patches it to an IGN record
 
         self.store[key] = value
-        #TODO: If this fails, just add the kv pair map as the object
-        obj = value.get_config() # will fail with AttributeError if this method does not exist
+        try:
+            obj = value.get_config() # will fail with AttributeError if this method does not exist
+        except AttributeError:
+            raise NotPersistableError()
         self.append(key, obj)
 
     def __delitem__(self, key):
