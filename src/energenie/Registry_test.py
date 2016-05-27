@@ -15,34 +15,55 @@ from lifecycle import *
 
 radio.DEBUG=True
 
-class TestRegistry(unittest.TestCase):
+REGISTRY_KVS = "registry.kvs"
 
-    @test_1
-    def test_create(self):
-        import os
-        os.unlink('registry.kvs')
-        registry = DeviceRegistry("registry.kvs")
+def remove_file(filename):
+    import os
+    os.unlink(filename)
 
-        # add some devices to the registry, it should auto update the file
-        registry.add(Devices.MIHO005(device_id=0x68b), "tv")
-        #TODO: Need to have a way to get the persistent summary of a device class
-        #Perhaps in Device(), LegacyDevice() and MiHomeDevice() it does this for us
-        #and returns a map we can just persist and create from later?
 
-        registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
-
-        # see what the file looks like
-        with open(registry.DEFAULT_FILENAME) as f:
+def show_file(filename):
+    """Show the contents of a file on screen"""
+    with open(filename) as f:
             for l in f.readlines():
                 l = l.strip() # remove nl
                 print(l)
 
+
+class TestRegistry(unittest.TestCase):
+
     @test_0
+    def test_create(self):
+        remove_file(REGISTRY_KVS)
+        registry = DeviceRegistry(REGISTRY_KVS)
+
+        # add some devices to the registry, it should auto update the file
+        registry.add(Devices.MIHO005(device_id=0x68b), "tv")
+        registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
+
+        # see what the file looks like
+        show_file(registry.DEFAULT_FILENAME)
+
+    @test_1
     def test_load(self):
-        pass #TODO
-        # load from a persisted registry
-        # list the registry in memory
-        # see that each item is instantiated and has a route
+        # create a registry file
+        remove_file(REGISTRY_KVS)
+        registry = DeviceRegistry(REGISTRY_KVS)
+        registry.add(Devices.MIHO005(device_id=0x68b), "tv")
+        registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
+
+        # clear the in memory registry
+        registry = None
+
+        # create and load from file
+        registry = DeviceRegistry()
+        registry.load_from(REGISTRY_KVS)
+
+        # dump the registry state
+        registry.list()
+
+        #TODO: What about receive route testing??
+
 
     @test_0
     def test_load_into(self):
