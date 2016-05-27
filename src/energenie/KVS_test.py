@@ -194,7 +194,7 @@ class TestKVSPersisted(unittest.TestCase):
         # expected result: object described as a kvp becomes a kvp in the store if no factory callback
         print(kvs.store)
 
-    @test_1
+    @test_0
     def test_ADD_factory(self):
         #NOTE: This is an under the bonnet test of parsing an ADD record from the file
         obj = {
@@ -212,8 +212,6 @@ class TestKVSPersisted(unittest.TestCase):
 
         kvs.ADD("tv1", obj, FACTORY)
 
-        #TODO all non type args need to be passed as the kwargs to the factory.get
-
         # expected result: object described as a kvp becomes a configured object instance in store
         print(kvs.store)
 
@@ -221,15 +219,42 @@ class TestKVSPersisted(unittest.TestCase):
     @test_0
     def test_IGN(self):
         #NOTE: This is an under the bonnet test of parsing an IGN record from the file
-        pass #TODO: do IGN records get ignored when parsing the file?
-        # expected result: no change to the in memory data structures
+        obj = {
+            "type":      "TV",
+            "id":        1234
+        }
+        kvs = KVS(self.KVS_FILENAME)
+        kvs.IGN("tv1", obj)
 
-    @test_0
+        # expected result: no change to the in memory data structures
+        print(kvs.store)
+
+    #---- HERE ----
+
+    @test_1
     def test_DEL(self):
         #NOTE: This is an under the bonnet test of parsing a DEL record from the file
-        pass #TODO: do DEL records get processed when parsing the file?
+
+        #NOTE: This is an under the bonnet test of parsing an IGN record from the file
+        obj = {
+            "type":      "TV",
+            "id":        1234
+        }
+        kvs = KVS(self.KVS_FILENAME)
+        kvs.ADD("tv1", obj)
+        kvs.DEL("tv1", obj)
+
         # expected result: record is deleted from in memory store
+        print(kvs.store)
+
+
+        try:
+            kvs.DEL("tv1", obj)
+            self.fail("Did not get expected KeyError")
+        except KeyError:
+            pass # expected
         # expected result: error if it was not in the store in the first place
+        print(kvs.store)
 
     @test_0
     def test_load_process(self):

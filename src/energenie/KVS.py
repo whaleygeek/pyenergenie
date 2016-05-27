@@ -81,7 +81,6 @@ class KVS():
         # store kvp or class instance appropriately
         self.store[key] = obj
 
-    @unimplemented
     def IGN(self, key, obj=None, factory=None):
         """Ignore the whole record"""
         # The IGN command is the same length as ADD, allowing a seek/write to change any
@@ -89,14 +88,12 @@ class KVS():
         # so that the record is deleted.
         pass # There is nothing to do with this command
 
-    @unimplemented
     def DEL(self, key, obj=None, factory=None):
         """Delete the key from the store"""
         # The DEL command deletes the rec from the store.
         # This is useful to build temporary objects and delete them later.
         # There is no need to write this to the file copy, we're processing the file
-        pass #TODO
-        # find key in object store, delete it
+        del self.store[key]
 
     def __getitem__(self, key):
         return self.store[key]
