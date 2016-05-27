@@ -148,9 +148,7 @@ class TestKVSPersisted(unittest.TestCase):
         print(kvs.store)
         show_file(self.KVS_FILENAME)
 
-    #---- HERE ----
-
-    @test_1
+    @test_0
     def test_delete(self):
         """Delete an existing key from the persistent version"""
 
@@ -164,8 +162,7 @@ class TestKVSPersisted(unittest.TestCase):
 
         show_file(self.KVS_FILENAME)
 
-        del kvs["tv1"] ####FAIL remove() needs implementing
-
+        del kvs["tv1"]
 
     @test_0
     def test_change(self):
@@ -176,24 +173,27 @@ class TestKVSPersisted(unittest.TestCase):
         kvs["tv1"] = TV(1)
         show_file(self.KVS_FILENAME)
 
-        kvs["tv1"] = TV(2) ####FAIL, need to implement kvs.remove() first
+        kvs["tv1"] = TV(2) ####HERE###
         show_file(self.KVS_FILENAME)
 
+    #---- HERE ----
 
-
-
-    @test_0
+    @unimplemented
+    @test_1
     def test_ADD(self):
         pass #TODO: do ADD records get added when parsing the file?
 
+    @unimplemented
     @test_0
     def test_IGN(self):
         pass #TODO: do IGN records get ignored when parsing the file?
 
+    @unimplemented
     @test_0
     def test_DEL(self):
         pass #TODO: do DEL records get processed when parsing the file?
 
+    @unimplemented
     @test_0
     def test_load_process(self):
         """Load and process a file with lots of records in it"""
