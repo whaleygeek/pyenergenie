@@ -10,7 +10,7 @@ class KVS():
         self.filename = filename
         self.store = {}
 
-    def load(self, filename=None, create_cb=None):
+    def load(self, filename=None, factory_cb=None):
         """Load the whole file into an in-memory cache"""
 
         # use new filename if provided, else use existing filename
@@ -51,27 +51,38 @@ class KVS():
                             k,v = line.split("=", 1)
                             obj[k] = v
                         else: # is blank
-                            self.process(command, key, obj)
+                            self.process(command, key, obj, factory_cb)
                             command = None
                             is_cmd = True
 
         self.filename = filename # remember filename if it was provided
 
-    def process(self, command, key, obj):
+    def process(self, command, key, obj, factory_cb):
         """Process the temporary object"""
         m = getattr(self, command)
         #If command is not found? get AttributeError - that's fine
-        m(key, obj)
+        m(key, obj, factory_cb)
 
-    def ADD(self, key, obj):
+    def ADD(self, key, obj, factory=None):
         """Add a new item to the kvs"""
-        # The ADD command process the next type= parameter as the class name in context
+        # The ADD command processes the next type= parameter as the class name in context
         # all other parameters are read as strings and passed to class constructor as kwargs
+
+        if factory != None:
+            print("*** calling factory to turn into a class instance")
+            type = obj["type"]
+            del obj["type"] # don't pass to constructor
+            obj = factory.get(type, **obj)
+            # If this fails, then this is an error, so just let it bubble out
+        else:
+            print("*** no factory configured, just storing kvp")
+
+        print("*** object: %s" % obj)
+        # store kvp or class instance appropriately
         self.store[key] = obj
-        self.append(key, obj)
 
     @unimplemented
-    def IGN(self, key, obj=None):
+    def IGN(self, key, obj=None, factory=None):
         """Ignore the whole record"""
         # The IGN command is the same length as ADD, allowing a seek/write to change any
         # command into IGN without changing the file size, effectively patching the file
@@ -79,7 +90,7 @@ class KVS():
         pass # There is nothing to do with this command
 
     @unimplemented
-    def DEL(self, key, obj=None):
+    def DEL(self, key, obj=None, factory=None):
         """Delete the key from the store"""
         # The DEL command deletes the rec from the store.
         # This is useful to build temporary objects and delete them later.
@@ -95,6 +106,7 @@ class KVS():
             self.remove(key) # patches it to an IGN record
 
         self.store[key] = value
+        #TODO: If this fails, just add the kv pair map as the object
         obj = value.get_config() # will fail with AttributeError if this method does not exist
         self.append(key, obj)
 
@@ -120,7 +132,6 @@ class KVS():
                     f.write("%s=%s\n" % (k, v))
                 f.write("\n")
 
-    @untested
     def remove(self, key):
         """Remove reference to this key in the file"""
         if self.filename == None:

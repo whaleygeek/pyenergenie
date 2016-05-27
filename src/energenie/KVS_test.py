@@ -10,6 +10,7 @@ from KVS import KVS
 
 class TV():
     def __init__(self, id):
+        print("Creating TV %s" % id)
         self.id = id
 
     def __repr__(self):
@@ -178,22 +179,58 @@ class TestKVSPersisted(unittest.TestCase):
 
     #---- HERE ----
 
-    @unimplemented
-    @test_1
-    def test_ADD(self):
-        pass #TODO: do ADD records get added when parsing the file?
+    @test_0
+    def test_ADD_nofactory(self):
+        #NOTE: This is an under the bonnet test of parsing an ADD record from the file
 
-    @unimplemented
+        # No factory callback provided, use ADD parse action
+        obj = {
+            "type":      "MIHO005",
+            "id":        1234
+        }
+        kvs = KVS(self.KVS_FILENAME)
+        kvs.ADD("tv1", obj)
+
+        # expected result: object described as a kvp becomes a kvp in the store if no factory callback
+        print(kvs.store)
+
+    @test_1
+    def test_ADD_factory(self):
+        #NOTE: This is an under the bonnet test of parsing an ADD record from the file
+        obj = {
+            "type":      "TV",
+            "id":        1234
+        }
+        kvs = KVS(self.KVS_FILENAME)
+
+        class FACTORY():
+            @staticmethod
+            def get(name, **kwargs):
+                if name == "TV": return TV(**kwargs)
+                else:
+                    raise ValueError("Unknown device name %s" % name)
+
+        kvs.ADD("tv1", obj, FACTORY)
+
+        #TODO all non type args need to be passed as the kwargs to the factory.get
+
+        # expected result: object described as a kvp becomes a configured object instance in store
+        print(kvs.store)
+
+
     @test_0
     def test_IGN(self):
+        #NOTE: This is an under the bonnet test of parsing an IGN record from the file
         pass #TODO: do IGN records get ignored when parsing the file?
+        # expected result: no change to the in memory data structures
 
-    @unimplemented
     @test_0
     def test_DEL(self):
+        #NOTE: This is an under the bonnet test of parsing a DEL record from the file
         pass #TODO: do DEL records get processed when parsing the file?
+        # expected result: record is deleted from in memory store
+        # expected result: error if it was not in the store in the first place
 
-    @unimplemented
     @test_0
     def test_load_process(self):
         """Load and process a file with lots of records in it"""
@@ -203,6 +240,13 @@ class TestKVSPersisted(unittest.TestCase):
         pass #TODO
 
 
+#TODO: Other tests - for integrating with the registry later
+#pass in an object creator callback, should turn kvp into object instance
+#when persisting, try to call get_config(), if it works, persist the kvp,
+#if there is no get_config(), decide what to persist, if anything,
+#or throw a NotPersistable error perhaps?
+#Look to see if there is a pythonic way to do this, perhaps with one of
+#the meta methods?
 
 if __name__ == "__main__":
     unittest.main()
