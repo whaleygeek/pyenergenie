@@ -15,6 +15,25 @@ class TV():
     def __repr__(self):
         return "TV(%s)" % self.id
 
+    def get_config(self):
+        return {
+            "id": self.id
+        }
+
+
+
+def remove_file(filename):
+    import os
+    os.unlink(filename)
+
+
+def show_file(filename):
+    """Show the contents of a file on screen"""
+    with open(filename) as f:
+            for l in f.readlines():
+                l = l.strip() # remove nl
+                print(l)
+
 
 class TestKVSMemory(unittest.TestCase):
 
@@ -86,40 +105,99 @@ class TestKVSMemory(unittest.TestCase):
 
 class TestKVSPersisted(unittest.TestCase):
 
-    @test_0
-    def test_write(self):
-        pass #TODO: write an in memory kvs to a file
-        # write
+    KVS_FILENAME = "test.kvs"
 
     @test_0
-    def test_load(self):
-        pass #TODO: load a blank kvs from an external file
-        # load
-        # callback for object creation needs to be passed in
-        # want to test that kvp's could be used to pass to kwargs to construct
-        # data must be passed in string format
+    def test_write(self):
+        """Write an in memory KVS to a file"""
+        remove_file(self.KVS_FILENAME)
+        kvs = KVS()
+        kvs["tv1"] = TV(1)
+        kvs.write(self.KVS_FILENAME)
+
+        show_file(self.KVS_FILENAME)
+
+    @test_0
+    def test_load_cache(self):
+        """Load record from a kvs file into the kvs cache"""
+        # create a file to test against
+        remove_file(self.KVS_FILENAME)
+        kvs = KVS()
+        kvs["tv1"] = TV(1)
+        kvs.write(self.KVS_FILENAME)
+
+        kvs = KVS() # clear it out again
+
+        # load the file
+        kvs.load(self.KVS_FILENAME)
+
+        # check the state of the kvs memory
+        print(kvs.store)
+
+        # check state of the kvs file at end
+        show_file(self.KVS_FILENAME)
 
     @test_0
     def test_add(self):
-        pass #TODO: does persistent version change as well?
-        # setitem
+        """Add a new record to a persisted KVS"""
+        remove_file(self.KVS_FILENAME)
+        kvs = KVS(self.KVS_FILENAME)
+
+        kvs["tv1"] = TV(1)
+
+        print(kvs.store)
+        show_file(self.KVS_FILENAME)
+
+    #---- HERE ----
+
+    @test_1
+    def test_delete(self):
+        """Delete an existing key from the persistent version"""
+
+        remove_file(self.KVS_FILENAME)
+        kvs = KVS(self.KVS_FILENAME)
+
+        kvs["tv1"] = TV(1)
+        show_file(self.KVS_FILENAME)
+
+        del kvs["tv1"] ####FAIL remove() needs implementing
+
 
     @test_0
     def test_change(self):
-        pass #TODO: change the value associated with an existing key
+        """Change an existing record in a persisted KVS"""
+        remove_file(self.KVS_FILENAME)
+        kvs = KVS(self.KVS_FILENAME)
+
+        kvs["tv1"] = TV(1)
+        show_file(self.KVS_FILENAME)
+
+        kvs["tv1"] = TV(2) ####FAIL, need to implement kvs.remove() first
+        show_file(self.KVS_FILENAME)
+
+
+
 
     @test_0
-    def test_delete(self):
-        pass #TODO: does persistent version get an IGN update?
-        # delitem
+    def test_ADD(self):
+        pass #TODO: do ADD records get added when parsing the file?
 
     @test_0
     def test_IGN(self):
-        pass #TODO: do IGN records get ignored?
+        pass #TODO: do IGN records get ignored when parsing the file?
 
     @test_0
     def test_DEL(self):
-        pass #TODO: do DEL records get processed?
+        pass #TODO: do DEL records get processed when parsing the file?
+
+    @test_0
+    def test_load_process(self):
+        """Load and process a file with lots of records in it"""
+        #including ADD, IGN, DEL
+        #make sure callback processing is working too for object creation
+        #as the callback will create the object that is stored in the cache
+        pass #TODO
+
 
 
 if __name__ == "__main__":
