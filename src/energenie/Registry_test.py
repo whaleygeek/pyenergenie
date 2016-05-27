@@ -19,6 +19,8 @@ class TestRegistry(unittest.TestCase):
 
     @test_1
     def test_create(self):
+        import os
+        os.unlink('registry.kvs')
         registry = DeviceRegistry("registry.kvs")
 
         # add some devices to the registry, it should auto update the file
@@ -27,7 +29,7 @@ class TestRegistry(unittest.TestCase):
         #Perhaps in Device(), LegacyDevice() and MiHomeDevice() it does this for us
         #and returns a map we can just persist and create from later?
 
-        ##registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
+        registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
 
         # see what the file looks like
         with open(registry.DEFAULT_FILENAME) as f:

@@ -277,6 +277,9 @@ class Device():
         self.capabilities = Capabilities()
         self.updated_cb = None
 
+    def get_config(self):
+        raise RuntimeError("There is no configuration for a base Device")
+
     def has_switch(self):
         return hasattr(self.capabilities, "switch")
 
@@ -353,6 +356,14 @@ class LegacyDevice(EnergenieDevice):
     def __repr__(self):
         return "LegacyDevice(%s)" % str(self.device_id)
 
+    def get_config(self):
+        """Get the persistable config, enough to reconstruct this class from a factory"""
+        return {
+            "type":            self.__class__.__name__,
+            "device_id":       self.device_id
+        }
+
+
     def send_message(self, payload):
         #TODO: interface with air_interface
         # Encode the payload two bits per byte as per OOK spec
@@ -387,6 +398,15 @@ class MiHomeDevice(EnergenieDevice):
         #if we are cycling codes on each message?
         #self.config.encryptPID = CRYPT_PID
         #self.config.encryptPIP = CRYPT_PIP
+
+    def get_config(self):
+        """Get the persistable config, enough to reconstruct this class from a factory"""
+        return {
+            "type":            self.__class__.__name__,
+            "manufacturer_id": self.manufacturer_id,
+            "product_id":      self.product_id,
+            "device_id":       self.device_id
+        }
 
     def __repr__(self):
         return "MiHomeDevice(%s,%s,%s)" % (str(self.manufacturer_id), str(self.product_id), str(self.device_id))
