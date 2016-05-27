@@ -11,9 +11,10 @@ class KVSFile():
         self.store = {}
 
     @unimplemented
-    def load(self, factory):
+    def load(self, create_cb):
         """Load the whole file into an in-memory cache"""
-        # The 'factory' is a place to go to turn device type names into actual class instances
+        # The 'callback' is called to process each record as it is read in.
+        # for the Registry, this is a way that it can create the class and also add receive routing
         pass #TODO
         # open file for read
         # for each line read
@@ -115,7 +116,7 @@ class KVSFile():
         # close file
 
     @unimplemented
-    def rewrite(self):
+    def write(self, filename=None):
         """Rewrite the whole in memory cache over the top of the external file"""
         # useful if you have updated the in memory copy only and want to completely regenerate
         pass #TODO
