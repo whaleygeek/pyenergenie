@@ -64,7 +64,8 @@ def do_mihome_discovery():
     energenie.Registry.discovery_ask(energenie.Registry.ask)
     try:
         while True:
-            time.sleep(1) # tick
+            energenie.loop() # Allow receive processing
+            time.sleep(0.25) # tick fast enough to get messages in quite quickly
     except KeyboardInterrupt:
         print("Discovery stopped")
 
@@ -87,6 +88,8 @@ def do_list_registry():
 def do_switch_device():
     global quit
     """Turn the switch on a socket on and off, to test it"""
+
+    #TODO DRY name = select_device()
     # select the device from a menu of numbered devices
     names = show_registry()
 
@@ -96,14 +99,21 @@ def do_switch_device():
     #TODO: error check
     #TODO: Ctrl-C check
 
-    print("selected: %s" % names[device_index-1])
+    name = names[device_index-1]
+    print("selected: %s" % name)
 
-    #TODO could list action methods by introspecting device class??
+    device = energenie.registry.get(name)
+    #TODO: DRY END
+
+    #TODO could list all action methods by introspecting device class
+    # and build a device specific menu
     def on():
-        print("will turn on")
+        print("Turning on")
+        device.turn_on
 
     def off():
-        print("will turn off")
+        print("Turning off")
+        device.turn_off
 
     MENU = [
         ("on",  on),
@@ -124,14 +134,25 @@ def do_switch_device():
 @untested
 def do_show_device_status():
     """Show the readings associated with a device"""
-    pass #TODO
-    #TODO: need a way of asking a device for a summary of it's readings
-    #In a way that Device() could implement it for all devices??
 
-    #TODO, not sure might show all devices in a simple table
-    #note different field names make table display hard, unless there are shorthand names
-    # for each device in the registry
-    #   show a summary line for that device
+    #TODO DRY name = select_device()
+    names = show_registry()
+
+    energenie.loop() # allow receive processing #TODO: not long enough for >1 msg??
+
+    # ask user for on/off/another/done
+    i = readin("Which device %s to %s" % (1,len(names)))
+    device_index = int(i)
+    #TODO: error check
+    #TODO: Ctrl-C check
+
+    name = names[device_index-1]
+    print("selected: %s" % name)
+    device = energenie.registry.get(name)
+    #TODO: DRY END
+
+    readings = device.get_readings_summary()
+    print(readings)
 
 
 @untested
@@ -139,6 +160,7 @@ def do_watch_devices():
     """Repeatedly show readings for all devices"""
     try:
         while True:
+            energenie.loop() # allow receive processing
             print('-' * 80)
             names = energenie.registry.names()
             for name in names:
@@ -151,41 +173,73 @@ def do_watch_devices():
     except KeyboardInterrupt:
         pass # user exit
 
-@unimplemented
+
+@untested
 def do_rename_device():
     """Rename a device in the registry to a different name"""
     #This is useful when turning auto discovered names into your own names
-    #TODO: The registry does not support a rename mode at the moment
-    #will need to add this by getting the record, deleting it, and appending it again
-    pass #TODO
+
+    #TODO DRY name = select_device()
     names = show_registry()
-    # get a choice 1..num+1
-    # ask for a new name
-    # registry.rename(old_name, new_name)
+
+    # ask user for on/off/another/done
+    i = readin("Which device %s to %s" % (1,len(names)))
+    device_index = int(i)
+    #TODO: error check
+    #TODO: Ctrl-C check
+
+    name = names[device_index-1]
+    print("selected: %s" % name)
+    #TODO: DRY END
+
+    new_name = readin("New name?")
+
+    energenie.registry.rename(name, new_name)
 
 
-@unimplemented
+@untested
 def do_delete_device():
     """Delete a device from the registry so it is no longer recognised"""
-    pass #TODO
+
+    #TODO DRY name = select_device()
     names = show_registry()
-    # get a choice 1..num+1
-    # registry.delete(name)
+
+    # ask user for on/off/another/done
+    i = readin("Which device %s to %s" % (1,len(names)))
+    device_index = int(i)
+    #TODO: error check
+    #TODO: Ctrl-C check
+
+    name = names[device_index-1]
+    print("selected: %s" % name)
+    #TODO: DRY END
+
+    energenie.registry.delete(name)
 
 
-
-
-@unimplemented
+@untested
 def do_logging():
     """Enter a mode where all communications are logged to screen and a file"""
-    pass #TODO
-    # loop until Ctrl-C
-    #   if a device update comes in
-    #   display summary of its data on screen
-    #   add summary of data to energenie.csv using Logging.log_message
+    import Logger
+
+    # provide a default incoming message handler for all fsk messages
+    def incoming(address, message):
+        print("\nIncoming from %s" % str(address))
+        print(message)
+        Logger.logMessage(message)
+    energenie.fsk_router.when_incoming(incoming)
+
+    try:
+        while True:
+            energenie.loop()
+
+    except KeyboardInterrupt:
+        pass #user quit
+
+    finally:
+        energenie.fsk_router.when_incoming(None)
 
 
-@log_method
 def do_quit():
     """Finished with the program, so exit"""
     global quit

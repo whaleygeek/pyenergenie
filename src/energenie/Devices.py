@@ -354,6 +354,7 @@ class Device():
         """An estimate of the next time we expect a message from this device"""
         pass
 
+    @unimplemented
     def get_readings_summary(self):
         """Try to get a terse summary of all present readings"""
         # if self.readings does not exist

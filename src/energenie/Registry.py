@@ -77,7 +77,7 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
     DEFAULT_FILENAME = "registry.kvs"
 
     def __init__(self, filename=None):
-        print("***Opening DeviceRegistry")
+        ##print("***Opening DeviceRegistry")
         self.store = KVS(filename)
 
     def load_from(self, filename=None):
@@ -123,6 +123,15 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
                 address = (c.manufacturer_id, c.product_id, c.device_id)
                 fsk_router.add(address, c)
         return c
+
+    @untested
+    def rename(self, old_name, new_name):
+        """Rename a device in the registry"""
+        c = self.store[old_name] # get the class instance
+        self.delete(old_name) # remove from memory and from any disk version
+        self.add(c, new_name) # Add the same class back, but with the new name
+        #Note: If rx routes are defined, they will still be correct,
+        # because they wire directly to the device class instance
 
     def delete(self, name):
         """Delete the named class instance"""
