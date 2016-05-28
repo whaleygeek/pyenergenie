@@ -276,6 +276,7 @@ class Device():
         class Capabilities(): pass
         self.capabilities = Capabilities()
         self.updated_cb = None
+        self.rxseq = 0
 
     def get_config(self):
         raise RuntimeError("There is no configuration for a base Device")
@@ -353,9 +354,13 @@ class Device():
         """An estimate of the next time we expect a message from this device"""
         pass
 
+    def get_receive_count(self):
+        return self.rxseq
+
     def incoming_message(self, payload):
         """Entry point for a message to be processed"""
         #This is the base-class entry point, don't  override this, but override handle_message
+        self.rxseq += 1
         self.handle_message(payload)
         if self.updated_cb != None:
             self.updated_cb(self, payload)
