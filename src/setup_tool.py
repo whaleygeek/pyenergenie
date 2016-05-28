@@ -17,6 +17,18 @@
 # - deleting devices from the registry]
 # - renaming devices in the registry (e.g. auto learn devices->nice name)
 
+
+# MENU:
+# 1. legacy learn mode
+# 2. mihome discovery mode
+# 3. list registry
+# 4. rename device
+# 5. delete device
+# 6. switch device
+# 7. show device states
+# 8. logging
+# 9. quit
+
 # END
 
 
