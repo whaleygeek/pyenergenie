@@ -2,6 +2,11 @@
 #
 # Monitor Energine MiHome sockets
 
+#NOTE: This file will soon be deprecated, and replaced with mihome_energy_monitor.py
+
+
+
+
 import energenie
 ##import Logger
 import time

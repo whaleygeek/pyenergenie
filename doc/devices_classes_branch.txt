@@ -203,18 +203,10 @@ POSSIBLE: 9. understand read only and read/write intents better
    whole record.
 
 
-
---------------------------------------------------------------------------------
-GENERAL NOTES
-
-aquarium.when_turned_off(just_turned_off)
-
-
 --------------------------------------------------------------------------------
 PRESENT STATUS
 
 Router written and integrated in energenie.loop()
-
 Discovery behaviours written and tested ok
 monitor_mihome works with a synthetic join and toggles switches
 KVS implementation completed and all tests pass
@@ -223,9 +215,7 @@ receive sequence counter tested
 
 
 --------------------------------------------------------------------------------
-TODO NEXT
-
-
+PLAN UP TO: MERGE BACK TO MASTER
 
 ---- TEST ON REAL HARDWARE
 
@@ -236,44 +226,20 @@ This will be a good first-look at what the better demos might look like.
 
 * add back in the loop() call in the monitor_mihome.py program
 
+---- DEMO APPS
+
+setup_tool.py
+mihome_energy_monitor.py
+games_console_minder.py
 
 
----- BETTER DEMOS
+---- EVENT HANDLERS ON DEVICES (later)
+
+(add this as an issue of 'ideas for devices')
+Need to get the core code out there, and improve it later
 
 aquarium.when_turned_off(just_turned_off)
 
-There are a few variants of things to test.
-Really do want the demos in the top level directory to be simple and representative
-of what a first time user might do with the code
-
-1. legacy switches
-- learn mode for legacy switches (learn mode with a broadcast tester)
-- turning legacy switches on and off
-
-energenie.start_learn(house_code=0xABCDE, index=2)
-raw_input("Press enter when done")
-energenie.stop_learn()
-
-2. mihome monitoring
-- discovering and registering mihome monitor devices into your registry (learn mode/tester)
-- generating an energy log from mihome monitors
-
-3. mixed monitoring and control
-- creating simple logic that turns mihome switches on and off based on energy usage/timer
-- perhaps also turning legacy switches on and off based on energy from a mihome monitor
-- showing the device agnostic oo interface for any switch device
-
-Perhaps there is a commissioning app, that allows
-- learn mode broadcasts for legacy devices
-- testing legacy device switches by turning on and off
-- assisted join from mihome with add to registry with friendly names
-- showing trace of data coming from mihome monitor
-- turning adaptor plus switch on and off
-
-It could just be a simple menu system.
-This then means you don't have to have all this in the demo apps
-and the demo apps can just refer to object variables names
-from an assumed auto_create registry.
 
 
 ----- RELEASE TESTING AND RELEASE
