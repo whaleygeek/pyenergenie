@@ -219,17 +219,12 @@ Discovery behaviours written and tested ok
 monitor_mihome works with a synthetic join and toggles switches
 KVS implementation completed and all tests pass
 Registry tests all complete
+receive sequence counter tested
+
 
 --------------------------------------------------------------------------------
 TODO NEXT
 
----- NOTIFY, UPDATE, or DATA SEQUENCE?
-
-Consider whether there is a need for a general update notify
-mechanism - perhaps could have a message sequence counter that
-you poll, and if it is higher than last time, you know the
-device state has updated (independently of using the
-when_updated callback)
 
 
 ---- TEST ON REAL HARDWARE

@@ -2,14 +2,15 @@
 #
 # Test harness for Devices module
 
-import time
 import Devices
 import unittest
 from lifecycle import *
+import OpenThings
+
 
 class TestDevices(unittest.TestCase):
 
-    @test_1
+    @test_0
     def test_without_registry(self):
         """A simple on/off test with some devices from the device factory"""
         tv   = Devices.DeviceFactory.get_device_from_name("GreenButton", device_id=(0xC8C8C, 1))
@@ -25,6 +26,17 @@ class TestDevices(unittest.TestCase):
         tv.turn_off()
         fan.turn_on()
         xbox.turn_on()
+
+    @test_1
+    def test_rx_seq(self):
+        """Test that the rx sequence increments on each received message"""
+        fan  = Devices.DeviceFactory.get_device_from_name("AdaptorPlus", device_id=0x68b)
+
+        msg = OpenThings.Message(Devices.MIHO005_REPORT)
+        print(fan.get_receive_count())
+
+        fan.incoming_message(msg)
+        print(fan.get_receive_count())
 
 
 def init():
