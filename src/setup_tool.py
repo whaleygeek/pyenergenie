@@ -7,19 +7,11 @@
 #   and the demo apps can just refer to object variables names
 #   from an assumed auto_create registry, that is built using this setup tool.
 
-# REQUIREMENTS
-# - learn mode broadcasts for legacy devices
-# - testing legacy device switches by turning on and off
-# - assisted join from mihome with add to registry with friendly names
-# - showing trace of data coming from mihome monitor
-# - turning adaptor plus switch on and off
-# - dumping the contents of the registry in a simple format
-# - deleting devices from the registry]
-# - renaming devices in the registry (e.g. auto learn devices->nice name)
 
 import energenie
 from energenie.lifecycle import *
 
+#TODO: Catch Ctrl-C interrupt if possible
 try:
     readin = raw_input # Python 2
 except NameError:
@@ -30,46 +22,96 @@ quit = False
 
 @log_method
 def do_legacy_learn():
+    """Repeatedly broadcast a legacy switch message, so you can learn a socket to the pattern"""
     pass #TODO
+    # get house code, default to energenie code
+    # get switch index, default 1 (0,1,2,3,4)
+    # go into transmit OOK mode
+    # in a loop until Ctrl-C
+    #   transmit on message for house/device
+    #   wait a short while
 
 
 @log_method
 def do_mihome_discovery():
+    """Discover any mihome device when it sends reports"""
     pass #TODO
+    # select join ask discovery mode
+    # in a loop until Ctrl-C
+    #   just wait, the discovery agent will do everything for us
+    #   in discover_askjoin mode, it will even ask the user for registry add/ignore
 
 
 @log_method
 def do_list_registry():
-    pass #TODO
+    """List the entries in the registry"""
+    energenie.registry.list()
 
 
 @log_method
 def do_rename_device():
+    """Rename a device in the registry to a different name"""
+    #This is useful when turning auto discovered names into your own names
+    #TODO: The registry does not support a rename mode at the moment
+    #will need to add this by getting the record, deleting it, and appending it again
     pass #TODO
 
 
 @log_method
 def do_delete_device():
+    """Delete a device from the registry so it is no longer recognised"""
     pass #TODO
+    #list the registry with numbers
+    # get the number of the device to delete, ctrl-C aborts
+    # ask the registry to delete it
 
 
 @log_method
 def do_switch_device():
+    """Turn the switch on a socket on and off, to test it"""
     pass #TODO
+    # select the device from a menu of numbered devices
+    # ask user for on/off/another/done
+    # if on, turn it on
+    # if off, turn it off
+    # if another, show list again
+    # if done, exit
 
 
 @log_method
 def do_show_device_status():
+    """Show the readings associated with a device"""
     pass #TODO
+    #TODO, not sure might show all devices in a simple table
+    #note different field names make table display hard, unless there are shorthand names
+    # for each device in the registry
+    #   show a summary line for that device
+
+
+@log_method
+def do_watch_device():
+    """Repeatedly show readings for a single device"""
+    pass #TODO
+    #show a list of devices
+    # get a device number from the user
+    # loop until Ctrl-C
+    #   show device status
+    #   wait until device status updates
 
 
 @log_method
 def do_logging():
+    """Enter a mode where all communications are logged to screen and a file"""
     pass #TODO
+    # loop until Ctrl-C
+    #   if a device update comes in
+    #   display summary of its data on screen
+    #   add summary of data to energenie.csv using Logging.log_message
 
 
 @log_method
 def do_quit():
+    """Finished with the program, so exit"""
     global quit
     quit = True
 
@@ -108,6 +150,7 @@ MAIN_MENU = [
     ("legacy learn mode",     do_legacy_learn),
     ("mihome discovery mode", do_mihome_discovery),
     ("list registry",         do_list_registry),
+    ("watch device",          do_watch_device),
     ("rename device",         do_rename_device),
     ("delete device",         do_delete_device),
     ("switch device",         do_switch_device),
