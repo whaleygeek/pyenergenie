@@ -80,11 +80,10 @@ class TestRegistry(unittest.TestCase):
         # dump the registry state
         registry.list()
 
-        #TODO loading the registry should set up receive routes also
-        #perhaps we have to get the registry to do that *after* loading all objects
-        #as an extra pass?
+        # get device intances, this will cause receive routes to be knitted up
+        tv = registry.get("tv")
+        fan = registry.get("fan")
         fsk_router.list() #### FAIL no routes created by registry
-        self.fail("no routes") #TODO:####
 
 
     @test_0 # DONE

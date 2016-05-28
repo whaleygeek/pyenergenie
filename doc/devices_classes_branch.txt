@@ -11,14 +11,14 @@ code 'in the land of their devices'.
 --------------------------------------------------------------------------------
 REQUIREMENTS
 
-1. EXPRESSIVE: To be able to write expressive and compact applications,
+YES 1. EXPRESSIVE: To be able to write expressive and compact applications,
    that talk in the vocabulary of physical devices.
 
-   a. All known Energenie devices to be modelled as classes inside a
+   YES a. All known Energenie devices to be modelled as classes inside a
       device database, and the capabilities and operations on those devices
       pre-written so they can be reused by a user application.
 
-   b. An easy way for users to map energenie device intents to user
+   YES b. An easy way for users to map energenie device intents to user
       device intents (such as by wrapping custom object vocabulary around
       the standard energenie device vocabulary) - e.g. room.heat() rather
       than plug.on()
@@ -32,77 +32,77 @@ REQUIREMENTS
   than the implementation details.
 
 
-2. NAME REGISTRY: To be able to build a local registry of devices and their configurations,
+HMM? 2. NAME REGISTRY: To be able to build a local registry of devices and their configurations,
    and refer to devices by name inside the application.
 
-   a. to be configurable by learning (e.g. listen for messages such as
+   YES a. to be configurable by learning (e.g. listen for messages such as
       a join message, and add the device to the registry)
 
-   b. to be configurable by hand (e.g. hand entering the sensor id of
+   YES b. to be configurable by hand (e.g. hand entering the sensor id of
       a known device into the registry)
 
-   c. to automatically build variables for the user program from the
+   YES c. to automatically build variables for the user program from the
       registry, so that users don't have to bother with lots of
       wiring up code every time their app starts.
 
-   d. this registry must be persistable, e.g. save and restore to a disk file,
+   YES d. this registry must be persistable, e.g. save and restore to a disk file,
       so that on application startup, the device database is automatically loaded
       and objects created.
 
-   e. the registry can be queried, such as 'find me all devices that are of
+   HMM? e. the registry can be queried, such as 'find me all devices that are of
       type x' or 'find me all devices in location kitchen'.
 
 
-3. INTENTS: To be able to command and query devices in a way that represents
+HMM? 3. INTENTS: To be able to command and query devices in a way that represents
    meaningful device-based intents (such as tv.on() and tv.get_power())
 
-   a. received data values to be cached for deferred query, such as get_power()
+   YES a. received data values to be cached for deferred query, such as get_power()
 
-   b. the last receipt time of data from a transmitting device to be known
+   POSSIBLE b. the last receipt time of data from a transmitting device to be known
 
-   c. the next expected receipt time of data from a transmitting device to be known
+   POSSIBLY c. the next expected receipt time of data from a transmitting device to be known
 
-   d. the last known state of a transmitting device to be known (e.g. switch state
+   POSSIBLY d. the last known state of a transmitting device to be known (e.g. switch state
       both by commanded state and retrieved state)
 
 
-4. AGNOSTIC: To be able to refer to user devices in an Energenie device agnostic way.
+YES 4. AGNOSTIC: To be able to refer to user devices in an Energenie device agnostic way.
 
    e.g. it doesn't matter if the TV is plugged into a green button device,
    or a MiHome device. It is always tv.on() in the code.
 
 
-5. LEARN/DISCOVER: To be able to instigate and manage learn mode from within an app
+YES 5. LEARN/DISCOVER: To be able to instigate and manage learn mode from within an app
 
-   a. To send specific commands to green button devices so they can
+   YES a. To send specific commands to green button devices so they can
       learn the pattern
 
-   b. To sniff for any messages from MiHome devices and capture them
+   YES b. To sniff for any messages from MiHome devices and capture them
       for later analysis and turning into device objects
 
-   c. To process MiHome join requests, and send MiHome join acks
+   YES c. To process MiHome join requests, and send MiHome join acks
 
 
-6. ABSTRACTED RADIO: To completely hide the user from the on-air radio interface
+YES 6. ABSTRACTED RADIO: To completely hide the user from the on-air radio interface
 
-   a. choosing the correct radio frequency and modulation automatically
+   YES a. choosing the correct radio frequency and modulation automatically
 
-   b. choosing the correct physical layer configuration automatically,
+   YES b. choosing the correct physical layer configuration automatically,
       such as message repeats for certain devices
 
 
 Not as part of this work, but this should at least be enabled
 by the design
 
-7. PERFORMING: To be able to build a well performing system
+HMM? 7. PERFORMING: To be able to build a well performing system
    with very few message collisions and message losses
 
-   a. by dynamically learning report patterns of MiHome devices
+   POSSIBLE a. by dynamically learning report patterns of MiHome devices
 
-   b. by intelligently deferring and schedulling transmit messages
+   POSSIBLE b. by intelligently deferring and schedulling transmit messages
       to avoid transmit slots of reporting devices
 
-   c. to query device characteristics such as modulation scheme and msg repeats.
+   POSSIBLE c. to query device characteristics such as modulation scheme and msg repeats.
       also to estimate the transmit time of a particular message to help
       with message scheduling.
 
@@ -110,53 +110,25 @@ by the design
 --------------------------------------------------------------------------------
 DESIGN Devices.py
 
-  to have a device class for each supported Energenie product.
+MOSTLY DONE,
 
-  These classes to define the operations on that device, such as on() off()
-  get_power().
-
-  Radio interface configuration parameters to be associated with each
-  device class, such as the modulation scheme and message repeat requirements.
-
-  commands modelled by function calls such as turn_on()
+remaining items to investigate:
 
   commanded state? (did we ask it to be on, when did we ask?)
   reported state? (did it tell us it is on, when did we learn it?)
 
   overall device state
-    can this device receive commands?
-    can this device transmit reports?
     have we seen this device this run?
     when did we last hear from it?
     when did we last talk to it?
     when do we expect to next hear from it?
-
-  common device features
-    it's manufacturer id
-    it's product id
-    it's sensor id
 
   yet unmodelled devices still to be usable to some degree
     for MiHome devices, a proxy class generated dynamically based on received message parameters.
     e.g. if it reports a TEMPERATURE field, then there should be an automatic get_temperature() method
     generated.
 
-  an incoming message callback
-    this already knows it is for the device, but it is up to the device to decode and action
-
-  an outgoing message sender
-    to be knitted to the on air interface proxy, but no radio handler code in the device class or instance.
-
-  TODO
-    possibly add callbacks such as when_turned_on() when_turned_off() etc.
-
-    Where do unknown incoming messages get routed to? Need to at least log them somewhere.
-    Although they won't necessarily route to a device class. But useful for learning semantics.
-    Perhaps there is a single 'UnknownDevice' that is just a Device() base class, that
-    captures all of these messages? But there might be multiple devices, so perhaps
-    we could generate UnknownDevice instances (optionally) when we receive messages
-    from something that we don't know what it is yet?
-
+  possibly add callbacks such as when_turned_on() when_turned_off() etc.
 
 (do we need to know what our last sent request is, vs last known reported state?
 e.g. if we have sent a request but not heard a response yet, this means we think we asked
@@ -177,116 +149,17 @@ get it, or if it is in the wrong state, could retry a send again until it change
 value and the confirmed value. If they are different, it means might still be
 waiting for a reply, so can't guarantee the command was received yet)
 
-Device
-  get_manufacturer_id
-  get_sensor_id
-  get_product_id
-
-  (these may need an ack-back from radio module to know it happened)
-  ?get_last_receive_time
-  ?get_last_send_time
-  ?get_next_receive_time
-  ?get_next_send_time
-
-  incoming_message (OOK or OpenThings as appropriate, stripped of header? pydict?)
-  send_message (a link out to the transport, could be mocked, for example)
-
-  EnergenieDevice
-    get_radio_config -> config_selector? (freq, modulation) config_parameters? (inner_repeats, delay, outer_repeats)
-    has_switch
-    can_send
-    can_receive
-
-    LegacyDevice
-      ENER002
-        turn_on
-        turn_off
-
-    MiHomeDevice
-      MIHO005 (AdaptorPlus)
-        turn_on
-        turn_off
-        is_on
-        is_off
-        get_switch
-        get_voltage
-        get_freq
-        get_apparent
-        get_reactive
-        get_real
-      MIHO006 (HomeMonitor)
-        get_battery_voltage
-        get_current
-      MIHO012 (eTRV)
-        ?get_battery_voltage
-        ?get_ambient_temperature
-        ?get_pipe_temperature
-        set_setpoint_temperature
-        ?get_valve_position ?is_on ?is_off
-        ?set_valve_position ?turn_on ?turn_off
-
 
 --------------------------------------------------------------------------------
 DESIGN Registry.py
 
-file format? platform dependent database format, like dbm but there is
-a platform dependent one - but need the licence to be MIT so we can
-just embed it here to have zero dependencies.
-
-persist the registry to disk and/or writeback new entries
-
-load the registry from disk and/or parse it
-
-add a device class instance to the registry with a friendly name
-- could be from a discovery or learn process
-- could be from a hand rolled object
-
-get a device by name from the registry
-
-delete a device from the registry
-
-create a new device class instance from a name
-
-auto-create variables in a given scope, for all persisted registry entries
-
-list the registry in some printable format (like a configuration record)
+DONE
 
 
 --------------------------------------------------------------------------------
 DESIGN - air_interface adaptors for FSK and OOK
 
-It looks like we need an air_interface adaptor, that knits the device class
-parents (LegacyDevice and MiHomeDevice) to the radio.
-
-These adaptors will then OpenThings.encode() and OpenThings.decode() so that
-the address can be consulted in the Registry.Router to route incoming messages
-to the correct device class. This also then means that TwoBit.encode() must
-be done in the air_interface adaptors, not in the Device class code.
-
-There can be an air_interface adaptor for OOK and FSK, Both will take
-payloads as pydict or tuple (ha, da, state) and encode/encrypt then
-configure the radio for the right modulation and send it.
-
-For the receive pipeline, a message pump somewhere in the main loop has to
-put the radio into receive OOK or receive FSK, then when a payload comes in,
-passes up to the appropriate air_interface. The FSK air_interface adaptor
-knows to OpenThings.decode before sending to the fsk_router, which then routes
-to the right device class instance.
-
-Similarly, an OOK transmit in the air_interface adaptor knows to TwoBit.encode
-the tuple (ha, da, s), configure the radio modulation to OOK, pass on any
-device specific parameters such as inner_repeats, and then transmit the message.
-
-
-When we introduce a message scheduler, it will be at the air_interface
-layer, and sending and receiving will be deferred on a queue and scheduled,
-rather than handled immediately.
-
-Note: message send and receipt times will have to be relayed to the device classes,
-either by parameter, or at time of receipt by the class. The scheduler will need
-to precisely know the receipt time to do accurate scheduling, but the device class
-probably only needs to know actual receipt time in the class for freshness measurement
-reasons.
+DONE
 
 
 --------------------------------------------------------------------------------
@@ -294,47 +167,23 @@ DESIGN NOTES - registry data store
 
 REQUIREMENT: I want a simple persistent kvp database with the following features:
 
-1. A file format that is portable across all platforms
-
-   so that a single registry file could be copied from a tutorial onto
-   any machine and it would just work
-
-2. A file format that is human readable and easily editable
-
-   so that users could create or edit the file just like a config file
-
-3. A simple read and write key/value abstraction in python
-   with a full CRUD lifecycle
-
-   so that new kvp's can be created, read, updated and deleted.
-
-4. Doesn't have to be hugely efficient or store very large data sets
-
-   it's mostly used for configuration data that rarely changes,
-   or last known values that tend to be quite small.
-
-5. MIT licence
-
-   so that it can be just embedded in an existing project
-
-6. A single python file
-
-   so it is easy to embed
-
-7. Works out of the box with no changes on Python 2 and Python 3
-
-   so it doesn't have to be configured or changed and does not limit
-   or dictate a specific python version.
+YES: 1. A file format that is portable across all platforms
+YES: 2. A file format that is human readable and easily editable
+YES: 3. A simple read and write key/value abstraction in python with a full CRUD lifecycle
+YES: 4. Doesn't have to be hugely efficient or store very large data sets
+YES: MIT licence
+YES: 6. A single python file
+TODO: 7. Works out of the box with no changes on Python 2 and Python 3
 
 Additionally, it might:
 
-8. A option to add multi process locking later if required, but not
+YES: 8. A option to add multi process locking later if required, but not
    included by default
 
    so that it could be used as a simple central database for multiple
    programs sharing the same data set.
 
-9. understand read only and read/write intents better
+POSSIBLE: 9. understand read only and read/write intents better
 
    when using configuration data and last known values, it is useful
    to keep them in the same single file, so it is easy to copy
@@ -354,45 +203,9 @@ Additionally, it might:
    whole record.
 
 
---------------------------------------------------------------------------------
-DESIGN NOTES - discovery process
-
-a way to sequence transmit messages to allow legacy devices to learn a code.
-
-a way to listen (for a long time) for any devices that transmit, and add them
-(optionally?) to the device registry.
-
-a way to listen (in the background) during normal operation for unknown devices,
-and optionally add them to the device registry.
-
 
 --------------------------------------------------------------------------------
 GENERAL NOTES
-
-(when configuring the system)
-print("Press the learn button on the TV device")
-energenie.start_learn(house_code=0xABCDE, index=2)
-raw_input("Press enter when done")
-energenie.stop_learn()
-
-energenie.create_device("tv", energenie.device.ENER002, index=2, house_code=0xABCDE)
-energenie.create_device("aquarium", energenie.device.MIHO005, address=0x1234)
-
-(when running the system)
-
-tv = energenie.get("tv")
-aquarium = energenie.get("aquarium")
-
-tv.off()
-aquarium.on()
-time.sleep(10)
-if aquarium.power > 20:
-print("Has the pump motor stalled??")
-
-def just_turned_off(device):
-print("Your user just turned off %s" % device)
-print("I'm turning it back on!")
-device.on()
 
 aquarium.when_turned_off(just_turned_off)
 
@@ -402,21 +215,13 @@ PRESENT STATUS
 
 Router written and integrated in energenie.loop()
 
-Design for discovery done
-Test cases for 5 discovery variants done and work
+Discovery behaviours written and tested ok
 monitor_mihome works with a synthetic join and toggles switches
-
 KVS implementation completed and all tests pass
-
-Registry test mostly completed
+Registry tests all complete
 
 --------------------------------------------------------------------------------
 TODO NEXT
-
----- PERSISTENT REGISTRY
-
-Get the 'rx routes created' test passing
-
 
 ---- NOTIFY, UPDATE, or DATA SEQUENCE?
 
@@ -427,15 +232,32 @@ device state has updated (independently of using the
 when_updated callback)
 
 
+---- TEST ON REAL HARDWARE
+
+Test registry and discovery on real hardware, and make sure it works as expected.
+This will be a good first-look at what the better demos might look like.
+
+* Test with real radio
+
+* add back in the loop() call in the monitor_mihome.py program
+
+
+
 ---- BETTER DEMOS
 
-Especially when testing without hardware, there are a few variants of things
-to test. Really do want the demos in the top level directory to be
-simple and representative of what a first time user might do with the code
+aquarium.when_turned_off(just_turned_off)
+
+There are a few variants of things to test.
+Really do want the demos in the top level directory to be simple and representative
+of what a first time user might do with the code
 
 1. legacy switches
 - learn mode for legacy switches (learn mode with a broadcast tester)
 - turning legacy switches on and off
+
+energenie.start_learn(house_code=0xABCDE, index=2)
+raw_input("Press enter when done")
+energenie.stop_learn()
 
 2. mihome monitoring
 - discovering and registering mihome monitor devices into your registry (learn mode/tester)
@@ -457,13 +279,6 @@ It could just be a simple menu system.
 This then means you don't have to have all this in the demo apps
 and the demo apps can just refer to object variables names
 from an assumed auto_create registry.
-
-
----- HARDWARE TESTING
-
-Test with real radio
-
-* add back in the loop() call in the monitor_mihome.py program
 
 
 ----- RELEASE TESTING AND RELEASE

@@ -117,7 +117,11 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
         """Get the description for a device class from the store, and construct a class instance"""
         c = self.store[name]
 
-        #TODO: need to configure the correct router if device.can_receive()==True
+        if c.can_receive():
+            if isinstance(c, Devices.MiHomeDevice):
+                ##print("Adding rx route for receive enabled device %s" % c)
+                address = (c.manufacturer_id, c.product_id, c.device_id)
+                fsk_router.add(address, c)
         return c
 
     def delete(self, name):
@@ -389,19 +393,19 @@ def discovery_none():
 
 def discovery_auto():
     d = AutoDiscovery(registry, fsk_router)
-    print("Using auto discovery")
+    ##print("Using auto discovery")
 
 def discovery_ask(ask_fn):
     d = ConfirmedDiscovery(registry, fsk_router, ask_fn)
-    print("using confirmed discovery")
+    ##print("using confirmed discovery")
 
 def discovery_autojoin():
     d = JoinAutoDiscovery(registry, fsk_router)
-    print("using auto join discovery")
+    ##print("using auto join discovery")
 
 def discovery_askjoin(ask_fn):
     d = JoinConfirmedDiscovery(registry, fsk_router, ask_fn)
-    print("using confirmed join discovery")
+    ##print("using confirmed join discovery")
 
 
 def ask(address, message):
