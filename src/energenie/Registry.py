@@ -77,9 +77,9 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
     DEFAULT_FILENAME = "registry.kvs"
 
     def __init__(self, filename=None):
+        print("***Opening DeviceRegistry")
         self.store = KVS(filename)
 
-    @untested
     def load_from(self, filename=None):
         """Start with a blank in memory registry, and load from the given filename"""
         if filename == None: filename = DeviceRegistry.DEFAULT_FILENAME
@@ -148,9 +148,14 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
             dl.append(d)
         return dl
 
+    def names(self):
+        """Get a list of all the names in the registry"""
+        return self.store.keys()
 
 registry = DeviceRegistry()
-#TODO: registry.reload??
+import os
+if os.path.isfile(DeviceRegistry.DEFAULT_FILENAME):
+    registry.load_from(DeviceRegistry.DEFAULT_FILENAME)
 
 
 # This will create all class instance variables in the module that imports the registry.

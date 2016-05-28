@@ -354,6 +354,18 @@ class Device():
         """An estimate of the next time we expect a message from this device"""
         pass
 
+    def get_readings_summary(self):
+        """Try to get a terse summary of all present readings"""
+        # if self.readings does not exist
+        #   return "no readings"
+        #
+        # for each reading
+        #   call get_x to get the reading
+        #   think of a very short name, perhaps first letter of reading name?
+        #   add it to a terse string
+        # return the string
+        return "no readings (yet - TODO)"
+
     def get_receive_count(self):
         return self.rxseq
 
@@ -405,6 +417,9 @@ class LegacyDevice(EnergenieDevice):
             device_id = (LegacyDevice.DEFAULT_HOUSE_ADDRESS, 1)
         elif type(device_id) == int:
             device_id = (LegacyDevice.DEFAULT_HOUSE_ADDRESS, device_id)
+        elif type(device_id) == tuple and device_id[0] ==  None:
+            device_id = (LegacyDevice.DEFAULT_HOUSE_ADDRESS, device_id[1])
+
         EnergenieDevice.__init__(self, device_id, ook_interface)
         #TODO: These might now just be implied by the ook_interface adaptor
         self.config.frequency  = 433.92
