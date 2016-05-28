@@ -19,7 +19,10 @@ REGISTRY_KVS = "registry.kvs"
 
 def remove_file(filename):
     import os
-    os.unlink(filename)
+    try:
+        os.unlink(filename)
+    except OSError:
+        pass # ok if it does not already exist
 
 
 def show_file(filename):
@@ -29,28 +32,43 @@ def show_file(filename):
                 l = l.strip() # remove nl
                 print(l)
 
+def create_file(filename):
+    with open(filename, "w"):
+        pass
+
 
 class TestRegistry(unittest.TestCase):
 
+    #----- HERE -----
+
     @test_0
     def test_create(self):
+        """Make a registry file by calling methods, and see that the file is the correct format"""
         remove_file(REGISTRY_KVS)
+        create_file(REGISTRY_KVS)
         registry = DeviceRegistry(REGISTRY_KVS)
 
         # add some devices to the registry, it should auto update the file
-        registry.add(Devices.MIHO005(device_id=0x68b), "tv")
-        registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
+        tv = Devices.MIHO005(device_id=0x68b)
+        fan = Devices.ENER002(device_id=(0xC8C8C, 1))
+        registry.add(tv, "tv")
+        registry.add(fan, "fan")
 
         # see what the file looks like
         show_file(registry.DEFAULT_FILENAME)
 
+
     @test_1
     def test_load(self):
+        """Load back a persisted registry and create objects from them, in the registry"""
+
         # create a registry file
         remove_file(REGISTRY_KVS)
+        create_file(REGISTRY_KVS)
         registry = DeviceRegistry(REGISTRY_KVS)
         registry.add(Devices.MIHO005(device_id=0x68b), "tv")
         registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
+        registry.list()
 
         # clear the in memory registry
         registry = None
@@ -62,18 +80,27 @@ class TestRegistry(unittest.TestCase):
         # dump the registry state
         registry.list()
 
-        #TODO: What about receive route testing??
+        #TODO loading the registry should set up receive routes also
+        #perhaps we have to get the registry to do that *after* loading all objects
+        #as an extra pass?
+        fsk_router.list() #### FAIL no routes created by registry
+        self.fail("no routes") #TODO:####
 
 
-    @test_0
+    @test_0 # DONE
     def test_load_into(self):
-        pass #TODO
-        # load from a persisted registry
-        # load_into some context
-        # make sure all the loaded context variables point to the right thing
 
+        # create an in memory registry
+        registry = DeviceRegistry()
+        registry.add(Devices.MIHO005(device_id=0x68b), "tv")
+        registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
 
+        class MyContext():pass
+        context = MyContext()
 
+        registry.load_into(context)
+        print(context.tv)
+        print(context.fan)
 
 
 

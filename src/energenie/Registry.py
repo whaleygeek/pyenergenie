@@ -77,8 +77,7 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
     DEFAULT_FILENAME = "registry.kvs"
 
     def __init__(self, filename=None):
-        if filename != None:
-            self.store = KVS(filename)
+        self.store = KVS(filename)
 
     @untested
     def load_from(self, filename=None):
@@ -87,7 +86,7 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
         # Create a new in memory store, effectively removing any existing in memory device class instances
         #TODO: Not good if there are routes to those class instances?
         self.store = KVS(filename) #TODO: later we might make it possible to load_from multiple files
-        self.store.load(Devices.DeviceFactory)
+        self.store.load(filename, Devices.DeviceFactory.get_device_from_name)
 
     @unimplemented
     def reload(self):
@@ -112,7 +111,7 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
 
     def add(self, device, name):
         """Add a device class instance to the registry, with a friendly name"""
-        self.store[name] = device.get_config()
+        self.store[name] = device
 
     def get(self, name): # -> Device
         """Get the description for a device class from the store, and construct a class instance"""

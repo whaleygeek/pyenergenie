@@ -30,6 +30,7 @@ class KVS():
         key = None
         obj = None
 
+        ##print("load from %s" % filename)
         with open(filename) as f:
             while True:
                 line = f.readline()
@@ -124,7 +125,7 @@ class KVS():
 
     def append(self, key, values):
         """Append a new record to the persistent file"""
-        print("append:%s %s" % (key, values))
+        ##print("append:%s %s" % (key, values))
 
         if self.filename != None:
             with open(self.filename, 'a') as f:
@@ -150,11 +151,11 @@ class KVS():
                     line = line.strip() # remove nl
                     cmd, this_key = line.split(" ", 1)
                     if this_key == key:
-                        print("found: %s %s" % (cmd, this_key))
+                        ##print("found: %s %s" % (cmd, this_key))
                         f.seek(start) # back to start of line
                         f.write('IGN') # patch it to be an ignore record but leave record intact
                         f.seek(end) # back to end of line, to process next lines
-                        print("Patched to IGN rec")
+                        ##print("Patched to IGN rec")
 
     def write(self, filename=None):
         """Rewrite the whole in memory cache over the top of the external file"""
