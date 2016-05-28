@@ -408,17 +408,14 @@ monitor_mihome works with a synthetic join and toggles switches
 
 KVS implementation completed and all tests pass
 
+Registry test mostly completed
 
 --------------------------------------------------------------------------------
 TODO NEXT
 
 ---- PERSISTENT REGISTRY
 
-Knit KVS into Registry
-Re-test persistent use cases with Registry_test
-
-
-
+Get the 'rx routes created' test passing
 
 
 ---- NOTIFY, UPDATE, or DATA SEQUENCE?
