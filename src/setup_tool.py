@@ -66,11 +66,13 @@ def get_device_index():
 def show_registry():
     """Show the registry as a numbered list"""
 
-    names = energenie.registry.names()
     i=1
-    for name in names:
+    names = []
+    for name in energenie.registry.names():
         print("%d. %s %s" % (i, name, energenie.registry.get(name)))
+        names.append(name)
         i += 1
+
     return names
 
 
@@ -81,10 +83,13 @@ def get_device_name():
 
     try:
         while True:
-            i = readin("Which device %s to %s? " % (1,len(names)))
+            i = readin("Which device %s to %s? " % (1, len(names)))
             try:
                 device_index = int(i)
-                break # got it
+                if device_index < 1 or device_index > len(names):
+                    print("Choose a number between %s and %s" % (1, len(names)))
+                else:
+                    break # got it
             except ValueError:
                 print("Must enter a number")
 
