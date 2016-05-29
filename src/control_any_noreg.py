@@ -1,4 +1,4 @@
-# legacy.py  17/03/2016  D.J.Whale
+# control_any_noreg.py  17/03/2016  D.J.Whale
 #
 # Control up to 4 legacy green-button sockets (or MiHome control-only sockets)
 
