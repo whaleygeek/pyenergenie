@@ -135,7 +135,6 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
         """How many entries are there in the registry?"""
         return self.store.size()
 
-    @untested
     def devices(self):
         """A generator/iterator that can be used to get a list of device instances"""
 
@@ -150,8 +149,6 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
             yield device
             i += 1
 
-
-    @untested
     def names(self):
         """A generator/iterator that can be used to get a list of device names"""
         # first get a list of all devices, in case the registry changes while iterating
