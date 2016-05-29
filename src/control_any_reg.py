@@ -21,7 +21,7 @@ def socket_toggle_loop():
 
     print("Setting socket switches to %s" % str(socket_state))
 
-    for device in energenie.registry.devices(): #TODO: Make energenie.registry iterable
+    for device in energenie.registry.devices():
         # Only try to toggle the switch for devices that actually have a switch
 
         if device.has_switch():

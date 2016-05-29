@@ -135,20 +135,39 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
         """How many entries are there in the registry?"""
         return self.store.size()
 
+    @untested
     def devices(self):
-        """Get a list of all device classes in the registry"""
-        #TODO: Temporary method until we read up about iterable, so we can say
-        # for devices in energenie.registry
-        dl = []
-        for k in self.store.keys():
-            d = self.store[k]
-            dl.append(d)
-        return dl
+        """A generator/iterator that can be used to get a list of device instances"""
 
+        # first get a list of all devices, in case the registry changes while iterating
+        devices = self.store.keys()
+
+        # now 'generate' one per call
+        i = 0
+        while i < len(devices):
+            k = devices[i]
+            device = self.store[k]
+            yield device
+            i += 1
+
+
+    @untested
     def names(self):
-        """Get a list of all the names in the registry"""
-        return self.store.keys()
+        """A generator/iterator that can be used to get a list of device names"""
+        # first get a list of all devices, in case the registry changes while iterating
+        devices = self.store.keys()
 
+        # now 'generate' one per call
+        i = 0
+        while i < len(devices):
+            k = devices[i]
+            yield k
+            i += 1
+
+
+
+#TODO: Might move this to energenie.init() so that it is optional
+#will make it possible to run all the test cases together also.
 registry = DeviceRegistry()
 import os
 if os.path.isfile(DeviceRegistry.DEFAULT_FILENAME):
@@ -377,6 +396,9 @@ class JoinConfirmedDiscovery(Discovery):
 # Might rename these, especially when we add in other protocols
 # such as devices that are 868 wirefree doorbells etc.
 
+#TODO: Might move this to energenie.init() so that it is optional
+#will make it possible to run all the test cases together also.
+
 #TODO: Name is not completely representative of function.
 # This is the Energenie 433.92MHz with OpenThings
 fsk_router = Router("fsk")
@@ -421,6 +443,8 @@ def ask(address, message):
     if y in ['Y', 'YES']: return True
     return False
 
+#TODO: Might move this to energenie.init() so that it is optional
+#will make it possible to run all the test cases together also.
 
 # Default discovery mode, unless changed by app
 ##discovery_none()
