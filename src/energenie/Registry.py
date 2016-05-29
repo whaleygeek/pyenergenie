@@ -21,7 +21,7 @@ from KVS import KVS
 
 directory = {}
 
-@deprecated
+@unimplemented # no longer supported
 def allkeys(d):
     result = ""
     for k in d:
@@ -31,7 +31,7 @@ def allkeys(d):
     return result
 
 
-@deprecated
+@unimplemented # no longer supported
 def update(message):
     """Update the local directory with information about this device"""
     now      = time.time()
@@ -50,17 +50,17 @@ def update(message):
     #not as a list index, else merging will be hard.
 
 
-@deprecated
+@unimplemented # no longer supported
 def size():
     return len(directory)
 
 
-@deprecated
+@unimplemented # no longer supported
 def get_sensorids():
     return directory.keys()
 
 
-@deprecated
+@unimplemented # no longer supported
 def get_info(sensor_id):
     return directory[sensor_id]
 
@@ -88,17 +88,6 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
         self.store = KVS(filename) #TODO: later we might make it possible to load_from multiple files
         self.store.load(filename, Devices.DeviceFactory.get_device_from_name)
 
-    @unimplemented
-    def reload(self):
-        pass #TODO: reload from the persisted version
-        #TODO: need to know what file it was previously loaded from
-        #TODO: What about existing receive routes??
-
-    @untested
-    def rewrite(self):
-        """Rewrite the persisted version from the in memory version"""
-        self.store.rewrite()
-
     def load_into(self, context):
         """auto-create variables in the provided context, for all persisted registry entries"""
         if context == None:
@@ -124,7 +113,6 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
                 fsk_router.add(address, c)
         return c
 
-    @untested
     def rename(self, old_name, new_name):
         """Rename a device in the registry"""
         c = self.store[old_name] # get the class instance
@@ -423,7 +411,7 @@ def discovery_askjoin(ask_fn):
 
 
 def ask(address, message):
-    MSG = "Do you want to register to device: %s" % str(address)
+    MSG = "Do you want to register to device: %s? " % str(address)
     try:
         y = raw_input(MSG)
     except AttributeError:

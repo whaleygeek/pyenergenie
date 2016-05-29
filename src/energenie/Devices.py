@@ -69,7 +69,7 @@ BROADCAST_ID                     = 0xFFFFFF # Energenie broadcast
 #TODO: This might be deprecated now, and replaced with the DeviceFactory?
 #Still used in deprecated methods in Registry.py
 
-@deprecated
+@unimplemented # no longer supported
 def getDescription(mfrid, productid):
     if mfrid == MFRID_ENERGENIE:
         mfr = "Energenie"
@@ -94,7 +94,7 @@ def getDescription(mfrid, productid):
 #e.g. if there is a turn_on method or get_switch method, it has a switch.
 #still used in switch.py demo (will be until device classes deployed into tests)
 
-@deprecated
+@unimplemented # no longer supported
 def hasSwitch(mfrid, productid):
     if mfrid != MFRID:                  return False
     if productid == PRODUCTID_MIHO005:  return True
@@ -354,18 +354,35 @@ class Device():
         """An estimate of the next time we expect a message from this device"""
         pass
 
-    @unimplemented
     def get_readings_summary(self):
         """Try to get a terse summary of all present readings"""
-        # if self.readings does not exist
-        #   return "no readings"
-        #
+
+        try:
+            r = self.readings
+        except AttributeError:
+            return "(no readings)"
+
+        def shortname(name):
+            parts = name.split('_')
+            sn = ""
+            for p in parts:
+                sn += p[0].upper()
+            return sn
+
+
+        line = ""
+        for rname in dir(self.readings):
+            if not rname.startswith("__"):
+                value = getattr(self.readings, rname)
+                line += "%s:%s " % (shortname(rname), str(value))
+
+        return line
+
         # for each reading
         #   call get_x to get the reading
         #   think of a very short name, perhaps first letter of reading name?
         #   add it to a terse string
         # return the string
-        return "no readings (yet - TODO)"
 
     def get_receive_count(self):
         return self.rxseq

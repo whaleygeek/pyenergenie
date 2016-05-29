@@ -689,7 +689,6 @@ class Message():
 		value["paramid"] = key
 		self.pydict["recs"].append(value)
 
-	@untested
 	def copyof(self): # -> Message
 		"""Clone, to create a new message that is a completely independent copy"""
 		import copy

@@ -3,7 +3,7 @@
 # Coding lifecycle method decorators.
 
 def unimplemented(m):
-    print("warning: unimplemented method %s" % str(m))
+    ##print("warning: unimplemented method %s" % str(m))
     def inner(*args, **kwargs):
         raise RuntimeError("Method is unimplemented: %s" % str(m))
     return inner

@@ -212,7 +212,7 @@ monitor_mihome works with a synthetic join and toggles switches
 KVS implementation completed and all tests pass
 Registry tests all complete
 receive sequence counter tested
-setup_tool implemented ready for testing to start
+setup_tool implemented and tested in simulation
 
 
 --------------------------------------------------------------------------------
@@ -220,10 +220,8 @@ PLAN UP TO: MERGE BACK TO MASTER
 
 ---- DEMO APPS PHASE 1
 
-write: setup_tool.py
-
-fix or deprecate, depending on what setup_tool does,
-also depending on what we want to show as a standalone app
+For each of these, rewrite it in the assumption that you use setup_tool
+to configure the system.
 
 fix: control_legacy.py
 fix: control_mihome.py
@@ -241,14 +239,18 @@ This will be a good first-look at what the better demos might look like.
 
 * add back in the loop() call in the monitor_mihome.py program
 
+
 ---- DEMO APPS PHASE 2
 
-setup_tool.py
+(might do these after merge to master)
+
 mihome_energy_monitor.py
 games_console_minder.py
 
 
 ---- EVENT HANDLERS ON DEVICES (later)
+
+(might do this as an improvement branch after merge to master)
 
 (add this as an issue of 'ideas for devices')
 Need to get the core code out there, and improve it later

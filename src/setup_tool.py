@@ -10,7 +10,7 @@
 
 import time
 import energenie
-from energenie.lifecycle import *
+##from energenie.lifecycle import *
 
 
 #===== GLOBALS =====
@@ -31,7 +31,7 @@ def get_house_code():
 
     while True:
         try:
-            hc = readin("House code? (ENTER for default) ")
+            hc = readin("House code (ENTER for default)? ")
             if hc == "": return None
 
         except KeyboardInterrupt:
@@ -50,7 +50,7 @@ def get_device_index():
 
     while True:
         try:
-            di = readin("Device index 1..4? (ENTER for all)")
+            di = readin("Device index 1..4 (ENTER for all)? ")
         except KeyboardInterrupt:
             return None # user abort
 
@@ -81,7 +81,7 @@ def get_device_name():
 
     try:
         while True:
-            i = readin("Which device %s to %s" % (1,len(names)))
+            i = readin("Which device %s to %s? " % (1,len(names)))
             try:
                 device_index = int(i)
                 break # got it
@@ -108,6 +108,7 @@ def do_legacy_learn():
     device = energenie.Devices.ENER002((house_code, device_index))
 
     # in a loop until Ctrl-C
+    print("Legacy learn broadcasting, Ctrl-C to stop")
     try:
         while True:
             print("ON")
@@ -139,6 +140,7 @@ def do_mihome_discovery():
 def do_list_registry():
     """List the entries in the registry"""
 
+    print("REGISTRY:")
     show_registry()
 
 
@@ -175,7 +177,6 @@ def do_switch_device():
     quit = False
 
 
-@untested
 def do_show_device_status():
     """Show the readings associated with a device"""
 
@@ -186,13 +187,14 @@ def do_show_device_status():
     print(readings)
 
 
-@untested
 def do_watch_devices():
     """Repeatedly show readings for all devices"""
 
+    print("Watching devices, Ctrl-C to stop")
     try:
         while True:
             energenie.loop() # allow receive processing
+
             print('-' * 80)
             names = energenie.registry.names()
             for name in names:
@@ -206,28 +208,33 @@ def do_watch_devices():
         pass # user exit
 
 
-@untested
 def do_rename_device():
     """Rename a device in the registry to a different name"""
 
     # This is useful when turning auto discovered names into your own names
 
     old_name = get_device_name()
-    new_name = readin("New name?")
+    if old_name == None: return # user abort
+
+    try:
+        new_name = readin("New name? ")
+    except KeyboardInterrupt:
+        return # user abort
 
     energenie.registry.rename(old_name, new_name)
+    print("Renamed OK")
 
 
-@untested
 def do_delete_device():
     """Delete a device from the registry so it is no longer recognised"""
 
     name = get_device_name()
+    if name == None: return #user abort
 
     energenie.registry.delete(name)
+    print("Deleted OK")
 
 
-@untested
 def do_logging():
     """Enter a mode where all communications are logged to screen and a file"""
 
@@ -240,6 +247,7 @@ def do_logging():
         Logger.logMessage(message)
     energenie.fsk_router.when_incoming(incoming)
 
+    print("Logging enabled, Ctrl-C to stop")
     try:
         while True:
             energenie.loop()
@@ -276,7 +284,7 @@ def get_choice(choices):
     last  = choices[1]
     try:
         while True:
-            choice = readin("Choose %d to %d?" % (first, last))
+            choice = readin("Choose %d to %d? " % (first, last))
             try:
                 choice = int(choice)
                 if choice < first or choice > last:
@@ -315,10 +323,11 @@ def setup_tool():
     """The main program loop"""
 
     while not quit:
-        print("MAIN MENU")
+        print("\nMAIN MENU")
         show_menu(MAIN_MENU)
         choice = get_choice((1,len(MAIN_MENU)))
         if not quit:
+            print("\n")
             handle_choice(MAIN_MENU, choice)
 
 
