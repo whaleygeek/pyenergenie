@@ -1,19 +1,59 @@
 # discover_mihome.py  24/05/2016  D.J.Whale
-
-#TODO: Placeholder for mihome discovery example app.
 #
-# This will sit in permanent receive mode and listen for any device id reports,
-# and when it sees one that is not in the user registry, it will add it.
-#
-# This will be useful for building up a user registry that can then be used
-# with the control_mihome tester to actually toggle all the switches,
-# and with the monitor_mihome to dump all message reports.
+# You can discover devices and store them in the registry with setup_tool.py
+# However, this is an example of how to do your own discovery using
+# one of the built in discovery design patterns.
 
-# For the moment, you have to seed the registry in control_mihome with a known
-# device_id to run the test (perhaps using an older version of the code to learn it).
+import energenie
 
-# This is only a temporary situation until the complete receive pipeline is written.
-# But I want to implement this properly, rather than half-hearted.
+# You could also use the standard energenie.Registry.ask callback instead if you want
+# as that does exactly the same thing
+
+def ask_fn(address, message):
+    MSG = "Do you want to register to device: %s? " % str(address)
+    try:
+        if message != None:
+            print(message)
+        y = raw_input(MSG)
+
+    except AttributeError:
+        y = input(MSG)
+
+    if y == "": return True
+    y = y.upper()
+    if y in ['Y', 'YES']: return True
+    return False
+
+
+def discover_mihome():
+    # Select your discovery behaviour from one of these:
+    ##energenie.Registry.discovery_auto()
+    energenie.Registry.discovery_ask(ask_fn)
+    ##energenie.Registry.discovery_autojoin()
+    ##energenie.Registry.discovery_askjoin(ask_fn)
+
+    # Run the receive loop permanently, so that receive messages are processed
+    try:
+        print("Discovery running, Ctrl-C to stop")
+        while True:
+            energenie.loop()
+
+    except KeyboardInterrupt:
+        pass # user abort
+
+
+if __name__ == "__main__":
+
+    print("Starting discovery example")
+
+    energenie.init()
+
+    try:
+        discover_mihome()
+
+    finally:
+        energenie.finished()
+
 
 # END
 

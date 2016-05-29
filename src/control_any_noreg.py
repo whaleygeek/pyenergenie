@@ -42,7 +42,7 @@ def legacy_socket_loop():
 
 
 if __name__ == "__main__":
-    print("starting legacy socket tester")
+    print("starting socket tester (no registry)")
 
     energenie.init()
 

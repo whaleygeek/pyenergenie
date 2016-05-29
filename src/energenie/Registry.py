@@ -435,9 +435,13 @@ def discovery_askjoin(ask_fn):
 def ask(address, message):
     MSG = "Do you want to register to device: %s? " % str(address)
     try:
+        if message != None:
+            print(message)
         y = raw_input(MSG)
+
     except AttributeError:
         y = input(MSG)
+
     if y == "": return True
     y = y.upper()
     if y in ['Y', 'YES']: return True

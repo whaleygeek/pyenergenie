@@ -34,7 +34,7 @@ def socket_toggle_loop():
 
 if __name__ == "__main__":
     
-    print("starting socket tester")
+    print("starting socket tester (from registry)")
     energenie.init()
 
     socket_state = False
