@@ -1,6 +1,7 @@
 # control_any_noreg.py  17/03/2016  D.J.Whale
 #
 # Control up to 4 legacy green-button sockets (or MiHome control-only sockets)
+# Shows how to address sockets directly without using the registry.
 
 import time
 import energenie
@@ -17,7 +18,10 @@ socket4     = energenie.Devices.ENER002(4)
 # A device that uses a custom house code (e.g. learnt from a hand controller)
 socket5     = energenie.Devices.ENER002((0x1234, 1))
 
-sockets     = [all_sockets, socket1, socket2, socket3, socket4, socket5]
+# A MiHome device that we know the address of from a previous capture
+socket6     = energenie.Devices.MIHO005(0x68b)
+
+sockets     = [all_sockets, socket1, socket2, socket3, socket4, socket5, socket6]
 
 
 def legacy_socket_loop():
