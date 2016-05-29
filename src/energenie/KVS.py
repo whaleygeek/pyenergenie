@@ -36,7 +36,7 @@ class KVS():
                 line = f.readline()
                 if line == "": # EOF
                     if command != None:
-                        self.process(command, key, obj)
+                        self.process(command, key, obj, create_fn)
                     break # END
                 else:
                     line = line.strip() # remove nl

@@ -203,6 +203,9 @@ POSSIBLE: 9. understand read only and read/write intents better
    whole record.
 
 
+Note: callbacks on when_updated() might be required
+
+
 --------------------------------------------------------------------------------
 PRESENT STATUS
 
@@ -213,55 +216,30 @@ KVS implementation completed and all tests pass
 Registry tests all complete
 receive sequence counter tested
 setup_tool implemented and tested in simulation
+fixed testers to use new registry and device classes
+auto create example written using example registry
 
 
 --------------------------------------------------------------------------------
 PLAN UP TO: MERGE BACK TO MASTER
 
----- DEMO APPS PHASE 1
-
-For each of these, rewrite it in the assumption that you use setup_tool
-to configure the system.
-
-fix: control_legacy.py
-fix: control_mihome.py
-fix: control_both.py
-fix: monitor_mihome.py
-fix: discover_mihome.py
-
 
 ---- TEST ON REAL HARDWARE
 
-Test registry and discovery on real hardware, and make sure it works as expected.
-This will be a good first-look at what the better demos might look like.
+Test device classes, factory, registry, router, discovery on real hardware.
+Do this by testing the example apps
 
 * Test with real radio
 
-* add back in the loop() call in the monitor_mihome.py program
-
-
----- DEMO APPS PHASE 2
-
-(might do these after merge to master)
-
-mihome_energy_monitor.py
-games_console_minder.py
-
-
----- EVENT HANDLERS ON DEVICES (later)
-
-(might do this as an improvement branch after merge to master)
-
-(add this as an issue of 'ideas for devices')
-Need to get the core code out there, and improve it later
-
-aquarium.when_turned_off(just_turned_off)
-
+* Test with python 3 as well as python 2
 
 
 ----- RELEASE TESTING AND RELEASE
 
 * update the test instructions and re-test everything before merge
+
+* Any outstanding items on the list above, feed back into issues on the TODO list,
+so that they get dealt with in a later pass
 
 * merge to master after test
 
