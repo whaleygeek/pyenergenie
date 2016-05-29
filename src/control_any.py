@@ -1,6 +1,7 @@
-# control_mihome.py  17/03/2016  D.J.Whale
+# control_any.py  17/03/2016  D.J.Whale
 #
 # Control Energenie MiHome Adaptor or AdaptorPlus sockets
+# and also ENER002 legacy green button sockets.
 
 # Shows how to use the registry to create devices.
 # You should first run setup_tool.py and join some sockets
