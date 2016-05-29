@@ -580,6 +580,11 @@ class ENER002(LegacyDevice):
         }
         self.send_message(payload)
 
+    def set_switch(self, state):
+        if state:
+            self.turn_on()
+        else:
+            self.turn_off()
 
 
 class MIHO004(MiHomeDevice):
