@@ -51,7 +51,7 @@ Getting Going
 ====
 
 1. Plug in your ENER314-RT-VER01 board from Energenie onto the 26 pin or 40 pin connector of
-your Raspberry Pi. This is tested on Raspberry Pi B, B+ B2 and 2B and PiZero. There is
+your Raspberry Pi. This is tested on Raspberry Pi B, B+ B2 and 2B, 3 and PiZero. There is
 no reason why it should not work on the A and A+ but it hasn't been specially tested on
 those combinations yet.
 
