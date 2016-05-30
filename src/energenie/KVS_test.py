@@ -6,7 +6,7 @@ import unittest
 from lifecycle import *
 from KVS import KVS, NotPersistableError
 
-# A dummy test class
+#---- DUMMY TEST CLASSES ------------------------------------------------------
 
 class TV():
     def __init__(self, id):
@@ -29,6 +29,7 @@ class FACTORY():
             raise ValueError("Unknown device name %s" % name)
 
 
+#----- FILE HELPERS -----------------------------------------------------------
 
 def remove_file(filename):
     import os
@@ -50,6 +51,10 @@ def write_file(filename, contents):
         for line in lines:
             f.write(line + '\n')
 
+
+#----- TEST KVS MEMORY --------------------------------------------------------
+#
+# Test the KVS in-memory only configuration (no persistence to file)
 
 class TestKVSMemory(unittest.TestCase):
 
@@ -118,6 +123,10 @@ class TestKVSMemory(unittest.TestCase):
         kvs["tv3"] = TV(3)
         print(kvs.keys())
 
+
+#----- TEST KVS PERSISTED -----------------------------------------------------
+#
+# Test the KVS persisted to a file
 
 class TestKVSPersisted(unittest.TestCase):
 

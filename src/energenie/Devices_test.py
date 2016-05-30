@@ -2,15 +2,24 @@
 #
 # Test harness for Devices module
 
-import Devices
 import unittest
 from lifecycle import *
-import OpenThings
 
+try:
+    # Python 2
+    import Devices
+    import OpenThings
+    import radio
+
+except ImportError:
+    # Python 3
+    from . import Devices
+    from . import OpenThings
+    from . import radio
 
 class TestDevices(unittest.TestCase):
 
-    @test_0
+    @test_1
     def test_without_registry(self):
         """A simple on/off test with some devices from the device factory"""
         tv   = Devices.DeviceFactory.get_device_from_name("GreenButton", device_id=(0xC8C8C, 1))
@@ -41,7 +50,6 @@ class TestDevices(unittest.TestCase):
 
 def init():
     """Start the Energenie system running"""
-    import OpenThings, radio
     radio.DEBUG = True
     radio.init()
     OpenThings.init(Devices.CRYPT_PID)

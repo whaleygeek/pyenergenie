@@ -498,7 +498,7 @@ class Value():
 				bits = (((bits-1)/8)+1)*8 # snap to nearest byte boundary
 				##trace("snap bits to 8:" + str(bits))
 
-				value &= ((2**bits)-1)
+				value &= ((2**int(bits))-1)
 				neg = True
 			else:
 				neg = False
