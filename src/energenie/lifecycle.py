@@ -37,12 +37,12 @@ def deprecated(m):
 
 
 def test_0(m):
-    #print("test disabled:%s" % m)
-    #def run(*args, **kwargs):
-    #    print("running:%s" % m)
-    #    r = m(*args, **kwargs)
-    #    print("finished:%s" % m)
-    #    return r
+    ##print("test disabled:%s" % m)
+    ##def run(*args, **kwargs):
+    ##    print("running:%s" % m)
+    ##    r = m(*args, **kwargs)
+    ##    print("finished:%s" % m)
+    ##    return r
 
     def nothing(*args, **kwargs):
         print("test disabled:%s" % m)

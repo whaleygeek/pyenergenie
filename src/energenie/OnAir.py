@@ -48,7 +48,7 @@ class OpenThingsAirInterface():
             timeout       = 1000 #ms
         self.rx_defaults = RxDefaults()
 
-    #@log_method
+    ##@log_method
     def send(self, payload, radio_params=None):
         #   payload is a pydict suitable for OpenThings
         #   radio_params is an overlay on top of radio tx defaults
@@ -62,7 +62,7 @@ class OpenThingsAirInterface():
         radio.transmit(p, outer_times=1, inner_times=4, outer_delay=0)
         # radio auto-returns to previous state after transmit completes
 
-    #@log_method
+    ##@log_method
     def receive(self, radio_params): # -> (radio_measurements, address or None, payload or None)
         #   radio_params is an overlay on top of radio rx defaults (e.g. poll rate, timeout, min payload, max payload)
         #   radio_measurements might include rssi reading, short payload report, etc
@@ -77,7 +77,7 @@ class OpenThingsAirInterface():
         radio.receiver(fsk=True)
         while True: # timer not expired
             if radio.is_receive_waiting():
-                payload = radio.receive() # TODO payload, radio_measurements = radio.receive()
+                payload = radio.receive() #TODO: payload, radio_measurements = radio.receive()
                 now = time.time()
                 p = OpenThings.decode(payload, receive_timestamp=now)
                 #TODO: if crc failure, report it, but keep trying
@@ -87,11 +87,11 @@ class OpenThingsAirInterface():
         #TODO: return radio to state it was before receiver (e.g. standby) - radio needs a pop() on this too?
 
         if payload == None: # nothing received in timeout
-            return (None, None, None) # (radio_measurements, address, payload) # TODO: might be measurements, average min max?
+            return (None, None, None) # (radio_measurements, address, payload) #TODO: might be measurements, average min max?
 
         #TODO: extract addresses: header_manufacturerid, header_productid header_deviceid -> (m, p, d)
         m, p, d = None, None, None
-        radio_measurements = None # TODO get from radio.receive()
+        radio_measurements = None #TODO: get from radio.receive()
         address = (m, p, d)
         return (radio_measurements, address, payload)
 
@@ -116,7 +116,7 @@ class TwoBitAirInterface():
             timeout       = 1000 #ms
         self.rx_defaults = RxDefaults()
 
-    #@log_method
+    ##@log_method
     def send(self, payload, radio_params=None):
         #   payload is just a list of bytes, or a byte buffer
         #   radio_params is an overlay on top of radio tx defaults
@@ -134,7 +134,7 @@ class TwoBitAirInterface():
         radio.transmit(bytes, outer_times=1, inner_times=8, outer_delay=0) #TODO: radio params
         # radio auto-pops to state before transmit
 
-    #@log_method
+    ##@log_method
     def receive(self, radio_params): # -> (radio_measurements, address or None, payload or None)
         #   radio_params is an overlay on top of radio rx defaults (e.g. poll rate, timeout, min payload, max payload)
         #   radio_measurements might include rssi reading, short payload report, etc
@@ -148,7 +148,7 @@ class TwoBitAirInterface():
         while True: # timer not expired
             if radio.is_receive_waiting():
                 #TODO: radio config should set receive preamble 4 bytes to prevent false triggers
-                payload = radio.receive(size=12) # TODO payload, radio_measurements = radio.receive()
+                payload = radio.receive(size=12) #TODO: payload, radio_measurements = radio.receive()
                 p = TwoBit.decode(payload)
                 #TODO: if failure, report it, but keep trying
                 #if  check passes...
@@ -157,7 +157,7 @@ class TwoBitAirInterface():
         #TODO: return radio to state it was before receiver (e.g. standby) - radio needs a pop() on this too?
 
         if payload == None: # nothing received in timeout
-            return (None, None, None) # (radio_measurements, address, payload) # TODO: might be measurements, average min max?
+            return (None, None, None) # (radio_measurements, address, payload) #TODO: might be measurements, average min max?
 
         #TODO: extract addresses (house_address, device_index)
         radio_measurements = None #TODO: return this from radio.receive()

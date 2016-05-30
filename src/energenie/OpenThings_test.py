@@ -296,35 +296,35 @@ class TestMessage(unittest.TestCase):
 	@test_0
 	def test_attr_header(self): #9 msg["header"]  msg["recs"][0]
 		"""READ(attr) the header"""
-		## access a specific keyed entry like a normal pydict, for read
+		# access a specific keyed entry like a normal pydict, for read
 		msg = Message(Devices.MIHO005_REPORT)
 		print(msg["header"])
 
 	@test_0
 	def test_attr_header_field(self): #9 msg["header"]  msg["recs"][0]
 		"""READ(attr) a field within the header"""
-		## access a specific keyed entry like a normal pydict, for read
+		# access a specific keyed entry like a normal pydict, for read
 		msg = Message(Devices.MIHO005_REPORT)
 		print(msg["header"]["mfrid"])
 
 	@test_0
 	def test_attr_recs(self): #9 msg["header"]  msg["recs"][0]
 		"""READ(attr) all recs"""
-		## access a specific keyed entry like a normal pydict, for read
+		# access a specific keyed entry like a normal pydict, for read
 		msg = Message(Devices.MIHO005_REPORT)
 		print(msg["recs"])
 
 	@test_0
 	def test_attr_rec(self): #9 msg["header"]  msg["recs"][0]
 		"""READ(attr) a single reg"""
-		## access a specific keyed entry like a normal pydict, for read
+		# access a specific keyed entry like a normal pydict, for read
 		msg = Message(Devices.MIHO005_REPORT)
 		print(msg["recs"][0])
 
 	@test_0
 	def test_attr_rec_field(self): #9 msg["header"]  msg["recs"][0]
 		"""READ(attr) a field in a rec"""
-		## access a specific keyed entry like a normal pydict, for read
+		# access a specific keyed entry like a normal pydict, for read
 		msg = Message(Devices.MIHO005_REPORT)
 		print(msg["recs"][0]["value"])
 
@@ -413,7 +413,7 @@ class TestMessage(unittest.TestCase):
 	def test_paramid_write_rec_overwrite(self):
 		"""WRITE (overwrite) a whole paramid rec"""
 		msg = Message(recs_0={"paramid":PARAM_SWITCH_STATE, "wr":True, "value":33})
-		#print(msg)
+		##print(msg)
 		msg[PARAM_SWITCH_STATE] = {"wr":True, "value":99}
 		##print(msg)
 		print(msg[PARAM_SWITCH_STATE])
@@ -423,7 +423,7 @@ class TestMessage(unittest.TestCase):
 		"""WRITE (add) a whole paramid rec"""
 		msg = Message(Devices.MIHO005_REPORT)
 		msg[PARAM_AIR_PRESSURE] = {"wr":True, "value":1}
-		#print(msg)
+		##print(msg)
 		print(msg[PARAM_AIR_PRESSURE])
 
 	@test_0
@@ -474,7 +474,7 @@ def test_message():
 	unittest.main()
 
 if __name__ == "__main__":
-	##TODO: Change these into unittest test cases
+	#TODO: Change these into unittest test cases
 	##test_value_encoder()
 	##test_value_decoder()
 	##test_payload_unencrypted()

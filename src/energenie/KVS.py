@@ -2,7 +2,7 @@
 #
 # A generic key value store
 
-from lifecycle import *
+##from lifecycle import *
 
 class NotPersistableError(Exception):
     pass
@@ -171,7 +171,7 @@ class KVS():
 
             for key in self.store:
                 obj = self.store[key]
-                # TODO: for this to work, we need to call the inner object get_config() to get a persistable version
+                #TODO: for this to work, we need to call the inner object get_config() to get a persistable version
                 # that the user of this class can recreate it from later
 
                 f.write("ADD %s\n" % key)
@@ -183,6 +183,7 @@ class KVS():
                 f.write("\n")
 
         self.filename = filename # Remember that we are linked to this file
+
 
 # END
 

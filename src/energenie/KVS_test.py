@@ -189,7 +189,7 @@ class TestKVSPersisted(unittest.TestCase):
         kvs["tv1"] = TV(1)
         show_file(self.KVS_FILENAME)
 
-        kvs["tv1"] = TV(2) ####HERE###
+        kvs["tv1"] = TV(2)
         show_file(self.KVS_FILENAME)
 
     @test_1

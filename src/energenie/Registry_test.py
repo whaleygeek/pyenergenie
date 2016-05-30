@@ -39,8 +39,6 @@ def create_file(filename):
 
 class TestRegistry(unittest.TestCase):
 
-    #----- HERE -----
-
     @test_0
     def test_create(self):
         """Make a registry file by calling methods, and see that the file is the correct format"""
@@ -83,7 +81,7 @@ class TestRegistry(unittest.TestCase):
         # get device intances, this will cause receive routes to be knitted up
         tv = registry.get("tv")
         fan = registry.get("fan")
-        fsk_router.list() #### FAIL no routes created by registry
+        fsk_router.list()
 
 
     @test_0 # DONE
@@ -152,7 +150,7 @@ class Dis:
         # ->MIHO005.incoming_message()
         #
         #it should update voltage, power etc
-        ## poor mans incoming synthetic message
+        # poor mans incoming synthetic message
 
 
         report = OpenThings.Message(Devices.MIHO005_REPORT)

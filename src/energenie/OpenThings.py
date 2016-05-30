@@ -2,7 +2,7 @@
 #
 # Implement OpenThings message encoding and decoding
 
-from lifecycle import *
+##from lifecycle import *
 import time
 
 try:
@@ -157,7 +157,7 @@ def paramid_to_paramname(paramid):
 
 #----- MESSAGE DECODER --------------------------------------------------------
 
-#TODO if silly lengths or silly types seen in decode, this might imply
+#TODO: if silly lengths or silly types seen in decode, this might imply
 #we're trying to process an encrypted packet without decrypting it.
 #the code should be more robust to this (by checking the CRC)
 
@@ -169,12 +169,12 @@ def decode(payload, decrypt=True, receive_timestamp=None):
 	# CHECK LENGTH
 	if length+1 != len(payload) or length < 10:
 		raise OpenThingsException("bad payload length")
-		#return {
-		#	"type":         "BADLEN",
-		#	"len_actual":   len(payload),
-		#	"len_expected": length,
-		#	"payload":      payload[1:]
-		#}
+		##return {
+		##	"type":         "BADLEN",
+		##	"len_actual":   len(payload),
+		##	"len_expected": length,
+		##	"payload":      payload[1:]
+		##}
 
 	# DECODE HEADER
 	mfrId      = payload[1]
@@ -192,7 +192,7 @@ def decode(payload, decrypt=True, receive_timestamp=None):
 		# [0]len,mfrid,productid,pipH,pipL,[5]
 		crypto.init(crypt_pid, encryptPIP)
 		crypto.cryptPayload(payload, 5, len(payload)-5) # including CRC
-		#printhex(payload)
+		##printhex(payload)
 	# sensorId is in encrypted region
 	sensorId = (payload[5]<<16) + (payload[6]<<8) + payload[7]
 	header["sensorid"] = sensorId
@@ -201,16 +201,16 @@ def decode(payload, decrypt=True, receive_timestamp=None):
 	# CHECK CRC
 	crc_actual  = (payload[-2]<<8) + payload[-1]
 	crc_expected = calcCRC(payload, 5, len(payload)-(5+2))
-	#trace("crc actual:%s, expected:%s" %(hex(crc_actual), hex(crc_expected)))
+	##trace("crc actual:%s, expected:%s" %(hex(crc_actual), hex(crc_expected)))
 
 	if crc_actual != crc_expected:
 		raise OpenThingsException("bad CRC")
-		#return {
-		#	"type":         "BADCRC",
-		#	"crc_actual":   crc_actual,
-		#	"crc_expected": crc_expected,
-		#	"payload":      payload[1:],
-		#}
+		##return {
+		##	"type":         "BADCRC",
+		##	"crc_actual":   crc_actual,
+		##	"crc_expected": crc_expected,
+		##	"payload":      payload[1:],
+		##}
 
 
 	# DECODE RECORDS
@@ -388,13 +388,13 @@ class Value():
 		mask = 1<<(maxbits-1)
 		bitno = maxbits-1
 		while mask != 0:
-			#trace("compare %s with %s" %(hex(value), hex(mask)))
+			##trace("compare %s with %s" %(hex(value), hex(mask)))
 			if (value & mask) == 0:
-				#trace("zero at bit %d" % bitno)
+				##trace("zero at bit %d" % bitno)
 				return bitno
 			mask >>= 1
 			bitno-=1
-		#trace("not found")
+		##trace("not found")
 		return None # NOT FOUND
 
 
@@ -406,25 +406,25 @@ class Value():
 
 		if value == -1: # always 0xFF, so always needs exactly 2 bits to represent (sign and value)
 			return 2 # bits required
-		#trace("valuebits of:%d" % value)
+		##trace("valuebits of:%d" % value)
 		# Turn into a 2's complement representation
 		MAXBYTES=15
 		MAXBITS = 1<<(MAXBYTES*8)
-		#TODO check for truncation?
+		#TODO: check for truncation?
 		value = value & MAXBITS-1
-		#trace("hex:%s" % hex(value))
+		##trace("hex:%s" % hex(value))
 		highz = Value.highestClearBit(value, MAXBYTES*8)
-		#trace("highz at bit:%d" % highz)
+		##trace("highz at bit:%d" % highz)
 		# allow for a sign bit, and bit numbering from zero
 		neededbits = highz+2
 
-		#trace("needed bits:%d" % neededbits)
+		##trace("needed bits:%d" % neededbits)
 		return neededbits
 
 
 	@staticmethod
 	def encode(value, typeid, length=None):
-		#trace("encoding:" + str(value))
+		##trace("encoding:" + str(value))
 		if typeid == Value.CHAR:
 			if type(value) != str:
 				value = str(value)
@@ -490,13 +490,13 @@ class Value():
 					bits = Value.valuebits(value)
 				else:
 					bits = Value.typebits(typeid)
-				#trace("need bits:" + str(bits))
+				##trace("need bits:" + str(bits))
 				# NORMALISE BITS TO BYTES
 				#round up to nearest number of 8 bits
 				# if already 8, leave 1,2,3,4,5,6,7,8 = 8   0,1,2,3,4,5,6,7 (((b-1)/8)+1)*8
 				# 9,10,11,12,13,14,15,16=16
 				bits = (((bits-1)/8)+1)*8 # snap to nearest byte boundary
-				#trace("snap bits to 8:" + str(bits))
+				##trace("snap bits to 8:" + str(bits))
 
 				value &= ((2**bits)-1)
 				neg = True
@@ -572,22 +572,6 @@ class Value():
 
 
 #----- CRC CALCULATION --------------------------------------------------------
-
-#int16_t crc(uint8_t const mes[], unsigned char siz)
-#{
-#	uint16_t rem = 0;
-#	unsigned char byte, bit;
-#
-#	for (byte = 0; byte < siz; ++byte)
-#	{
-#		rem ^= (mes[byte] << 8);
-#		for (bit = 8; bit > 0; --bit)
-#		{
-#			rem = ((rem & (1 << 15)) ? ((rem << 1) ^ 0x1021) : (rem << 1));
-#		}
-#	}
-#	return rem;
-#}
 
 def calcCRC(payload, start, length):
 	rem = 0
@@ -881,98 +865,6 @@ class Message():
 						value = None
 
 				print("%s %s %s %s = %s" % (write, paramid, paramname, paramunit, str(value)))
-
-
-#TODO: Remove this when the new Message() integration is tested
-#@deprecated
-#def showMessage(msg, timestamp=None):
-#	"""Show the message in a friendly format"""
-#
-#	# HEADER
-#	header    = msg["header"]
-#	mfrid     = header["mfrid"]
-#	productid = header["productid"]
-#	sensorid  = header["sensorid"]
-#	if timestamp != None:
-#		print("receive-time:%s" % time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)))
-#	print("mfrid:%s prodid:%s sensorid:%s" % (hex(mfrid), hex(productid), hex(sensorid)))
-#
-#	# RECORDS
-#	for rec in msg["recs"]:
-#		wr = rec["wr"]
-#		if wr == True:
-#			write = "write"
-#		else:
-#			write = "read "
-#
-#		try:
-#			paramname = rec["paramname"] # This only come out from decoded messages
-#		except:
-#			paramname = ""
-##
-#		try:
-#			paramid = rec["paramid"] #This is only present on a input message (e.g SWITCH)
-#			paramname = paramid_to_paramname(paramid)
-#			paramid = str(hex(paramid))
-##		except:
-#			paramid = ""
-#
-#		try:
-#			paramunit = rec["paramunit"] # This only come out from decoded messages
-#		except:
-#			paramunit = ""
-#
-#		if "value" in rec:
-#				value = rec["value"]
-#		else:
-#				value = None
-#
-#		print("%s %s %s %s = %s" % (write, paramid, paramname, paramunit, str(value)))
-
-
-# Example paths into message
-#   header_sensorid            msg["header"]["sensorid"]
-#   recs_0_value               msg["recs"][0]["value"]
-#   recs_WATER_DETECTOR_value  msg["recs"].find_param("WATER_DETECTOR")["value"]
-
-#TODO: Remove this when the new Message() integration is tested
-#@deprecated
-#def alterMessage(message, **kwargs):
-#	"""Change parameters in-place in a message template"""
-#
-#	for arg in kwargs:
-#		path = arg.split("_")
-#		value = kwargs[arg]
-#		m = message
-#
-#		for pkey in path[:-1]:
-#			try:
-#				# If it is convertable to an int, it's an array index
-#				pkey = int(pkey)
-#			except:
-#				# It must be a field name
-#				pass
-#			m = m[pkey]
-#		##trace("old value:%s" % m[path[-1]])
-#		m[path[-1]] = value
-#
-#		##trace("modified:" + str(message))
-#
-#	return message
-
-#TODO: Remove this when the new Message() integration is tested
-#@deprecated
-#def getFromMessage(message, keypath):
-#	"""Get a field from a message, given an underscored keypath to the item"""
-#	path = keypath.split("_")
-#
-#	for pkey in path[:-1]:
-#		try:
-#			pkey = int(pkey)
-#		except:
-#			pass
-#		message = message[pkey]
-#	return message[path[-1]]
 
 
 # END

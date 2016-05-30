@@ -123,10 +123,10 @@ def ask(address, message):
         if message != None:
             print(message)
         y = raw_input(MSG)
-## 
+
     except AttributeError:
         y = input(MSG)
-## 
+
     if y == "": return True
     y = y.upper()
     if y in ['Y', 'YES']: return True

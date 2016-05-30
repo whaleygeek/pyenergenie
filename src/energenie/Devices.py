@@ -15,47 +15,47 @@ fsk_interface = OnAir.OpenThingsAirInterface()
 MFRID_ENERGENIE                  = 0x04
 MFRID                            = MFRID_ENERGENIE
 
-#PRODUCTID_MIHO001               =        #         Home Hub
-#PRODUCTID_MIHO002               =        #         Control only (Uses Legacy OOK protocol)
-#PRODUCTID_MIHO003               = 0x0?   #         Hand Controller
+##PRODUCTID_MIHO001               =        #         Home Hub
+##PRODUCTID_MIHO002               =        #         Control only (Uses Legacy OOK protocol)
+##PRODUCTID_MIHO003               = 0x0?   #         Hand Controller
 PRODUCTID_MIHO004                = 0x01   #         Monitor only
 PRODUCTID_MIHO005                = 0x02   #         Adaptor Plus
 PRODUCTID_MIHO006                = 0x05   #         House Monitor
-#PRODUCTID_MIHO007               = 0x0?   #         Double Wall Socket White
-#PRODUCTID_MIHO008               = 0x0?   #         Single light switch
-#PRODUCTID_MIHO009 not used
-#PRODUCTID_MIHO010 not used
-#PRODUCTID_MIHO011 not used
-#PRODUCTID_MIHO012 not used
+##PRODUCTID_MIHO007               = 0x0?   #         Double Wall Socket White
+##PRODUCTID_MIHO008               = 0x0?   #         Single light switch
+##PRODUCTID_MIHO009 not used
+##PRODUCTID_MIHO010 not used
+##PRODUCTID_MIHO011 not used
+##PRODUCTID_MIHO012 not used
 PRODUCTID_MIHO013                = 0x03   #         eTRV
-#PRODUCTID_MIHO014               = 0x0?   #         In-line Relay
-#PRODUCTID_MIHO015 not used
-#PRODUCTID_MIHO016 not used
-#PRODUCTID_MIHO017
-#PRODUCTID_MIHO018
-#PRODUCTID_MIHO019
-#PRODUCTID_MIHO020
-#PRODUCTID_MIHO021               = 0x0?   #         Double Wall Socket Nickel
-#PRODUCTID_MIHO022               = 0x0?   #         Double Wall Socket Chrome
-#PRODUCTID_MIHO023               = 0x0?   #         Double Wall Socket Brushed Steel
-#PRODUCTID_MIHO024               = 0x0?   #         Style Light Nickel
-#PRODUCTID_MIHO025               = 0x0?   #         Style Light Chrome
-#PRODUCTID_MIHO026               = 0x0?   #         Style Light Steel
-#PRODUCTID_MIHO027 starter pack bundle
-#PRODUCTID_MIHO028 eco starter pack
-#PRODUCTID_MIHO029 heating bundle
-#PRODUCTID_MIHO030 not used
-#PRODUCTID_MIHO031 not used
-#PRODUCTID_MIHO032 not used
-#PRODUCTID_MIHO033 not used
-#PRODUCTID_MIHO034 not used
-#PRODUCTID_MIHO035 not used
-#PRODUCTID_MIHO036 not used
-#PRODUCTID_MIHO037 Adaptor Plus Bundle
-#PRODUCTID_MIHO038 2-gang socket Bundle
-#PRODUCTID_MIHO039 2-gang socket Bundle black nickel
-#PRODUCTID_MIHO040 2-gang socket Bundle chrome
-#PRODUCTID_MIHO041 2-gang socket Bundle stainless steel
+##PRODUCTID_MIHO014               = 0x0?   #         In-line Relay
+##PRODUCTID_MIHO015 not used
+##PRODUCTID_MIHO016 not used
+##PRODUCTID_MIHO017
+##PRODUCTID_MIHO018
+##PRODUCTID_MIHO019
+##PRODUCTID_MIHO020
+##PRODUCTID_MIHO021               = 0x0?   #         Double Wall Socket Nickel
+##PRODUCTID_MIHO022               = 0x0?   #         Double Wall Socket Chrome
+##PRODUCTID_MIHO023               = 0x0?   #         Double Wall Socket Brushed Steel
+##PRODUCTID_MIHO024               = 0x0?   #         Style Light Nickel
+##PRODUCTID_MIHO025               = 0x0?   #         Style Light Chrome
+##PRODUCTID_MIHO026               = 0x0?   #         Style Light Steel
+##PRODUCTID_MIHO027 starter pack bundle
+##PRODUCTID_MIHO028 eco starter pack
+##PRODUCTID_MIHO029 heating bundle
+##PRODUCTID_MIHO030 not used
+##PRODUCTID_MIHO031 not used
+##PRODUCTID_MIHO032 not used
+##PRODUCTID_MIHO033 not used
+##PRODUCTID_MIHO034 not used
+##PRODUCTID_MIHO035 not used
+##PRODUCTID_MIHO036 not used
+##PRODUCTID_MIHO037 Adaptor Plus Bundle
+##PRODUCTID_MIHO038 2-gang socket Bundle
+##PRODUCTID_MIHO039 2-gang socket Bundle black nickel
+##PRODUCTID_MIHO040 2-gang socket Bundle chrome
+##PRODUCTID_MIHO041 2-gang socket Bundle stainless steel
 
 # Default keys for OpenThings encryption and decryption
 CRYPT_PID                        = 242
@@ -67,47 +67,7 @@ CRYPT_PIP                        = 0x0100
 BROADCAST_ID                     = 0xFFFFFF # Energenie broadcast
 
 
-
-#TODO: Remove these
-##@unimplemented # no longer supported
-##def getDescription(mfrid, productid):
-##    if mfrid == MFRID_ENERGENIE:
-##        mfr = "Energenie"
-##        if productid == PRODUCTID_MIHO004:
-##            product = "MIHO004 MONITOR"
-##        elif productid == PRODUCTID_MIHO005:
-##            product = "MIHO005 ADAPTOR PLUS"
-##        elif productid == PRODUCTID_MIHO006:
-##            product = "MIHO006 HOUSE MONITOR"
-##        elif productid == PRODUCTID_MIHO013:
-##            product = "MIHO013 ETRV"
-##        else:
-##            product = "UNKNOWN_%s" % str(hex(productid))
-##    else:
-##        mfr     = "UNKNOWN_%s" % str(hex(mfrid))
-##        product = "UNKNOWN_%s" % str(hex(productid))
-####
-##    return "Manufacturer:%s Product:%s" % (mfr, product)
-####
-##
-###TODO this might be deprecated now, and replaced with the Device classes.
-###e.g. if there is a turn_on method or get_switch method, it has a switch.
-###still used in switch.py demo (will be until device classes deployed into tests)
-####
-##@unimplemented # no longer supported
-##def hasSwitch(mfrid, productid):
-##    if mfrid != MFRID:                  return False
-##    if productid == PRODUCTID_MIHO005:  return True
-##    return False
-
-
 #----- DEFINED MESSAGE TEMPLATES ----------------------------------------------
-
-##TODO: remove
-##import copy
-##
-##def create_message(message):
-##    return copy.deepcopy(message)
 
 
 SWITCH = {
@@ -232,19 +192,6 @@ MIHO005_REPORT = {
     ]
 }
 
-#TODO: remove
-##def send_join_ack(radio, mfrid, productid, sensorid):
-##    # send back a JOIN ACK, so that join light stops flashing
-##    response = OpenThings.Message(JOIN_ACK)
-##    response.set(header_mfrid=mfrid,
-##                 header_productid=productid,
-##                 header_sensorid=sensorid)
-##    p = OpenThings.encode(response)
-##    radio.transmitter()
-##    radio.transmit(p, inner_times=2)
-##    radio.receiver()
-
-
 
 #----- CONTRACT WITH AIR-INTERFACE --------------------------------------------
 
@@ -253,8 +200,8 @@ MIHO005_REPORT = {
 #
 #   synchronous send
 #   synchronous receive
-#   TODO: asynchronous send (deferred)    - implies a callback on 'done, fail, timeout'
-#   TODO: asynchronous receive (deferred) - implies a callback on 'done, fail, timeout'
+#TODO: asynchronous send (deferred)    - implies a callback on 'done, fail, timeout'
+#TODO: asynchronous receive (deferred) - implies a callback on 'done, fail, timeout'
 
 # air_interface has:
 #   configure(parameters)
@@ -457,10 +404,10 @@ class LegacyDevice(EnergenieDevice):
     def send_message(self, payload):
         #TODO: interface with air_interface
         # Encode the payload two bits per byte as per OOK spec
-        #TODO, should we just pass a payload (as a pydict or tuple) to the air_interface adaptor
+        #TODO: should we just pass a payload (as a pydict or tuple) to the air_interface adaptor
         #and let it encode it, to be consistent with the FSK MiHome devices?
         #payload could be a 3-tuple of (house_address, device_address, state)
-        #bytes = TwoBit.build_switch_msg(payload, house_address=self.device_id[0], device_address=self.device_id[1])
+        ##bytes = TwoBit.build_switch_msg(payload, house_address=self.device_id[0], device_address=self.device_id[1])
 
         if self.air_interface != None:
             #TODO: might want to send the config, either as a send parameter,
@@ -486,8 +433,8 @@ class MiHomeDevice(EnergenieDevice):
 
         #Different devices might have different PIP's
         #if we are cycling codes on each message?
-        #self.config.encryptPID = CRYPT_PID
-        #self.config.encryptPIP = CRYPT_PIP
+        ##self.config.encryptPID = CRYPT_PID
+        ##self.config.encryptPIP = CRYPT_PIP
 
     def get_config(self):
         """Get the persistable config, enough to reconstruct this class from a factory"""
@@ -522,7 +469,7 @@ class MiHomeDevice(EnergenieDevice):
         msg[OpenThings.PARAM_JOIN] = {"wr":False, "typeid":OpenThings.Value.UINT, "length":0}
         self.send_message(msg)
 
-    #def handle_message(self, payload):
+    ##def handle_message(self, payload):
     #override for any specific handling
 
     def send_message(self, payload):
@@ -558,7 +505,7 @@ class ENER002(LegacyDevice):
 
 
     def turn_on(self):
-        #TODO should this be here, or in LegacyDevice??
+        #TODO: should this be here, or in LegacyDevice??
         #addressing should probably be in LegacyDevice
         #child devices might interpret the command differently
         payload = {
@@ -771,13 +718,13 @@ class MIHO013(MiHomeDevice):
         return self.readings.setpoint_temperature
 
     def set_setpoint_temperature(self, temperature):
-        self.send_message("set setpoint temp") # TODO command
+        self.send_message("set setpoint temp") #TODO: command
 
     def get_valve_position(self): # -> position:int?
-        pass # TODO is this possible?
+        pass #TODO: is this possible?
 
     def set_valve_position(self, position):
-        pass # TODO command, is this possible?
+        pass #TODO: command, is this possible?
         self.send_message("set valve pos") #TODO
 
     #TODO: difference between 'is on and 'is requested on'
@@ -786,18 +733,18 @@ class MIHO013(MiHomeDevice):
     #TODO: switch state might be 'turning_on' or 'turning_off' if send request and not heard response yet
 
     def turn_on(self): # command
-        pass # TODO command i.e. valve position?
+        pass #TODO: command i.e. valve position?
         self.send_message("turn on") #TODO
 
     def turn_off(self): # command
-        pass # TODO command i.e. valve position?
+        pass #TODO: command i.e. valve position?
         self.send_message("turn off") #TODO
 
     def is_on(self): # query last known reported state (unknown if changing?)
-        pass # TODO i.e valve is not completely closed?
+        pass #TODO: i.e valve is not completely closed?
 
     def is_off(self): # query last known reported state (unknown if changing?)
-        pass # TODO i.e. valve is completely closed?
+        pass #TODO: i.e. valve is completely closed?
 
 
 #----- DEVICE FACTORY ---------------------------------------------------------
@@ -865,6 +812,7 @@ class DeviceFactory():
         i = c(device_id, air_interface)
         print(i)
         return i
+
 
 # END
 

@@ -223,16 +223,10 @@ auto create example written using example registry
 --------------------------------------------------------------------------------
 PLAN UP TO: MERGE BACK TO MASTER
 
----- PRE-RELEASE CLEAN-UP
-
-Move all global code from Registry.py (setup of router, registry) to __init__
+---- TEST HARNESS IMPROVEMENT
 
 Enable all tests and see if they work as a group
-
-Remove all commented out code
-
-Search TODO:s and remove any that are done
-
+(Registry changes should now allow multiple tests to run together)
 
 
 ---- TEST ON REAL HARDWARE

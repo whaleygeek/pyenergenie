@@ -83,7 +83,7 @@ def encode_test_message(pattern): #-> list of numbers
 
 def encode_switch_message(state, device_address=ALL_SOCKETS, house_address=None): # -> list of numbers
     """Build a message to turn a switch on or off"""
-    #print("build: state:%s, device:%d, house:%s" % (str(state), device_address, str(house_address)))
+    ##print("build: state:%s, device:%d, house:%s" % (str(state), device_address, str(house_address)))
 
     if house_address == None:
         house_address = DEFAULT_ADDR
@@ -130,17 +130,17 @@ def encode_switch_message(state, device_address=ALL_SOCKETS, house_address=None)
         bits |= 0x02
         
     payload += encode_bits(bits, 4)
-    #print("encoded as:%s" % ashex(payload))
+    ##print("encoded as:%s" % ashex(payload))
     return payload
 
 
 def encode_bytes(data): # -> list of numbers
     """Turn a list of bytes into a modulated pattern equivalent"""
-    #print("modulate_bytes: %s" % ashex(data))
+    ##print("modulate_bytes: %s" % ashex(data))
     payload = []
     for b in data:
         payload += encode_bits(b, 8)
-    #print("  returns: %s" % ashex(payload))
+    ##print("  returns: %s" % ashex(payload))
     return payload
 
 
@@ -152,16 +152,16 @@ def encode_bits(data, number): # -> list of numbers
     # 128 64 32 16  8  4  2  1
     #   1  B  B  0  1  A  A  0
     # i.e. a 0 is a short pulse, a 1 is a long pulse
-    #print("modulate_bits %s (%s)" % (ashex(data), str(number)))
+    ##print("modulate_bits %s (%s)" % (ashex(data), str(number)))
 
     shift = number-2
     encoded = []
     for i in range(int(number/2)):
         bits = (data >> shift) & 0x03
-        #print("    shift %d bits %d" % (shift, bits))
+        ##print("    shift %d bits %d" % (shift, bits))
         encoded.append(ENCODER[bits])
         shift -= 2
-    #print("  returns:%s" % ashex(encoded))
+    ##print("  returns:%s" % ashex(encoded))
     return encoded
 
 
@@ -192,7 +192,7 @@ def decode_bytes(bytes): # -> list of numbers, decoded bytes
 def decode_bits(bits, number): # -> list of bytes, decoded bits
     # decode 'number' of bits held in 'bits' and return as a list of 1 or more bytes
     # e.g. decode_bits(0xEE, 2) -> 0b00000011
-    pass # TODO
+    pass #TODO
 
 
 
