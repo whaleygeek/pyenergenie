@@ -219,19 +219,11 @@ setup_tool implemented and tested in simulation
 fixed testers to use new registry and device classes
 auto create example written using example registry
 all test harnesses now run as a group fine
+works on hardware
+works on python3 (after a fashion!)
 
 --------------------------------------------------------------------------------
 PLAN UP TO: MERGE BACK TO MASTER
-
-
----- TEST ON REAL HARDWARE
-
-Test device classes, factory, registry, router, discovery on real hardware.
-Do this by testing the example apps
-
-* Test with real radio
-
-* Test with python 3 as well as python 2
 
 
 ----- RELEASE TESTING AND RELEASE

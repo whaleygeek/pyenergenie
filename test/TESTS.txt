@@ -15,92 +15,25 @@ cd energenie/drv
 git add radio_rpi.so
 
 
-2. legacy.py runs on Raspberry Pi
+2. setup_tool works python 2/3
+  2.1. legacy learn mode
+  2.2. mihome discovery mode
+  2.3. list registry
+  2.4. switch device
+  2.5. show device status
+  2.6. watch devices
+  2.7. rename device
+  2.8. delete device
+  2.9. logging
 
-cd src
-sudo python legacy.py
+3. control_any_auto.py works python 2/3
 
-("do you want to learn any switches?" Y)
-("Learn switch 1?" Y)
-("Press the LEARN button on any switch 1 for 5 secs until LED flashes")
-("press ENTER when LED is flashing")
-  (hold green button for 10 seconds for fast flash to clear pairing memory)
-  (press ENTER)
-("ON")
-("Device should now be programmed")
-("Testing....")
-("OFF")
-("ON")
-("OFF")
-("ON")
-("OFF")
-("ON")
-  (say no to learn other switches)
-("switch 0 ON")
-  (turns on due to 'all switches on')
-("switch 0 OFF")
-  (turns off due to 'all switches off')
-("switch 1 ON")
-  (turns on)
-("switch 1 OFF")
-  (turns off)
-("switch 2 ON")
-("switch 2 OFF")
-("switch 3 ON")
-("switch 3 OFF")
-("switch 4 ON")
-("switch 4 OFF")
+4. control_any_noreg.py works python 2/3
 
+5. control_any_reg.py works python 2/3
 
-3. monitor.py
+6. discover_mihome.py works python 2/3
 
-cd src
-sudo python monitor.py
-
-(plug in a MiHome adaptor plus)
-(press button to force it to send a report)
-
-("monitor:1463122760.36,4,2,1675,1111100,1,243,49.8984375,0,0,None,None")
-("mfrid:0x4 prodid:0x2 sensorid:0x68b")
-("read  REAL_POWER W = 0")
-("read  REACTIVE_POWER VAR = 0")
-("read  VOLTAGE V = 242")
-("read  FREQUENCY Hz = 49.8984375")
-("read  SWITCH_STATE  = 1")
-("monitor:1463122770.34,4,2,1675,1111100,1,242,49.8984375,0,0,None,None")
-
-
-(plug in a MiHome house monitor)
-(wait a few seconds for a report to come back)
-
-("read  APPARENT_POWER VA = 0")
-("read  VOLTAGE V = 4.65625")
-("read  CURRENT A = 0.0")
-("ADD device:0x1b9 Manufacturer:Energenie Product:MIHO006 HOUSE MONITOR")
-("monitor:1463122944.38,4,5,441,0100011,None,4.65625,None,None,None,0,0.0")
-
-
-(put batteries in a MiHome eTRV)
-(wait a few seconds for a join report to come back)
-
-("mfrid:0x4 prodid:0x3 sensorid:0xc2a")
-("read  VOLTAGE V = 3.05859375")
-("ADD device:0xc2a Manufacturer:Energenie Product:MIHO013 ETRV")
-("monitor:1463123313.37,4,3,3114,0100000,None,3.05859375,None,None,None,None,None")
-("mfrid:0x4 prodid:0x3 sensorid:0xc2a")
-("monitor:1463123315.15,4,3,3114,0000000,None,None,None,None,None,None,None")
-("Empty record:{'header': {'sensorid': 3114, 'productid': 3, 'encryptPIP': 17443, 'mfrid': 4}, 'type': 'OK', 'recs': []}")
-("mfrid:0x4 prodid:0x3 sensorid:0xc2a")
-("read  TEMPERATURE C = 22.0")
-("monitor:1463123323.41,4,3,3114,0000000,None,None,None,None,None,None,None")
-
-
-4. switch.py
-
-cd src
-sudo python switch.py
-
-(plug in a MiHome adaptor plus, should report)
-(every 10 seconds it should toggle it's on/of state)
+7. mihome_energy_monitor.py works python 2/3
 
 END
