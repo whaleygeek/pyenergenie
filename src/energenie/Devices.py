@@ -566,7 +566,7 @@ class MIHO005(MiHomeDevice):
         return MiHomeDevice.get_join_req(MFRID_ENERGENIE, PRODUCTID_MIHO004, deviceid)
 
     def handle_message(self, payload):
-        ##print("MIHO005 new data %s" % self.device_id)
+        ##print("MIHO005 new data %s %s" % (self.device_id, payload))
         for rec in payload["recs"]:
             paramid = rec["paramid"]
             #TODO: consider making this table driven and allowing our base class to fill our readings in for us

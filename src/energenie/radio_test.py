@@ -12,7 +12,7 @@ import time
 # 4800bps*8*16=26ms per payload
 # 75 payloads is 2 seconds
 # 255 payloads is 6.8 seconds
-TIMES = 75
+TIMES = 40
 DELAY = 0.5
 
 # The 'radio' module knows nothing about the Energenie (HS1527) bit encoding,

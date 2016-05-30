@@ -76,7 +76,7 @@ def loop(receive_time=1):
                 device_id  = hdr["sensorid"]
                 address    = (mfr_id, product_id, device_id)
 
-                Registry.fsk_router.handle_message(address, payload)
+                registry.fsk_router.incoming_message(address, msg)
                 handled = True
             except OpenThings.OpenThingsException:
                 print("Can't decode payload:%s" % payload)
