@@ -6,7 +6,7 @@
 
 import energenie
 
-# You could also use the standard energenie.Registry.ask callback instead if you want
+# You could also use the standard energenie.ask callback instead if you want
 # as that does exactly the same thing
 
 def ask_fn(address, message):
@@ -27,10 +27,10 @@ def ask_fn(address, message):
 
 def discover_mihome():
     # Select your discovery behaviour from one of these:
-    ##energenie.Registry.discovery_auto()
-    energenie.Registry.discovery_ask(ask_fn)
-    ##energenie.Registry.discovery_autojoin()
-    ##energenie.Registry.discovery_askjoin(ask_fn)
+    ##energenie.discovery_auto()
+    energenie.discovery_ask(ask_fn)
+    ##energenie.discovery_autojoin()
+    ##energenie.discovery_askjoin(ask_fn)
 
     # Run the receive loop permanently, so that receive messages are processed
     try:

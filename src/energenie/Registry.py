@@ -19,50 +19,51 @@ except ImportError:
 from KVS import KVS
 
 
-directory = {}
+#TODO: REMOVE
+##directory = {}
 
-@unimplemented # no longer supported
-def allkeys(d):
-    result = ""
-    for k in d:
-        if len(result) != 0:
-            result += ','
-        result += str(k)
-    return result
-
-
-@unimplemented # no longer supported
-def update(message):
-    """Update the local directory with information about this device"""
-    now      = time.time()
-    header   = message["header"]
-    sensorId = header["sensorid"]
-
-    if not (sensorId in directory):
-        # new device discovered
-        desc = Devices.getDescription(header["mfrid"], header["productid"])
-        print("ADD device:%s %s" % (hex(sensorId), desc))
-        directory[sensorId] = {"header": message["header"]}
-        #trace(allkeys(directory))
-
-    directory[sensorId]["time"] = now
-    #TODO would be good to keep recs, but need to iterate through all and key by paramid,
-    #not as a list index, else merging will be hard.
+##@unimplemented # no longer supported
+##def allkeys(d):
+##    result = ""
+##    for k in d:
+##        if len(result) != 0:
+##            result += ','
+##        result += str(k)
+##    return result
 
 
-@unimplemented # no longer supported
-def size():
-    return len(directory)
-
-
-@unimplemented # no longer supported
-def get_sensorids():
-    return directory.keys()
-
-
-@unimplemented # no longer supported
-def get_info(sensor_id):
-    return directory[sensor_id]
+## @unimplemented # no longer supported
+## def update(message):
+##     """Update the local directory with information about this device"""
+##     now      = time.time()
+##     header   = message["header"]
+##     sensorId = header["sensorid"]
+## ## 
+##     if not (sensorId in directory):
+##         # new device discovered
+##         desc = Devices.getDescription(header["mfrid"], header["productid"])
+##         print("ADD device:%s %s" % (hex(sensorId), desc))
+##         directory[sensorId] = {"header": message["header"]}
+##         #trace(allkeys(directory))
+## ## 
+##     directory[sensorId]["time"] = now
+##     #TODO would be good to keep recs, but need to iterate through all and key by paramid,
+##     #not as a list index, else merging will be hard.
+## ## 
+## 
+## @unimplemented # no longer supported
+## def size():
+##     return len(directory)
+## ## 
+## 
+## @unimplemented # no longer supported
+## def get_sensorids():
+##     return directory.keys()
+## ## 
+## 
+## @unimplemented # no longer supported
+## def get_info(sensor_id):
+##     return directory[sensor_id]
 
 
 
@@ -79,6 +80,10 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
     def __init__(self, filename=None):
         ##print("***Opening DeviceRegistry")
         self.store = KVS(filename)
+        self.fsk_router = None
+
+    def set_fsk_router(self, fsk_router):
+        self.fsk_router = fsk_router
 
     def load_from(self, filename=None):
         """Start with a blank in memory registry, and load from the given filename"""
@@ -106,11 +111,12 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
         """Get the description for a device class from the store, and construct a class instance"""
         c = self.store[name]
 
-        if c.can_receive():
-            if isinstance(c, Devices.MiHomeDevice):
-                ##print("Adding rx route for receive enabled device %s" % c)
-                address = (c.manufacturer_id, c.product_id, c.device_id)
-                fsk_router.add(address, c)
+        if self.fsk_router != None:
+            if c.can_receive():
+                if isinstance(c, Devices.MiHomeDevice):
+                    ##print("Adding rx route for receive enabled device %s" % c)
+                    address = (c.manufacturer_id, c.product_id, c.device_id)
+                    self.fsk_router.add(address, c)
         return c
 
     def rename(self, old_name, new_name):
@@ -165,10 +171,10 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
 
 #TODO: Might move this to energenie.init() so that it is optional
 #will make it possible to run all the test cases together also.
-registry = DeviceRegistry()
-import os
-if os.path.isfile(DeviceRegistry.DEFAULT_FILENAME):
-    registry.load_from(DeviceRegistry.DEFAULT_FILENAME)
+##registry = DeviceRegistry()
+##import os
+##if os.path.isfile(DeviceRegistry.DEFAULT_FILENAME):
+##    registry.load_from(DeviceRegistry.DEFAULT_FILENAME)
 
 
 # This will create all class instance variables in the module that imports the registry.
@@ -398,60 +404,60 @@ class JoinConfirmedDiscovery(Discovery):
 
 #TODO: Name is not completely representative of function.
 # This is the Energenie 433.92MHz with OpenThings
-fsk_router = Router("fsk")
+##fsk_router = Router("fsk")
 
 #OOK receive not yet written
 #It will be used to be able to learn codes from Energenie legacy hand remotes
 ##ook_router = Router("ook")
 
 
-#TODO: Improve this interface
-# (temporary) helpful methods to switch between different discovery methods
-# Note that the __init__ automaticall registers itself with router
-
-def discovery_none():
-    fsk_router.when_unknown(None)
-
-def discovery_auto():
-    d = AutoDiscovery(registry, fsk_router)
-    ##print("Using auto discovery")
-
-def discovery_ask(ask_fn):
-    d = ConfirmedDiscovery(registry, fsk_router, ask_fn)
-    ##print("using confirmed discovery")
-
-def discovery_autojoin():
-    d = JoinAutoDiscovery(registry, fsk_router)
-    ##print("using auto join discovery")
-
-def discovery_askjoin(ask_fn):
-    d = JoinConfirmedDiscovery(registry, fsk_router, ask_fn)
-    ##print("using confirmed join discovery")
-
-
-def ask(address, message):
-    MSG = "Do you want to register to device: %s? " % str(address)
-    try:
-        if message != None:
-            print(message)
-        y = raw_input(MSG)
-
-    except AttributeError:
-        y = input(MSG)
-
-    if y == "": return True
-    y = y.upper()
-    if y in ['Y', 'YES']: return True
-    return False
-
-#TODO: Might move this to energenie.init() so that it is optional
-#will make it possible to run all the test cases together also.
-
-# Default discovery mode, unless changed by app
-##discovery_none()
-##discovery_auto()
-##discovery_ask(ask)
-discovery_autojoin()
-##discovery_askjoin(ask)
+## #TODO: Improve this interface
+## # (temporary) helpful methods to switch between different discovery methods
+## # Note that the __init__ automaticall registers itself with router
+## ## 
+## def discovery_none():
+##     fsk_router.when_unknown(None)
+## ## 
+## def discovery_auto():
+##     d = AutoDiscovery(registry, fsk_router)
+##     ##print("Using auto discovery")
+## ## 
+## def discovery_ask(ask_fn):
+##     d = ConfirmedDiscovery(registry, fsk_router, ask_fn)
+##     ##print("using confirmed discovery")
+## ## 
+## def discovery_autojoin():
+##     d = JoinAutoDiscovery(registry, fsk_router)
+##     ##print("using auto join discovery")
+## ## 
+## def discovery_askjoin(ask_fn):
+##     d = JoinConfirmedDiscovery(registry, fsk_router, ask_fn)
+##     ##print("using confirmed join discovery")
+## ## 
+## 
+## def ask(address, message):
+##     MSG = "Do you want to register to device: %s? " % str(address)
+##     try:
+##         if message != None:
+##             print(message)
+##         y = raw_input(MSG)
+## ## 
+##     except AttributeError:
+##         y = input(MSG)
+## ## 
+##     if y == "": return True
+##     y = y.upper()
+##     if y in ['Y', 'YES']: return True
+##     return False
+## ## 
+## #TODO: Might move this to energenie.init() so that it is optional
+## #will make it possible to run all the test cases together also.
+## ## 
+## # Default discovery mode, unless changed by app
+## ##discovery_none()
+## ##discovery_auto()
+## ##discovery_ask(ask)
+## discovery_autojoin()
+## ##discovery_askjoin(ask)
 
 # END

@@ -7,6 +7,7 @@
 # Future versions of this *might* also start receive monitor or scheduler threads.
 
 import time
+import os
 
 try:
     # Python 3
@@ -21,13 +22,40 @@ except ImportError:
     import Registry
     import OpenThings
 
-registry = Registry.registry
-fsk_router = Registry.fsk_router
+
+registry   = None
+fsk_router = None
+ook_router = None
+
 
 def init():
     """Start the Energenie system running"""
+
+    global registry, fsk_router, ook_router
+
     radio.init()
     OpenThings.init(Devices.CRYPT_PID)
+
+    fsk_router = Registry.Router("fsk")
+
+    #OOK receive not yet written
+    #It will be used to be able to learn codes from Energenie legacy hand remotes
+    ##ook_router = Registry.Router("ook")
+
+    registry = Registry.DeviceRegistry()
+    registry.set_fsk_router(fsk_router)
+    ##registry.set_ook_router(ook_router
+
+    if os.path.isfile(registry.DEFAULT_FILENAME):
+        registry.load_from(registry.DEFAULT_FILENAME)
+
+
+    # Default discovery mode, unless changed by app
+    ##discovery_none()
+    ##discovery_auto()
+    ##discovery_ask(ask)
+    discovery_autojoin()
+    ##discovery_askjoin(ask)
 
 
 def loop(receive_time=1):
@@ -62,6 +90,49 @@ def loop(receive_time=1):
 def finished():
     """Cleanly close the Energenie system when finished"""
     radio.finished()
+
+
+
+def discovery_none():
+    fsk_router.when_unknown(None)
+
+
+def discovery_auto():
+    d = Registry.AutoDiscovery(registry, fsk_router)
+    ##print("Using auto discovery")
+
+
+def discovery_ask(ask_fn):
+    d = Registry.ConfirmedDiscovery(registry, fsk_router, ask_fn)
+    ##print("using confirmed discovery")
+
+
+def discovery_autojoin():
+    d = Registry.JoinAutoDiscovery(registry, fsk_router)
+    ##print("using auto join discovery")
+
+
+def discovery_askjoin(ask_fn):
+    d = Registry.JoinConfirmedDiscovery(registry, fsk_router, ask_fn)
+    ##print("using confirmed join discovery")
+
+
+def ask(address, message):
+    MSG = "Do you want to register to device: %s? " % str(address)
+    try:
+        if message != None:
+            print(message)
+        y = raw_input(MSG)
+## 
+    except AttributeError:
+        y = input(MSG)
+## 
+    if y == "": return True
+    y = y.upper()
+    if y in ['Y', 'YES']: return True
+    return False
+
+
 
 
 # END

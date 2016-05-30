@@ -129,7 +129,7 @@ class KVS():
 
         if self.filename != None:
             with open(self.filename, 'a') as f:
-                f.write("ADD %s\n" % key)
+                f.write("\nADD %s\n" % key)
                 for k in values:
                     v = values[k]
                     f.write("%s=%s\n" % (k, v))

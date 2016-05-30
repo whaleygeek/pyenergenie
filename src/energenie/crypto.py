@@ -3,7 +3,6 @@
 # Crypto engine for OpenThings, including crc calculation
 
 
-
 ran = None
 
 #static uint16_t ran;

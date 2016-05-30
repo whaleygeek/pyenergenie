@@ -66,49 +66,49 @@ CRYPT_PIP                        = 0x0100
 # This makes simple discovery possible.
 BROADCAST_ID                     = 0xFFFFFF # Energenie broadcast
 
-#TODO: This might be deprecated now, and replaced with the DeviceFactory?
-#Still used in deprecated methods in Registry.py
-
-@unimplemented # no longer supported
-def getDescription(mfrid, productid):
-    if mfrid == MFRID_ENERGENIE:
-        mfr = "Energenie"
-        if productid == PRODUCTID_MIHO004:
-            product = "MIHO004 MONITOR"
-        elif productid == PRODUCTID_MIHO005:
-            product = "MIHO005 ADAPTOR PLUS"
-        elif productid == PRODUCTID_MIHO006:
-            product = "MIHO006 HOUSE MONITOR"
-        elif productid == PRODUCTID_MIHO013:
-            product = "MIHO013 ETRV"
-        else:
-            product = "UNKNOWN_%s" % str(hex(productid))
-    else:
-        mfr     = "UNKNOWN_%s" % str(hex(mfrid))
-        product = "UNKNOWN_%s" % str(hex(productid))
-
-    return "Manufacturer:%s Product:%s" % (mfr, product)
 
 
-#TODO this might be deprecated now, and replaced with the Device classes.
-#e.g. if there is a turn_on method or get_switch method, it has a switch.
-#still used in switch.py demo (will be until device classes deployed into tests)
-
-@unimplemented # no longer supported
-def hasSwitch(mfrid, productid):
-    if mfrid != MFRID:                  return False
-    if productid == PRODUCTID_MIHO005:  return True
-    return False
+#TODO: Remove these
+##@unimplemented # no longer supported
+##def getDescription(mfrid, productid):
+##    if mfrid == MFRID_ENERGENIE:
+##        mfr = "Energenie"
+##        if productid == PRODUCTID_MIHO004:
+##            product = "MIHO004 MONITOR"
+##        elif productid == PRODUCTID_MIHO005:
+##            product = "MIHO005 ADAPTOR PLUS"
+##        elif productid == PRODUCTID_MIHO006:
+##            product = "MIHO006 HOUSE MONITOR"
+##        elif productid == PRODUCTID_MIHO013:
+##            product = "MIHO013 ETRV"
+##        else:
+##            product = "UNKNOWN_%s" % str(hex(productid))
+##    else:
+##        mfr     = "UNKNOWN_%s" % str(hex(mfrid))
+##        product = "UNKNOWN_%s" % str(hex(productid))
+####
+##    return "Manufacturer:%s Product:%s" % (mfr, product)
+####
+##
+###TODO this might be deprecated now, and replaced with the Device classes.
+###e.g. if there is a turn_on method or get_switch method, it has a switch.
+###still used in switch.py demo (will be until device classes deployed into tests)
+####
+##@unimplemented # no longer supported
+##def hasSwitch(mfrid, productid):
+##    if mfrid != MFRID:                  return False
+##    if productid == PRODUCTID_MIHO005:  return True
+##    return False
 
 
 #----- DEFINED MESSAGE TEMPLATES ----------------------------------------------
 
-##TODO: This should really be in OpenThings.Message
+##TODO: remove
+##import copy
+##
+##def create_message(message):
+##    return copy.deepcopy(message)
 
-import copy
-
-def create_message(message):
-    return copy.deepcopy(message)
 
 SWITCH = {
     "header": {
@@ -162,7 +162,6 @@ JOIN_ACK = {
     ]
 }
 
-
 REGISTERED_SENSOR = {
     "header": {
         "mfrid":       MFRID_ENERGENIE,
@@ -171,7 +170,6 @@ REGISTERED_SENSOR = {
         "sensorid":    0 # FILL IN
     }
 }
-
 
 MIHO005_REPORT = {
     "header": {
@@ -234,16 +232,17 @@ MIHO005_REPORT = {
     ]
 }
 
-def send_join_ack(radio, mfrid, productid, sensorid):
-    # send back a JOIN ACK, so that join light stops flashing
-    response = OpenThings.Message(JOIN_ACK)
-    response.set(header_mfrid=mfrid,
-                 header_productid=productid,
-                 header_sensorid=sensorid)
-    p = OpenThings.encode(response)
-    radio.transmitter()
-    radio.transmit(p, inner_times=2)
-    radio.receiver()
+#TODO: remove
+##def send_join_ack(radio, mfrid, productid, sensorid):
+##    # send back a JOIN ACK, so that join light stops flashing
+##    response = OpenThings.Message(JOIN_ACK)
+##    response.set(header_mfrid=mfrid,
+##                 header_productid=productid,
+##                 header_sensorid=sensorid)
+##    p = OpenThings.encode(response)
+##    radio.transmitter()
+##    radio.transmit(p, inner_times=2)
+##    radio.receiver()
 
 
 

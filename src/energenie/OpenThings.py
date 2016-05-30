@@ -4,10 +4,13 @@
 
 from lifecycle import *
 import time
+
 try:
-	import crypto # python 2
+	# Python 2
+	import crypto
 except ImportError:
-	from . import crypto # python 3
+	# Python 3
+	from . import crypto
 
 
 def warning(msg):
@@ -25,6 +28,7 @@ class OpenThingsException(Exception):
 	def __str__(self):
 		return repr(self.value)
 
+
 #----- CRYPT PROCESSING -------------------------------------------------------
 
 crypt_pid = None
@@ -32,6 +36,7 @@ crypt_pid = None
 def init(pid):
 	global crypt_pid
 	crypt_pid = pid
+
 
 #----- PARAMETERS -------------------------------------------------------------
 
@@ -131,6 +136,7 @@ param_info = {
 	PARAM_WATER_FLOW_RATE : {"n":"WATER_FLOW_RATE",		"u":"l/hr"},
 	PARAM_WATER_PRESSURE  : {"n":"WATER_PRESSURE",		"u":"Pa"},
 }
+
 
 def paramname_to_paramid(paramname):
 	"""Turn a parameter name to a parameter id number"""

@@ -13,11 +13,19 @@
 # NOTE: This also might include intelligent power level selection based
 # on RSSI reports from different devices.
 
-from lifecycle import *
-import OpenThings
-import TwoBit
-import radio
+##from lifecycle import *
 import time
+
+try:
+    # Python 2
+    import OpenThings
+    import TwoBit
+    import radio
+except ImportError:
+    # Python 3
+    from . import OpenThings
+    from . import TwoBit
+    from . import radio
 
 
 class OpenThingsAirInterface():

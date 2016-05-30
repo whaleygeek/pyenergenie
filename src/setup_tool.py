@@ -132,7 +132,7 @@ def do_mihome_discovery():
     """Discover any mihome device when it sends reports"""
 
     print("Discovery mode, press Ctrl-C to stop")
-    energenie.Registry.discovery_ask(energenie.Registry.ask)
+    energenie.discovery_ask(energenie.ask)
     try:
         while True:
             energenie.loop() # Allow receive processing

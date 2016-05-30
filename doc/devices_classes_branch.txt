@@ -223,6 +223,17 @@ auto create example written using example registry
 --------------------------------------------------------------------------------
 PLAN UP TO: MERGE BACK TO MASTER
 
+---- PRE-RELEASE CLEAN-UP
+
+Move all global code from Registry.py (setup of router, registry) to __init__
+
+Enable all tests and see if they work as a group
+
+Remove all commented out code
+
+Search TODO:s and remove any that are done
+
+
 
 ---- TEST ON REAL HARDWARE
 
