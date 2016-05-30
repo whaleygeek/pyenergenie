@@ -218,15 +218,10 @@ receive sequence counter tested
 setup_tool implemented and tested in simulation
 fixed testers to use new registry and device classes
 auto create example written using example registry
-
+all test harnesses now run as a group fine
 
 --------------------------------------------------------------------------------
 PLAN UP TO: MERGE BACK TO MASTER
-
----- TEST HARNESS IMPROVEMENT
-
-Enable all tests and see if they work as a group
-(Registry changes should now allow multiple tests to run together)
 
 
 ---- TEST ON REAL HARDWARE

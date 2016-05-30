@@ -31,6 +31,8 @@ class FACTORY():
 
 #----- FILE HELPERS -----------------------------------------------------------
 
+#TODO: This is repeated in Registry_test.py
+
 def remove_file(filename):
     import os
     try:

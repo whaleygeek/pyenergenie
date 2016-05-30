@@ -1,12 +1,7 @@
 # Registry_Test.py  21/05/2016  D.J.Whale
 #
 # Test harness for the Registry
-
-#TODO: need a way to separate device creation from device restoration
-#and the app needs to know what mode it is in.
-#creation is probably just a test feature, as a user would either
-#install the device, configure it, or learn it.
-
+# includes: DeviceRegistry, Router, Discovery
 
 import unittest
 from Registry import *
@@ -16,6 +11,11 @@ from lifecycle import *
 radio.DEBUG=True
 
 REGISTRY_KVS = "registry.kvs"
+
+
+#----- FILE HELPERS -----------------------------------------------------------
+#
+#TODO: This is repeated in KVS_test.py
 
 def remove_file(filename):
     import os
@@ -37,9 +37,11 @@ def create_file(filename):
         pass
 
 
+#----- TEST REGISTRY ----------------------------------------------------------
+
 class TestRegistry(unittest.TestCase):
 
-    @test_0
+    @test_1
     def test_create(self):
         """Make a registry file by calling methods, and see that the file is the correct format"""
         remove_file(REGISTRY_KVS)
@@ -68,11 +70,14 @@ class TestRegistry(unittest.TestCase):
         registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
         registry.list()
 
+
         # clear the in memory registry
         registry = None
 
         # create and load from file
         registry = DeviceRegistry()
+        fsk_router = Router("fsk")
+        registry.set_fsk_router(fsk_router)
         registry.load_from(REGISTRY_KVS)
 
         # dump the registry state
@@ -81,10 +86,10 @@ class TestRegistry(unittest.TestCase):
         # get device intances, this will cause receive routes to be knitted up
         tv = registry.get("tv")
         fan = registry.get("fan")
-        fsk_router.list()
+        registry.fsk_router.list()
 
 
-    @test_0 # DONE
+    @test_1
     def test_load_into(self):
 
         # create an in memory registry
@@ -100,19 +105,19 @@ class TestRegistry(unittest.TestCase):
         print(context.fan)
 
 
+#----- TEST ROUTER ------------------------------------------------------------
 
-#TODO: This is not realy a registry tester, it's a device class/router tester??
-class Dis:
-##class TestRegistry(unittest.TestCase):
+class TestRouter(unittest.TestCase):
     def setUp(self):
         # seed the registry
+        registry = DeviceRegistry()
         registry.add(Devices.MIHO005(device_id=0x68b), "tv")
         registry.add(Devices.ENER002(device_id=(0xC8C8C, 1)), "fan")
 
         # test the auto create mechanism
-        registry.auto_create(self)
+        registry.load_into(self)
 
-    @test_0
+    @test_1
     def test_capabilities(self):
         print("tv switch:%s"  % self.tv.has_switch())
         print("tv send:%s"    % self.tv.can_send())
@@ -122,21 +127,21 @@ class Dis:
         print("fan send:%s"    % self.fan.can_send())
         print("fan receive:%s" % self.fan.can_receive())
 
-    @test_0
+    @test_1
     def test_ook_tx(self):
         """Test the transmit pipeline"""
 
         self.fan.turn_on()
         self.fan.turn_off()
 
-    @test_0
+    @test_1
     def test_fsk_tx(self):
         """Test the transmit pipeline for MiHome FSK devices"""
 
         self.tv.turn_on()
         self.tv.turn_off()
 
-    @test_0
+    @test_1
     def test_fsk_rx(self):
         """Test the receive pipeline for FSK MiHome adaptor"""
 
@@ -174,11 +179,9 @@ class Dis:
         print("switch %s"     % switch)
 
 
+#----- TEST DISCOVERY ---------------------------------------------------------
 
 UNKNOWN_SENSOR_ID = 0x111
-
-#TODO: Due to use of the fsk_router and registry instances,
-#these tests will not run back to back yet. Have to run them one at a time.
 
 class TestDiscovery(unittest.TestCase):
     def setUp(self):
@@ -186,93 +189,104 @@ class TestDiscovery(unittest.TestCase):
         self.msg = OpenThings.Message(Devices.MIHO005_REPORT)
         self.msg[OpenThings.PARAM_VOLTAGE]["value"] = 240
 
-    @test_0
+        self.fsk_router = Router("fsk")
+
+        #OOK receive not yet written
+        #It will be used to be able to learn codes from Energenie legacy hand remotes
+        ##ook_router = Registry.Router("ook")
+
+        self.registry = DeviceRegistry()
+        self.registry.set_fsk_router(self.fsk_router)
+
+    @test_1
     def test_discovery_none(self):
-        discovery_none()
+        self.fsk_router.when_unknown(None) # Discovery NONE
+
 
         # Poke synthetic unknown into the router and let it route to unknown handler
         self.msg.set(header_sensorid=UNKNOWN_SENSOR_ID)
-        fsk_router.incoming_message(
+        self.fsk_router.incoming_message(
             (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), self.msg)
 
         # expect unknown handler to fire
 
-    @test_0
+    @test_1
     def test_discovery_auto(self):
-        discovery_auto()
+        d = AutoDiscovery(self.registry, self.fsk_router) # Discovery AUTO
 
         # Poke synthetic unknown into the router and let it route to unknown handler
         self.msg.set(header_sensorid=UNKNOWN_SENSOR_ID)
-        fsk_router.incoming_message(
+        self.fsk_router.incoming_message(
             (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), self.msg)
 
         # expect auto accept logic to fire
-        registry.list()
-        fsk_router.list()
+        self.registry.list()
+        self.fsk_router.list()
 
-    @test_0
+    @test_1
     def test_discovery_ask(self):
         def yes(a,b): return True
         def no(a,b):  return False
 
-        discovery_ask(no)
+        d = ConfirmedDiscovery(self.registry, self.fsk_router, no) # Discovery ASK(NO)
+
 
         # Poke synthetic unknown into the router and let it route to unknown handler
         self.msg.set(header_sensorid=UNKNOWN_SENSOR_ID)
-        fsk_router.incoming_message(
+        self.fsk_router.incoming_message(
             (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), self.msg)
 
         # expect a reject
 
-        discovery_ask(yes)
+        d = ConfirmedDiscovery(self.registry, self.fsk_router, yes) # Discovery ASK(YES)
 
         # Poke synthetic unknown into the router and let it route to unknown handler
         self.msg.set(header_sensorid=UNKNOWN_SENSOR_ID)
-        fsk_router.incoming_message(
+        self.fsk_router.incoming_message(
             (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), self.msg)
 
         # expect a accept
-        registry.list()
-        fsk_router.list()
+        self.registry.list()
+        self.fsk_router.list()
 
-    @test_0
+    @test_1
     def test_discovery_autojoin(self):
-        discovery_autojoin()
+        d = JoinAutoDiscovery(self.registry, self.fsk_router) # Discovery AUTO JOIN
 
         # Poke synthetic unknown JOIN into the router and let it route to unknown handler
         msg = Devices.MIHO005.get_join_req(UNKNOWN_SENSOR_ID)
 
-        fsk_router.incoming_message(
+        self.fsk_router.incoming_message(
             (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), msg)
 
         # expect auto accept and join_ack logic to fire
-        registry.list()
-        fsk_router.list()
+        self.registry.list()
+        self.fsk_router.list()
 
-    @test_0
+    @test_1
     def test_discovery_askjoin(self):
         def no(a,b): return False
         def yes(a,b): return True
 
-        discovery_askjoin(no)
+        d = JoinConfirmedDiscovery(self.registry, self.fsk_router, no) # Discovery ASK JOIN(NO)
 
         # Poke synthetic unknown JOIN into the router and let it route to unknown handler
         msg = Devices.MIHO005.get_join_req(UNKNOWN_SENSOR_ID)
-        fsk_router.incoming_message(
+        self.fsk_router.incoming_message(
             (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), msg)
 
         # expect reject
-        registry.list()
-        fsk_router.list()
+        self.registry.list()
+        self.fsk_router.list()
 
-        discovery_askjoin(yes)
+        d = JoinConfirmedDiscovery(self.registry, self.fsk_router, yes) # Discovery ASK JOIN(YES)
 
-        fsk_router.incoming_message(
+        self.fsk_router.incoming_message(
             (Devices.MFRID_ENERGENIE, Devices.PRODUCTID_MIHO005, UNKNOWN_SENSOR_ID), msg)
 
         # expect auto accept and join_ack logic to fire
-        registry.list()
-        fsk_router.list()
+        self.registry.list()
+        self.fsk_router.list()
 
 
 if __name__ == "__main__":

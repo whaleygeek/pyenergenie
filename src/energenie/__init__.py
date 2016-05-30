@@ -133,6 +133,4 @@ def ask(address, message):
     return False
 
 
-
-
 # END
