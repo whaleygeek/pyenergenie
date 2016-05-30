@@ -12,8 +12,6 @@
 # All you would need is a different radio.py that marshalled data to and from
 # the Arduino via pyserial.
 
-from lifecycle import *
-
 #TODO: Should really add parameter validation here, so that C code doesn't have to.
 #although it will be faster in C (C could be made optional, like an assert?)
 

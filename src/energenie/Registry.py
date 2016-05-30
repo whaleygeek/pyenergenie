@@ -10,12 +10,13 @@ try:
     # Python 2
     import Devices
     import OpenThings
+    from KVS import KVS
 except ImportError:
     # Python 3
     from . import Devices
     from . import OpenThings
+    from .KVS import KVS
 
-from KVS import KVS
 
 
 #----- NEW DEVICE REGISTRY ----------------------------------------------------
@@ -94,16 +95,21 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
     def devices(self):
         """A generator/iterator that can be used to get a list of device instances"""
 
-        # first get a list of all devices, in case the registry changes while iterating
-        devices = self.store.keys()
-
-        # now 'generate' one per call
-        i = 0
-        while i < len(devices):
-            k = devices[i]
+        # Python2 and Python3 safe
+        for k in self.store.keys():
             device = self.store[k]
             yield device
-            i += 1
+
+        # first get a list of all devices, in case the registry changes while iterating
+        ##devices = self.store.keys()
+
+        # now 'generate' one per call
+        ##i = 0
+        ##while i < len(devices):
+        ##    k = devices[i]
+        ##    device = self.store[k]
+        ##    yield device
+        ##    i += 1
 
     def names(self):
         """A generator/iterator that can be used to get a list of device names"""

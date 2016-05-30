@@ -10,17 +10,17 @@ import time
 import os
 
 try:
-    # Python 3
-    from . import radio
-    from . import Devices
-    from . import Registry
-    from . import OpenThings
-except ImportError:
     # Python 2
     import radio
     import Devices
     import Registry
     import OpenThings
+except ImportError:
+    # Python 3
+    from . import radio
+    from . import Devices
+    from . import Registry
+    from . import OpenThings
 
 
 registry   = None

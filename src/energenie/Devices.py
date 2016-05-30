@@ -3,9 +3,15 @@
 # Information about specific Energenie devices
 # This table is mostly reverse-engineered from various websites and web catalogues.
 
-from lifecycle import *
-import OnAir
-import OpenThings
+##from lifecycle import *
+try:
+    # Python 2
+    import OnAir
+    import OpenThings
+except ImportError:
+    # Python 3
+    from . import OnAir
+    from . import OpenThings
 
 # This level of indirection allows easy mocking for testing
 ook_interface = OnAir.TwoBitAirInterface()
