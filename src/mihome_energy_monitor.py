@@ -26,7 +26,9 @@ def energy_monitor_loop():
     switch_state = not switch_state
 
     # For all devices in the registry, if they have a get_power(), call it
+    print("Checking device status")
     for d in energenie.registry.devices():
+        print(d)
         try:
             p = d.get_power()
             print("Power: %s" % str(p))
@@ -47,7 +49,7 @@ if __name__ == "__main__":
         print("\nIncoming from %s" % str(address))
         Logger.logMessage(message)
     energenie.fsk_router.when_incoming(incoming)
-
+    print("Logging to file:%s" % Logger.LOG_FILENAME)
 
     try:
         while True:

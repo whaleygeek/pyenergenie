@@ -187,11 +187,16 @@ class Router():
         if self.incoming_cb != None:
             self.incoming_cb(address, message)
 
+        ##print("router.incoming addr=%s" % str(address))
+        ##print("routes:%s" % str(self.routes))
+
         if address in self.routes:
             ci = self.routes[address]
             ci.incoming_message(message)
 
-        else: # unknown address
+        else: # address has no route
+            print("No route to an object, for device:%s" % str(address))
+            #TODO: Could consult registry and squash if registry knows it
             self.handle_unknown(address, message)
 
     def when_incoming(self, callback):
@@ -222,12 +227,12 @@ class Discovery():
         router.when_unknown(self.unknown_device)
 
     def unknown_device(self, address, message):
-        pass##print("message from unknown device:%s" % str(address))
+        print("message from unknown device:%s" % str(address))
         # default action is to drop message
         # override this method in sub classes if you want special processing
 
     def reject_device(self, address, message):
-        pass##print("message rejected from:%s" % (str(address)))
+        print("message rejected from:%s" % (str(address)))
         # default action is to drop message
         # override this method if you want special processing
 
@@ -290,7 +295,7 @@ class JoinAutoDiscovery(Discovery):
             j = None
 
         if j == None: # not a join
-            self.unknown_device(address, message)
+            Discovery.unknown_device(self, address, message)
         else: # it is a join
             # but don't forward the join request as it will be malformed with no value
             ci = self.accept_device(address, message, forward=False)
@@ -314,7 +319,7 @@ class JoinConfirmedDiscovery(Discovery):
             j = None
 
         if j == None: # not a join
-            self.unknown_device(address, message)
+            Discovery.unknown_device(self, address, message)
         else: # it is a join
             y = self.ask_fn(address, message)
             if y:

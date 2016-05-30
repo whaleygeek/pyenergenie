@@ -48,7 +48,9 @@ def init():
 
     if os.path.isfile(registry.DEFAULT_FILENAME):
         registry.load_from(registry.DEFAULT_FILENAME)
-
+        print("loaded registry from file")
+        registry.list()
+        fsk_router.list()
 
     # Default discovery mode, unless changed by app
     ##discovery_none()
