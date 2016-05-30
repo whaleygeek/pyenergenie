@@ -12,12 +12,12 @@ import time
 # 4800bps*8*16=26ms per payload
 # 75 payloads is 2 seconds
 # 255 payloads is 6.8 seconds
-TIMES = 75
+TIMES = 40
 DELAY = 0.5
 
 # The 'radio' module knows nothing about the Energenie (HS1527) bit encoding,
 # so this test code manually encodes the bits.
-# For the full Python stack, there is an encoder module that can generate
+# For the full Python stack, there is a TwoBit module that can generate
 # specific payloads. Repeats are done in radio_transmitter.
 # The HRF preamble feature is no longer used, it's more predictable to
 # put the preamble in the payload.

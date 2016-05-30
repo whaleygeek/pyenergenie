@@ -1,7 +1,6 @@
 # cleanup.py  05/04/2016  D.J.Whale
 #
-# Put all used GPIO pins into an input state
-# Useful to recover from a crash
+# Put all used Raspberry Pi GPIO pins into an input state. Useful to recover from a crash
 
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)

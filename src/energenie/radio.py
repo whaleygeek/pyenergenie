@@ -15,6 +15,9 @@
 #TODO: Should really add parameter validation here, so that C code doesn't have to.
 #although it will be faster in C (C could be made optional, like an assert?)
 
+#TODO: Would like to add RSSI measurements and reporting to the metadata that
+#comes back with received packets.
+
 LIBNAME = "drv/radio_rpi.so"
 ##LIBNAME = "drv/radio_mac.so" # testing
 
@@ -22,6 +25,8 @@ import time
 import ctypes
 from os import path
 mydir = path.dirname(path.abspath(__file__))
+
+DEBUG = False
 
 libradio                     = ctypes.cdll.LoadLibrary(mydir + "/" + LIBNAME)
 radio_init_fn                = libradio["radio_init"]
@@ -46,7 +51,7 @@ RADIO_MODULATION_FSK = 1
 MAX_RX_SIZE = 66
 
 
-#TODO RADIO_RESULT_XX
+#TODO: RADIO_RESULT_XX
 
 def trace(msg):
     print(str(msg))
@@ -57,30 +62,6 @@ def tohex(l):
     for item in l:
         line += hex(item) + " "
     return line
-
-
-def unimplemented(m):
-    print("warning: method is not implemented:%s" % m)
-    return m
-
-
-def deprecated(m):
-    """Load-time warning about deprecated method"""
-    print("warning: method is deprecated:%s" % m)
-    return m
-
-
-def untested(m):
-    """Load-time warning about untested function"""
-    print("warning: method is untested:%s" % m)
-    return m
-
-
-def disabled(m):
-    """Load-time waring about disabled function"""
-    print("warning: method is disabled:%s" % m)
-    def nothing(*args, **kwargs):pass
-    return nothing
 
 
 def init():
@@ -128,6 +109,13 @@ def transmit(payload, outer_times=1, inner_times=8, outer_delay=0):
     """Transmit a single payload using the present modulation scheme"""
     #Note, this optionally does a mode change before and after
     #extern void radio_transmit(uint8_t* payload, uint8_t len, uint8_t repeats);
+
+    if DEBUG:
+        print("***TX %s" % payload)
+        import OpenThings
+        if payload[0] < 20: # crude way to reject ook messages
+            print("PAYLOAD: %s" % OpenThings.decode(payload))
+        # remember that the sensorId is encrypted too
 
     framelen = len(payload)
     if framelen < 1 or framelen > 255:
@@ -232,28 +220,29 @@ def receive_cbp():
     return rxlist # Python len(rxlist) tells us how many bytes including length byte if present
 
 
-@untested
-def receive_len(size):
-    """Receive a fixed payload size"""
-
-    bufsize = size
-
-    Buffer = ctypes.c_ubyte * bufsize
-    rxbuf  = Buffer()
-    buflen = ctypes.c_ubyte(bufsize)
-    #RADIO_RESULT radio_get_payload_len(uint8_t* buf, uint8_t buflen)
-
-    result = radio_get_payload_len_fn(rxbuf, buflen)
-
-    if result != 0: # RADIO_RESULT_OK
-        raise RuntimeError("Receive failed, error code %s" % hex(result))
-
-    # turn buffer into a list of bytes, using 'size' as the counter
-    rxlist = []
-    for i in range(size):
-        rxlist.append(rxbuf[i])
-
-    return rxlist # Python len(rxlist) tells us how many bytes including length byte if present
+#TODO: Placeholder for when we do OOK receive
+##@untested
+##def receive_len(size):
+##    """Receive a fixed payload size"""
+##
+##    bufsize = size
+##
+##    Buffer = ctypes.c_ubyte * bufsize
+##    rxbuf  = Buffer()
+##    buflen = ctypes.c_ubyte(bufsize)
+##    #RADIO_RESULT radio_get_payload_len(uint8_t* buf, uint8_t buflen)
+##
+##    result = radio_get_payload_len_fn(rxbuf, buflen)
+##
+##    if result != 0: # RADIO_RESULT_OK
+##        raise RuntimeError("Receive failed, error code %s" % hex(result))
+##
+##    # turn buffer into a list of bytes, using 'size' as the counter
+##    rxlist = []
+##    for i in range(size):
+##        rxlist.append(rxbuf[i])
+##
+##    return rxlist # Python len(rxlist) tells us how many bytes including length byte if present
 
 
 def standby():

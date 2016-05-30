@@ -1,0 +1,238 @@
+DEVICE CLASSES
+
+A device class is a scheme where user devices plugged into Energenie
+product, can be referred to as objects within a user application.
+
+It is a way of abstracting the on-air radio interface and Energenie
+device specifics from a user application, such that the user can
+code 'in the land of their devices'.
+
+
+--------------------------------------------------------------------------------
+REQUIREMENTS
+
+YES 1. EXPRESSIVE: To be able to write expressive and compact applications,
+   that talk in the vocabulary of physical devices.
+
+   YES a. All known Energenie devices to be modelled as classes inside a
+      device database, and the capabilities and operations on those devices
+      pre-written so they can be reused by a user application.
+
+   YES b. An easy way for users to map energenie device intents to user
+      device intents (such as by wrapping custom object vocabulary around
+      the standard energenie device vocabulary) - e.g. room.heat() rather
+      than plug.on()
+
+  e.g. first level device names such as my_radiator or my_plug,
+  or second level device names such as bedroom_radiator and kitchen_kettle
+  (things plugged into devices)
+
+  This will hide the detail of how messages get encoded and transported,
+  and allows users to focus ore on the intents of the application, rather
+  than the implementation details.
+
+
+HMM? 2. NAME REGISTRY: To be able to build a local registry of devices and their configurations,
+   and refer to devices by name inside the application.
+
+   YES a. to be configurable by learning (e.g. listen for messages such as
+      a join message, and add the device to the registry)
+
+   YES b. to be configurable by hand (e.g. hand entering the sensor id of
+      a known device into the registry)
+
+   YES c. to automatically build variables for the user program from the
+      registry, so that users don't have to bother with lots of
+      wiring up code every time their app starts.
+
+   YES d. this registry must be persistable, e.g. save and restore to a disk file,
+      so that on application startup, the device database is automatically loaded
+      and objects created.
+
+   HMM? e. the registry can be queried, such as 'find me all devices that are of
+      type x' or 'find me all devices in location kitchen'.
+
+
+HMM? 3. INTENTS: To be able to command and query devices in a way that represents
+   meaningful device-based intents (such as tv.on() and tv.get_power())
+
+   YES a. received data values to be cached for deferred query, such as get_power()
+
+   POSSIBLE b. the last receipt time of data from a transmitting device to be known
+
+   POSSIBLY c. the next expected receipt time of data from a transmitting device to be known
+
+   POSSIBLY d. the last known state of a transmitting device to be known (e.g. switch state
+      both by commanded state and retrieved state)
+
+
+YES 4. AGNOSTIC: To be able to refer to user devices in an Energenie device agnostic way.
+
+   e.g. it doesn't matter if the TV is plugged into a green button device,
+   or a MiHome device. It is always tv.on() in the code.
+
+
+YES 5. LEARN/DISCOVER: To be able to instigate and manage learn mode from within an app
+
+   YES a. To send specific commands to green button devices so they can
+      learn the pattern
+
+   YES b. To sniff for any messages from MiHome devices and capture them
+      for later analysis and turning into device objects
+
+   YES c. To process MiHome join requests, and send MiHome join acks
+
+
+YES 6. ABSTRACTED RADIO: To completely hide the user from the on-air radio interface
+
+   YES a. choosing the correct radio frequency and modulation automatically
+
+   YES b. choosing the correct physical layer configuration automatically,
+      such as message repeats for certain devices
+
+
+Not as part of this work, but this should at least be enabled
+by the design
+
+HMM? 7. PERFORMING: To be able to build a well performing system
+   with very few message collisions and message losses
+
+   POSSIBLE a. by dynamically learning report patterns of MiHome devices
+
+   POSSIBLE b. by intelligently deferring and schedulling transmit messages
+      to avoid transmit slots of reporting devices
+
+   POSSIBLE c. to query device characteristics such as modulation scheme and msg repeats.
+      also to estimate the transmit time of a particular message to help
+      with message scheduling.
+
+
+--------------------------------------------------------------------------------
+DESIGN Devices.py
+
+MOSTLY DONE,
+
+remaining items to investigate:
+
+  commanded state? (did we ask it to be on, when did we ask?)
+  reported state? (did it tell us it is on, when did we learn it?)
+
+  overall device state
+    have we seen this device this run?
+    when did we last hear from it?
+    when did we last talk to it?
+    when do we expect to next hear from it?
+
+  yet unmodelled devices still to be usable to some degree
+    for MiHome devices, a proxy class generated dynamically based on received message parameters.
+    e.g. if it reports a TEMPERATURE field, then there should be an automatic get_temperature() method
+    generated.
+
+  possibly add callbacks such as when_turned_on() when_turned_off() etc.
+
+(do we need to know what our last sent request is, vs last known reported state?
+e.g. if we have sent a request but not heard a response yet, this means we think we asked
+it to turn on, but we don't yet know if it has done that. Some devices can't report
+back, but some can, so it would be nice to have a four stage state machine for on/off)
+
+(note, would be good to be able to persist the last message received on disk,
+so that when code restarts, it knows the last send/receive time that was last processed.
+i.e. a resumable state machine persisted to disk)
+
+(note, a message scheduler if inserted in the middle, would do callbacks to say
+that the request has been processed, so timestamps can be updated. Also same scheduler
+could handle retries perhaps, if the device is tx and rx, then when you send a switch
+change, it would normally report back that the switch had changed, so if you don't
+get it, or if it is in the wrong state, could retry a send again until it changes)
+
+(note, inner variables might have two versions for some devices, the requested
+value and the confirmed value. If they are different, it means might still be
+waiting for a reply, so can't guarantee the command was received yet)
+
+
+--------------------------------------------------------------------------------
+DESIGN Registry.py
+
+DONE
+
+
+--------------------------------------------------------------------------------
+DESIGN - air_interface adaptors for FSK and OOK
+
+DONE
+
+
+--------------------------------------------------------------------------------
+DESIGN NOTES - registry data store
+
+REQUIREMENT: I want a simple persistent kvp database with the following features:
+
+YES: 1. A file format that is portable across all platforms
+YES: 2. A file format that is human readable and easily editable
+YES: 3. A simple read and write key/value abstraction in python with a full CRUD lifecycle
+YES: 4. Doesn't have to be hugely efficient or store very large data sets
+YES: MIT licence
+YES: 6. A single python file
+TODO: 7. Works out of the box with no changes on Python 2 and Python 3
+
+Additionally, it might:
+
+YES: 8. A option to add multi process locking later if required, but not
+   included by default
+
+   so that it could be used as a simple central database for multiple
+   programs sharing the same data set.
+
+POSSIBLE: 9. understand read only and read/write intents better
+
+   when using configuration data and last known values, it is useful
+   to keep them in the same single file, so it is easy to copy
+   to other machines. Some data is naturally 'write once' and
+   very configuration based. Some data is naturally 'write often'.
+   It might be nice if these two types of data could appear in the same
+   file, but the locking/performance and resilience issues be handled
+   differently for the two classes of data - e.g. perhaps having
+   two connections to the same database file, one in read only mode
+   for config records, and one in read/write mode for last use data.
+   There might also be different namespace prefixes in the file
+   so that the key sets are separate, or there may be a way to
+   link them so that when you read a record you get both the static
+   config data and the fast changing last use data as a single
+   record. But this then implies when you do an update, you
+   probably want to update part of a record rather than the
+   whole record.
+
+
+Note: callbacks on when_updated() might be required
+
+
+--------------------------------------------------------------------------------
+PRESENT STATUS
+
+Router written and integrated in energenie.loop()
+Discovery behaviours written and tested ok
+monitor_mihome works with a synthetic join and toggles switches
+KVS implementation completed and all tests pass
+Registry tests all complete
+receive sequence counter tested
+setup_tool implemented and tested in simulation
+fixed testers to use new registry and device classes
+auto create example written using example registry
+all test harnesses now run as a group fine
+works on hardware
+works on python3 (after a fashion!)
+
+--------------------------------------------------------------------------------
+PLAN UP TO: MERGE BACK TO MASTER
+
+
+----- RELEASE TESTING AND RELEASE
+
+* update the test instructions and re-test everything before merge
+
+* Any outstanding items on the list above, feed back into issues on the TODO list,
+so that they get dealt with in a later pass
+
+* merge to master after test
+
+END

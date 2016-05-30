@@ -2,11 +2,24 @@
 #
 # Implement OpenThings message encoding and decoding
 
+##from lifecycle import *
 import time
+
 try:
-	import crypto # python 2
+	# Python 2
+	import crypto
 except ImportError:
-	from . import crypto # python 3
+	# Python 3
+	from . import crypto
+
+
+def warning(msg):
+	print("warning:" + str(msg))
+
+
+def trace(msg):
+	print("OpenThings:%s" % str(msg))
+
 
 class OpenThingsException(Exception):
 	def __init__(self, value):
@@ -15,6 +28,17 @@ class OpenThingsException(Exception):
 	def __str__(self):
 		return repr(self.value)
 
+
+#----- CRYPT PROCESSING -------------------------------------------------------
+
+crypt_pid = None
+
+def init(pid):
+	global crypt_pid
+	crypt_pid = pid
+
+
+#----- PARAMETERS -------------------------------------------------------------
 
 # report has bit 7 clear
 # command has bit 7 set
@@ -114,28 +138,30 @@ param_info = {
 }
 
 
-crypt_pid = None
-
-def init(pid):
-	global crypt_pid
-	crypt_pid = pid
-
-
-def warning(msg):
-	print("warning:" + str(msg))
+def paramname_to_paramid(paramname):
+	"""Turn a parameter name to a parameter id number"""
+	for paramid in param_info:
+		name = param_info[paramid]['n'] # name
+		if name == paramname:
+			return paramid
+	raise ValueError("Unknown param name %s" % paramname)
 
 
-def trace(msg):
-	print("OpenThings:%s" % str(msg))
+def paramid_to_paramname(paramid):
+	"""Turn a parameter id number into a parameter name"""
+	try:
+		return param_info[paramid]['n']
+	except KeyError:
+		return "UNKNOWN_%s" % str(hex(paramid))
 
 
 #----- MESSAGE DECODER --------------------------------------------------------
 
-#TODO if silly lengths or silly types seen in decode, this might imply
+#TODO: if silly lengths or silly types seen in decode, this might imply
 #we're trying to process an encrypted packet without decrypting it.
 #the code should be more robust to this (by checking the CRC)
 
-def decode(payload, decrypt=True):
+def decode(payload, decrypt=True, receive_timestamp=None):
 	"""Decode a raw buffer into an OpenThings pydict"""
 	#Note, decrypt must already have run on this for it to work
 	length = payload[0]
@@ -143,12 +169,12 @@ def decode(payload, decrypt=True):
 	# CHECK LENGTH
 	if length+1 != len(payload) or length < 10:
 		raise OpenThingsException("bad payload length")
-		#return {
-		#	"type":         "BADLEN",
-		#	"len_actual":   len(payload),
-		#	"len_expected": length,
-		#	"payload":      payload[1:]
-		#}
+		##return {
+		##	"type":         "BADLEN",
+		##	"len_actual":   len(payload),
+		##	"len_expected": length,
+		##	"payload":      payload[1:]
+		##}
 
 	# DECODE HEADER
 	mfrId      = payload[1]
@@ -166,7 +192,7 @@ def decode(payload, decrypt=True):
 		# [0]len,mfrid,productid,pipH,pipL,[5]
 		crypto.init(crypt_pid, encryptPIP)
 		crypto.cryptPayload(payload, 5, len(payload)-5) # including CRC
-		#printhex(payload)
+		##printhex(payload)
 	# sensorId is in encrypted region
 	sensorId = (payload[5]<<16) + (payload[6]<<8) + payload[7]
 	header["sensorid"] = sensorId
@@ -175,16 +201,16 @@ def decode(payload, decrypt=True):
 	# CHECK CRC
 	crc_actual  = (payload[-2]<<8) + payload[-1]
 	crc_expected = calcCRC(payload, 5, len(payload)-(5+2))
-	#trace("crc actual:%s, expected:%s" %(hex(crc_actual), hex(crc_expected)))
+	##trace("crc actual:%s, expected:%s" %(hex(crc_actual), hex(crc_expected)))
 
 	if crc_actual != crc_expected:
 		raise OpenThingsException("bad CRC")
-		#return {
-		#	"type":         "BADCRC",
-		#	"crc_actual":   crc_actual,
-		#	"crc_expected": crc_expected,
-		#	"payload":      payload[1:],
-		#}
+		##return {
+		##	"type":         "BADCRC",
+		##	"crc_actual":   crc_actual,
+		##	"crc_expected": crc_expected,
+		##	"payload":      payload[1:],
+		##}
 
 
 	# DECODE RECORDS
@@ -230,11 +256,14 @@ def decode(payload, decrypt=True):
 		# store rec
 		recs.append(rec)
 
-	return {
+	m = {
 		"type":    "OK",
 		"header":  header,
 		"recs":    recs
 	}
+	if receive_timestamp != None:
+		m["rxtimestamp"] = receive_timestamp
+	return Message(m)
 
 
 #----- MESSAGE ENCODER --------------------------------------------------------
@@ -359,13 +388,13 @@ class Value():
 		mask = 1<<(maxbits-1)
 		bitno = maxbits-1
 		while mask != 0:
-			#trace("compare %s with %s" %(hex(value), hex(mask)))
+			##trace("compare %s with %s" %(hex(value), hex(mask)))
 			if (value & mask) == 0:
-				#trace("zero at bit %d" % bitno)
+				##trace("zero at bit %d" % bitno)
 				return bitno
 			mask >>= 1
 			bitno-=1
-		#trace("not found")
+		##trace("not found")
 		return None # NOT FOUND
 
 
@@ -377,25 +406,25 @@ class Value():
 
 		if value == -1: # always 0xFF, so always needs exactly 2 bits to represent (sign and value)
 			return 2 # bits required
-		#trace("valuebits of:%d" % value)
+		##trace("valuebits of:%d" % value)
 		# Turn into a 2's complement representation
 		MAXBYTES=15
 		MAXBITS = 1<<(MAXBYTES*8)
-		#TODO check for truncation?
+		#TODO: check for truncation?
 		value = value & MAXBITS-1
-		#trace("hex:%s" % hex(value))
+		##trace("hex:%s" % hex(value))
 		highz = Value.highestClearBit(value, MAXBYTES*8)
-		#trace("highz at bit:%d" % highz)
+		##trace("highz at bit:%d" % highz)
 		# allow for a sign bit, and bit numbering from zero
 		neededbits = highz+2
 
-		#trace("needed bits:%d" % neededbits)
+		##trace("needed bits:%d" % neededbits)
 		return neededbits
 
 
 	@staticmethod
 	def encode(value, typeid, length=None):
-		#trace("encoding:" + str(value))
+		##trace("encoding:" + str(value))
 		if typeid == Value.CHAR:
 			if type(value) != str:
 				value = str(value)
@@ -461,15 +490,15 @@ class Value():
 					bits = Value.valuebits(value)
 				else:
 					bits = Value.typebits(typeid)
-				#trace("need bits:" + str(bits))
+				##trace("need bits:" + str(bits))
 				# NORMALISE BITS TO BYTES
-				####HERE#### round up to nearest number of 8 bits
+				#round up to nearest number of 8 bits
 				# if already 8, leave 1,2,3,4,5,6,7,8 = 8   0,1,2,3,4,5,6,7 (((b-1)/8)+1)*8
 				# 9,10,11,12,13,14,15,16=16
 				bits = (((bits-1)/8)+1)*8 # snap to nearest byte boundary
-				#trace("snap bits to 8:" + str(bits))
+				##trace("snap bits to 8:" + str(bits))
 
-				value &= ((2**bits)-1)
+				value &= ((2**int(bits))-1)
 				neg = True
 			else:
 				neg = False
@@ -544,22 +573,6 @@ class Value():
 
 #----- CRC CALCULATION --------------------------------------------------------
 
-#int16_t crc(uint8_t const mes[], unsigned char siz)
-#{
-#	uint16_t rem = 0;
-#	unsigned char byte, bit;
-#
-#	for (byte = 0; byte < siz; ++byte)
-#	{
-#		rem ^= (mes[byte] << 8);
-#		for (bit = 8; bit > 0; --bit)
-#		{
-#			rem = ((rem & (1 << 15)) ? ((rem << 1) ^ 0x1021) : (rem << 1));
-#		}
-#	}
-#	return rem;
-#}
-
 def calcCRC(payload, start, length):
 	rem = 0
 	for b in payload[start:start+length]:
@@ -574,200 +587,284 @@ def calcCRC(payload, start, length):
 	return rem
 
 
-def showMessage(msg, timestamp=None):
-	"""Show the message in a friendly format"""
+#----- MESSAGE UTILITIES ------------------------------------------------------
 
-	# HEADER
-	header    = msg["header"]
-	mfrid     = header["mfrid"]
-	productid = header["productid"]
-	sensorid  = header["sensorid"]
-	if timestamp != None:
-		print("receive-time:%s" % time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)))
-	print("mfrid:%s prodid:%s sensorid:%s" % (hex(mfrid), hex(productid), hex(sensorid)))
+# SAMPLE MESSAGE
+# SWITCH = {
+#     "header": {
+#         "mfrid":       MFRID_ENERGENIE,
+#         "productid":   PRODUCTID_MIHO005,
+#         "encryptPIP":  CRYPT_PIP,
+#         "sensorid":    0 # FILL IN
+#     },
+#     "recs": [
+#         {
+#             "wr":      True,
+#             "paramid": OpenThings.PARAM_SWITCH_STATE,
+#             "typeid":  OpenThings.Value.UINT,
+#             "length":  1,
+#             "value":   0 # FILL IN
+#         }
+#     ]
+# }
 
-	# RECORDS
-	for rec in msg["recs"]:
-		wr = rec["wr"]
-		if wr == True:
-			write = "write"
+
+import copy
+
+class Message():
+	BLANK = {
+		"header": {
+			"mfrid" :    None,
+			"productid": None,
+			"sensorid":  None
+		},
+		"recs":[]
+	}
+
+	def __init__(self, pydict=None, **kwargs):
+		if pydict == None:
+			pydict = copy.deepcopy(Message.BLANK)
+		self.pydict = pydict
+
+		self.set(**kwargs)
+
+	def __getitem__(self, key):
+		try:
+			# an integer key is used as a paramid in recs[]
+			key = int(key)
+		except:
+			# not an integer, so do a normal key lookup
+			# typically used for msg["header"] and msg["recs"]
+			# just returns a reference to that part of the inner pydict
+			return self.pydict[key]
+
+		# Is an integer, so index into recs[]
+		##print("looking up in recs")
+		for rec in self.pydict["recs"]:
+			if "paramid" in rec:
+				paramid = rec["paramid"]
+				if paramid == key:
+					return rec
+		raise KeyError("no paramid found for %s" % str(hex(key)))
+
+
+	def __setitem__(self, key, value):
+		"""set the header or the recs to the provided value"""
+		try:
+			key = int(key)
+		except:
+			# Not an parseable integer, so access by field name
+			##print("set by key")
+			self.pydict[key] = value
+			return
+
+		# Is an integer, so index into recs[]
+		##print("looking up in recs")
+		i = 0
+		for rec in self.pydict["recs"]:
+			if "paramid" in rec:
+				paramid = rec["paramid"]
+				if paramid == key:
+					##print("found at index %d %s" % (i, rec))
+					# add in the paramid
+					value["paramid"] = key
+					self.pydict["recs"][i] = value
+					return
+			i += 1
+
+		# Not found, so we should add it
+		print("no paramid for key %s, adding..." % str(hex(key)))
+		#TODO: add
+		# add in the paramid
+		value["paramid"] = key
+		self.pydict["recs"].append(value)
+
+	def copyof(self): # -> Message
+		"""Clone, to create a new message that is a completely independent copy"""
+		import copy
+		return Message(copy.deepcopy(self.pydict))
+
+	def set(self, **kwargs):
+		"""Set fields in the message from key value pairs"""
+		for key in kwargs:
+			value = kwargs[key]
+			# Is it a recs_PARAM_NAME_value format?
+			if key.startswith('recs_') and len(key)>6 and key[6].isupper():
+				self.set_PARAM_NAME(key[5:], value)
+			else:
+				# It's a full path
+				pathed_key = key.split('_')
+				m = self.pydict
+				# walk to the parent
+				for pkey in pathed_key[:-1]:
+					# If the key parseable as an integer, use as a list index instead
+					try:
+						pkey = int(pkey)
+					except:
+						pass
+					m = m[pkey]
+				# set the parent to have a key that points to the new value
+				pkey = pathed_key[-1]
+				# If the key parseable as an integer, use as a list index instead
+				try:
+					pkey = int(pkey)
+				except:
+					pass
+
+				# if index exists, change it, else create it
+				try:
+					m[pkey] = value
+				except IndexError:
+					# expand recs up to pkey
+					l = len(m) # length of list
+					gap = (l - pkey)+1
+					for i in range(gap):
+						m.append({})
+					m[pkey] = value
+
+	def set_PARAM_NAME(self, key, value):
+		"""Set a parameter given a PARAM_NAME key like recs_PARAM_NAME_field_nae"""
+		##print("set param name %s %s" % (key, value))
+		##key='recs_SWITCH_STATE'
+		#e.g. recs_SWITCH_STATE_value
+		#scan forward from char 5 until first lower case char, or end
+		pos = 0
+		last_uc=None
+		for c in key:
+			pos += 1
+			if c.isupper():
+				last_uc = pos
+			if c.islower(): break
+		name = key[:last_uc]
+
+		# turn PARAM_NAME into an integer id
+		param_id = paramname_to_paramid(name)
+		##print("paramid %d" % param_id)
+
+		# search for the id as a rec[]["paramid":v] value and get the rec
+		found = False
+		pos = 0
+		for rec in self.pydict["recs"]:
+			if "paramid" in rec:
+				if rec["paramid"] == param_id:
+					##print("found: %s" % rec)
+					found = True
+					break
+			pos += 1
+
+		if not found:
+			raise ValueError("No such paramid in message: %s" % name)
+
+		# is this rec_PARAM_NAME or rec_PARAM_NAME_field_name??
+		if len(key) == len(name):
+			##print("REC")
+			value["paramid"] = param_id
+			self.pydict["recs"][pos] = value
+
 		else:
-			write = "read "
+			##print("REC with field")
+			field_key = key[len(name)+1:]
+			self.pydict["recs"][pos][field_key] = value
 
-		paramid   = rec["paramid"]
-		paramname = rec["paramname"]
-		paramunit = rec["paramunit"]
-		if "value" in rec:
-				value = rec["value"]
+	def append_rec(self, *args, **kwargs):
+		"""Add a rec"""
+		if type(args[0]) == dict:
+			# This is ({})
+			self.pydict["recs"].append(args[0])
+			return len(self.pydict["recs"])-1 # index of rec just added
+
+		elif type(args[0]) == int:
+			if len(kwargs) == 0:
+				# This is (PARAM_x, pydict)
+				paramid = args[0]
+				pydict  = args[1]
+				pydict["paramid"] = paramid
+				return self.append_rec(pydict)
+			else:
+				# This is (PARAM_x, key1=value1, key2=value2)
+				paramid = args[0]
+				# build a pydict
+				pydict = {"paramid":paramid}
+				for key in kwargs:
+					value = kwargs[key]
+					pydict[key] = value
+				self.append_rec(pydict)
+
 		else:
-				value = None
-		print("%s %s %s = %s" % (write, paramname, paramunit, str(value)))
+			raise ValueError("Not sure how to parse arguments to append_rec")
 
-
-def alterMessage(message, **kwargs):
-	"""Change parameters in-place in a message template"""
-	# e.g. header_sensorid=1234, recs_0_value=1
-	for arg in kwargs:
-
-		path = arg.split("_")
-		value = kwargs[arg]
-
-		m = message
-		for p in path[:-1]:
+	def get(self, keypath):
+		"""READ(GET) from a single keypathed entry"""
+		path = keypath.split("_")
+		m = self.pydict
+		# walk to the final item
+		for pkey in path:
 			try:
-				p = int(p)
+				pkey = int(pkey)
 			except:
 				pass
-			m = m[p]
-		#trace("old value:%s" % m[path[-1]])
-		m[path[-1]] = value
+			m = m[pkey]
+		return m
 
-		#trace("modified:" + str(message))
+	def __str__(self): # -> str
+		return str(self.pydict)
 
-	return message
+	def dump(self):
+		msg = self.pydict
+		timestamp = None
 
+		# TIMESTAMP
+		if timestamp != None:
+			print("receive-time:%s" % time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)))
 
-def getFromMessage(message, keypath):
-	"""Get a field from a message, given an underscored keypath to the item"""
-	path = keypath.split("_")
+		# HEADER
+		if "header" in msg:
+			header = msg["header"]
 
-	for p in path[:-1]:
-		try:
-			p = int(p)
-		except:
-			pass
-		message = message[p]
-	return message[path[-1]]
+			def gethex(key):
+				if key in header:
+					value = header[key]
+					if value != None: return str(hex(value))
+				return ""
 
+			mfrid     = gethex("mfrid")
+			productid = gethex("productid")
+			sensorid  = gethex("sensorid")
 
-#----- TEST HARNESS -----------------------------------------------------------
+			print("mfrid:%s prodid:%s sensorid:%s" % (mfrid, productid, sensorid))
 
-def printhex(payload):
-	line = ""
-	for b in payload:
-		line += hex(b) + " "
+		# RECORDS
+		if "recs" in msg:
+			for rec in msg["recs"]:
+				wr = rec["wr"]
+				if wr == True:
+					write = "write"
+				else:
+					write = "read "
 
-	print(line)
+				try:
+					paramname = rec["paramname"] #NOTE: This only comes out from decoded messages
+				except:
+					paramname = ""
 
+				try:
+					paramid = rec["paramid"] #NOTE: This is only present on a input message (e.g SWITCH)
+					paramname = paramid_to_paramname(paramid)
+					paramid = str(hex(paramid))
+				except:
+					paramid = ""
 
-TEST_PAYLOAD = [
-	0x1C, 						#len   16 + 10 + 2  = 0001 1100
-	0x04, 						#mfrid
-	0x02, 						#prodid
-	0x01, 						#pipmsb
-	0x00, 						#piplsb
-	0x00, 0x06, 0x8B,        	#sensorid
-	0x70, 0x82, 0x00, 0x07, 	#SINT(2)     power
-	0x71, 0x82, 0xFF, 0xFD,     #SINT(2)     reactive_power
-	0x76, 0x01, 0xF0,    		#UINT(1)     voltage
-	0x66, 0x22, 0x31, 0xDA,		#UINT_BP8(2) freq
-	0x73, 0x01, 0x01,			#UINT(1)     switch_state
-	0x00,						#NUL
-	0x97, 0x64					#CRC
+				try:
+					paramunit = rec["paramunit"] #NOTE: This only comes out from decoded messages
+				except:
+					paramunit = ""
 
-]
+				if "value" in rec:
+						value = rec["value"]
+				else:
+						value = None
 
-import pprint
+				print("%s %s %s %s = %s" % (write, paramid, paramname, paramunit, str(value)))
 
-
-def test_payload_unencrypted():
-	init(242)
-
-	printhex(TEST_PAYLOAD)
-	spec = decode(TEST_PAYLOAD, decrypt=False)
-	pprint.pprint(spec)
-
-	payload = encode(spec, encrypt=False)
-	printhex(payload)
-
-	spec2 = decode(payload, decrypt=False)
-	pprint.pprint(spec2)
-
-	payload2 = encode(spec2, encrypt=False)
-
-	printhex(TEST_PAYLOAD)
-	printhex(payload2)
-
-	if TEST_PAYLOAD != payload:
-		print("FAILED")
-	else:
-		print("PASSED")
-
-
-def test_payload_encrypted():
-	init(242)
-
-	printhex(TEST_PAYLOAD)
-	spec = decode(TEST_PAYLOAD, decrypt=False)
-	pprint.pprint(spec)
-
-	payload = encode(spec, encrypt=True)
-	printhex(payload)
-
-	spec2 = decode(payload, decrypt=True)
-	pprint.pprint(spec2)
-
-	payload2 = encode(spec2, encrypt=False)
-
-	printhex(TEST_PAYLOAD)
-	printhex(payload2)
-
-	if TEST_PAYLOAD != payload:
-		print("FAILED")
-	else:
-		print("PASSED")
-
-
-def test_value_encoder():
-	pass
-	# test cases (auto, forced, overflow, -min, -min-1, 0, 1, +max, +max+1
-	# UINT
-	# UINT_BP4
-	# UINT_BP8
-	# UINT_BP12
-	# UINT_BP16
-	# UINT_BP20
-	# UINT_BP24
-	# SINT
-	# SINT(2)
-	vin = [1,255,256,32767,32768,0,-1,-2,-3,-127,-128,-129,-32767,-32768]
-	for v in vin:
-		vout = Value.encode(v, Value.SINT)
-		print("encode " + str(v) + " " + str(vout))
-	# SINT_BP8
-	# SINT_BP16
-	# SINT_BP24
-	# CHAR
-	# FLOAT
-
-
-def test_value_decoder():
-	pass
-	# test cases (auto, forced, overflow, -min, -min-1, 0, 1, +max, +max+1
-	# UINT
-	# UINT_BP4
-	# UINT_BP8
-	# UINT_BP12
-	# UINT_BP16
-	# UINT_BP20
-	# UINT_BP24
-	# SINT
-	vin = [255, 253]
-	print("input value:" + str(vin))
-	vout = Value.decode(vin, Value.SINT, 2)
-	print("encoded as:" + str(vout))
-
-	# SINT_BP8
-	# SINT_BP16
-	# SINT_BP24
-	# CHAR
-	# FLOAT
-
-
-if __name__ == "__main__":
-	#test_value_encoder()
-	#test_value_decoder()
-	test_payload_unencrypted()
-	#test_payload_encrypted()
 
 # END
