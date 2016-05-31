@@ -1,0 +1,10 @@
+# REQUIREMENTS
+# - zero install (probably python bottle)
+# - simple monitor/control interface
+#   - live status display of all registered devices with values and states
+#   - turn on/off devices that have a switch
+# - simple setup tool interface
+#   - enter/exit learn mode for legacy
+#   - change discovery status
+#   - rename/delete devices in registry (e.g. from auto learn)
+
