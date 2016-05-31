@@ -1,10 +1,23 @@
-# REQUIREMENTS
-# - zero install (probably python bottle)
-# - simple monitor/control interface
-#   - live status display of all registered devices with values and states
-#   - turn on/off devices that have a switch
-# - simple setup tool interface
-#   - enter/exit learn mode for legacy
-#   - change discovery status
-#   - rename/delete devices in registry (e.g. from auto learn)
+REQUIREMENTS
 
+DONE - zero install (probably python bottle)
+
+- surface all the setup_tool features in a web context
+
+  - monitoring interface (basically registry list)
+    perhaps a panel that shows all registered devices
+    picture of the raw energenie device
+    user assigned picture for what is plugged into it?
+    control status (demands)  show switch status (demand only if rx only device)
+    - click on a device switch to turn it on and off
+    monitor status (readings) show all readings as they arrive
+
+  - other buttons
+    - legacy learn mode start/stop
+    - mihome discovery start/stop
+    - rename device
+    - delete device
+
+    - logging mode
+    (log all data to a scrollable window and file)
+    (download/clear the data file)
