@@ -6,8 +6,11 @@ ADD tv
 type=MIHO005
 device_id=1675
 
-
 ADD door
 type=MIHO033
 device_id=2817
+
+ADD PIR
+type=MIHO032
+device_id=4042
 
