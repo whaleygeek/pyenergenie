@@ -833,22 +833,48 @@ class MIHO013(MiHomeDevice):
 
 class MIHO032(MiHomeDevice):
     """An Energenie Motion Sensor"""
-    pass #TODO
-    ##def __init__(self, device_id, air_interface=None):
-    ##    MiHomeDevice.__init__(self, device_id, air_interface)
-    ##    ##self.product_id = PRODUCTID_MIHO006
-    ##    ##class Readings():
-    ##    ##    battery_voltage = None
-    ##    ##    current         = None
-    ##   ##self.readings = Readings()
-    ##    ##self.capabilities.send = True
+    def __init__(self, device_id, air_interface=None):
+        MiHomeDevice.__init__(self, device_id, air_interface)
+        self.product_id = PRODUCTID_MIHO032
+        class Readings():
+            switch_state = None
+            battery_alarm = None
+        self.readings = Readings()
+        self.capabilities.send = True
 
-    ##def get_battery_voltage(self): # -> voltage:float
-    ##    return self.readings.battery_voltage
+    def __repr__(self):
+        return "MIHO032(%s)" % str(hex(self.device_id))
 
-    ##def get_current(self): # -> current:float
-    ##    return self.readings.current
+    def handle_message(self, payload):
+        print("MIHO032 new data %s %s" % (self.device_id, payload))
+        for rec in payload["recs"]:
+            paramid = rec["paramid"]
+            #TODO: consider making this table driven and allowing our base class to fill our readings in for us
+            #TODO: consider using @OpenThings.parameter as a decorator to the receive function
+            #it will then register a handler for that message for itself as a handler
+            #we still need Readings() defined too as a cache. The decorator could add
+            #an entry into the cache too for us perhaps?
+            if "value" in rec:
+                value = rec["value"]
+                if paramid == OpenThings.PARAM_MOTION_DETECTOR:
+                    self.readings.switch_state = ((value == True) or (value != 0))
+                elif paramid == OpenThings.PARAM_ALARM:
+                    if value == 0x42: # battery alarming
+                        self.readings.battery_alarm = True
+                    elif value == 0x62: # battery not alarming
+                        self.readings.battery_alarm = False
+                else:
+                    try:
+                        param_name = OpenThings.param_info[paramid]['n'] # name
+                    except:
+                        param_name = "UNKNOWN_%s" % str(hex(paramid))
+                    print("unwanted paramid: %s" % param_name)
 
+    def get_switch_state(self): # -> switch:bool
+        return self.readings.switch_state
+
+    def get_battery_alarm(self): # -> alarm:bool
+        return self.readings.battery_alarm
 
 #------------------------------------------------------------------------------
 
@@ -907,6 +933,7 @@ class DeviceFactory():
         "MIHO005":     MIHO005,    "AdaptorPlus":  MIHO005,
         "MIHO006":     MIHO006,    "HomeMonitor":  MIHO006,
         "MIHO013":     MIHO013,    "eTRV":         MIHO013,
+        "MIHO032":     MIHO032,    "MotionSensor": MIHO032,
         "MIHO033":     MIHO033,    "OpenSensor":   MIHO033
     }
 
@@ -917,6 +944,7 @@ class DeviceFactory():
         PRODUCTID_MIHO005: MIHO005,
         PRODUCTID_MIHO006: MIHO006,
         PRODUCTID_MIHO013: MIHO013,
+        PRODUCTID_MIHO032: MIHO032,
         PRODUCTID_MIHO033: MIHO033
         #ENER product range does not have deviceid, as it does not transmit
     }
