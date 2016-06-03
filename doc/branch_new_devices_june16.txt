@@ -1,5 +1,7 @@
 New devices to add:
 
+--------------------------------------------------------------------------------
+
 MiHome Light
   MIHO008 OOK White
   MIHO024 OOK Black Nickel
@@ -9,45 +11,210 @@ MiHome Light
   RX ONLY
   OOK, OUTER_TIMES=1, OUTER_DELAY=0, INNER_TIMES=75
 
-MiHome Open Sensor
-  MIHO033
-  TX ONLY
-  FSK
-  PRODUCTID=
-  messages:
-  paramids:
+
+--------------------------------------------------------------------------------
 
 MiHome Motion Sensor
   MIHO032
   TX ONLY
   FSK
-  PRODUCTID=
-  messages:
-  paramids:
+  PRODUCTID=0x0C
 
+
+JOIN BUTTON:
+No route to an object, for device:(4, 12, 4042)
+{
+  'header': {
+    'sensorid': 4042,
+    'productid': 12,                   <------- THIS
+    'encryptPIP': 13298,
+    'mfrid': 4
+  },
+  'type': 'OK',
+  'rxtimestamp': 1464955109.109954,
+  'recs': [
+    {
+      'paramunit': '',
+      'typeid': 0,
+      'length': 0,
+      'wr': True,
+      'paramname': 'JOIN',             <------ THIS
+      'paramid': 106
+    }
+  ]
+}
+
+
+MOTION:
+No route to an object, for device:(4, 12, 4042)
+{
+  'header': {
+    'sensorid': 4042,
+    'productid': 12,
+    'encryptPIP': 13298,
+    'mfrid': 4
+  },
+  'type': 'OK',
+  'rxtimestamp': 1464955035.384384,
+  'recs': [
+    {
+      'paramunit': '',
+      'typeid': 0,
+      'valuebytes': [1],
+      'value': 1,                            <-------- THIS
+      'length': 1,
+      'wr': False,
+      'paramname': 'MOTION_DETECTOR',        <-------- THIS
+      'paramid': 109
+    }
+  ]
+}
+
+Once motion is detected, there is a transmission holdoff timer for 60 seconds
+before it goes to no motion mode (light flashes once, no transmission)
+
+NO MOTION: (60 second timeout from motion)
+No route to an object, for device:(4, 12, 4042)
+{
+  'header':
+  {
+    'sensorid': 4042,
+    'productid': 12,
+    'encryptPIP': 13298,
+    'mfrid': 4
+  },
+  'type': 'OK',
+  'rxtimestamp': 1464955276.68883,
+  'recs': [
+    {
+      'paramunit': '',
+      'typeid': 0,
+      'valuebytes': [0],
+      'value': 0,
+      'length': 1,
+      'wr': False,
+      'paramname': 'MOTION_DETECTOR',
+      'paramid': 109
+    }
+  ]
+}
+
+
+LOW BATTERY:
+{
+  'header': {
+    'sensorid': 4042,
+    'productid': 12,
+    'encryptPIP': 13298,
+    'mfrid': 4
+  },
+  'type': 'OK',
+  'rxtimestamp': 1464955580.958382,
+  'recs': [
+    {
+      'paramunit': '',
+      'typeid': 0,
+      'valuebytes': [66],
+      'value': 66,             <-------- THIS (alarm 0x42 is 'battery alarm occurred), 0x62 would be 'cleared'
+      'length': 1,
+      'wr': False,
+      'paramname': 'ALARM',    <-------- THIS (see 'Alarms' on Page 7 of OpenThings specification)
+      'paramid': 33
+    }
+  ]
+}
+
+
+--------------------------------------------------------------------------------
+
+MiHome Open Sensor
+  MIHO033
+  TX ONLY
+  FSK
+  PRODUCTID=0x0D
+
+JOIN BUTTON PRESSED:
+{
+  'header':{
+    'sensorid': 2817,
+    'productid': 13,          <---------- THIS
+    'encryptPIP': 13298,
+    'mfrid': 4
+  },
+  'type': 'OK',
+  'rxtimestamp': 1464953871.31946,
+  'recs': [
+    {
+      'paramunit': '',
+      'typeid': 0,
+      'length': 0,
+      'wr': True,
+      'paramname': 'JOIN',     <-------- THIS
+      'paramid': 106
+    }
+  ]
+}
+
+MAGNET ATTACHED:
+{
+  'header': {
+    'sensorid': 2817,
+    'productid': 13,
+    'encryptPIP': 13298,
+    'mfrid': 4
+  },
+  'type': 'OK',
+  'rxtimestamp': 1464953936.18644,
+  'recs': [
+    {
+      'paramunit': '',
+      'typeid': 0,
+      'valuebytes': [0],
+      'value': 0,                       <-------- THIS
+      'length': 1,
+      'wr': False,
+      'paramname': 'DOOR_SENSOR',       <-------- THIS
+      'paramid': 100
+    }
+  ]
+}
+
+MAGNET REMOVED:
+{
+  'header': {
+    'sensorid': 2817,
+    'productid': 13,
+    'encryptPIP': 13298,
+    'mfrid': 4
+  },
+  'type': 'OK',
+  'rxtimestamp': 1464954026.97475,
+  'recs': [
+    {
+      'paramunit': '',
+      'typeid': 0,
+      'valuebytes': [1],
+      'value': 1,                       <-------- THIS
+      'length': 1,
+      'wr': False,
+      'paramname': 'DOOR_SENSOR',       <-------- THIS
+      'paramid': 100
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
 
 
 KNOCK ON TODOs
 - need to pass forward radio config parameters to get INNER_TIMES=75 for the MiHome Light.
   - need to think about config.tx_repeats vs get_config() - these are different concepts
 
-- what is the OpenThings product id for Open Sensor?
-  - run setup_tool in monitor mode to capture
+- code up product id's
+- code up paramid's for decoding messages
+- decide how to handle low battery alarm, this is the first alarm we have seen.
 
-- what is the OpenThings product id for Motion Sensor?
-  - run setup_tool in monitor mode to capture
-
-- what different messages are sent by Open Sensor?
-  - check user guide, confirm with setup tool
-
-- what paramid's are needed (get_xxx) for Open Sensor?
-  - check with setup tool
-
-- what different messages are sent by Motion Sensor?
-  - check user guide, confirm with setup tool
-
-- what paramid's are needed (get_xxx) for Motion Sensor?
-  - check with setup tool
+--------------------------------------------------------------------------------
 
 
 
