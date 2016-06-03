@@ -1,0 +1,54 @@
+New devices to add:
+
+MiHome Light
+  MIHO008 OOK White
+  MIHO024 OOK Black Nickel
+  MIHO025 OOK Chrome
+  MIHO026 OOK Brushed Steel
+
+  RX ONLY
+  OOK, OUTER_TIMES=1, OUTER_DELAY=0, INNER_TIMES=75
+
+MiHome Open Sensor
+  MIHO033
+  TX ONLY
+  FSK
+  PRODUCTID=
+  messages:
+  paramids:
+
+MiHome Motion Sensor
+  MIHO032
+  TX ONLY
+  FSK
+  PRODUCTID=
+  messages:
+  paramids:
+
+
+
+KNOCK ON TODOs
+- need to pass forward radio config parameters to get INNER_TIMES=75 for the MiHome Light.
+  - need to think about config.tx_repeats vs get_config() - these are different concepts
+
+- what is the OpenThings product id for Open Sensor?
+  - run setup_tool in monitor mode to capture
+
+- what is the OpenThings product id for Motion Sensor?
+  - run setup_tool in monitor mode to capture
+
+- what different messages are sent by Open Sensor?
+  - check user guide, confirm with setup tool
+
+- what paramid's are needed (get_xxx) for Open Sensor?
+  - check with setup tool
+
+- what different messages are sent by Motion Sensor?
+  - check user guide, confirm with setup tool
+
+- what paramid's are needed (get_xxx) for Motion Sensor?
+  - check with setup tool
+
+
+
+
