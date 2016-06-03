@@ -862,8 +862,11 @@ class MIHO033(MiHomeDevice):
         self.readings = Readings()
         self.capabilities.send = True
 
+    def __repr__(self):
+        return "MIHO033(%s)" % str(hex(self.device_id))
+
     def handle_message(self, payload):
-        print("MIHO033 new data %s %s" % (self.device_id, payload))
+        ##print("MIHO033 new data %s %s" % (self.device_id, payload))
         for rec in payload["recs"]:
             paramid = rec["paramid"]
             #TODO: consider making this table driven and allowing our base class to fill our readings in for us
@@ -871,15 +874,16 @@ class MIHO033(MiHomeDevice):
             #it will then register a handler for that message for itself as a handler
             #we still need Readings() defined too as a cache. The decorator could add
             #an entry into the cache too for us perhaps?
-            value = rec["value"]
-            if paramid == OpenThings.DOOR_SENSOR:
-                self.readings.switch_state = ((value == True) or (value != 0))
-            else:
-                try:
-                    param_name = OpenThings.param_info[paramid]['n'] # name
-                except:
-                    param_name = "UNKNOWN_%s" % str(hex(paramid))
-                print("unwanted paramid: %s" % param_name)
+            if "value" in rec:
+                value = rec["value"]
+                if paramid == OpenThings.PARAM_DOOR_SENSOR:
+                    self.readings.switch_state = ((value == True) or (value != 0))
+                else:
+                    try:
+                        param_name = OpenThings.param_info[paramid]['n'] # name
+                    except:
+                        param_name = "UNKNOWN_%s" % str(hex(paramid))
+                    print("unwanted paramid: %s" % param_name)
 
     def get_switch_state(self): # -> switch:bool
         return self.readings.switch_state
