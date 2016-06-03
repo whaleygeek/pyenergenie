@@ -28,7 +28,7 @@ PRODUCTID_MIHO004                = 0x01   #         Monitor only
 PRODUCTID_MIHO005                = 0x02   #         Adaptor Plus
 PRODUCTID_MIHO006                = 0x05   #         House Monitor
 ##PRODUCTID_MIHO007               = 0x0?   #         Double Wall Socket White
-##PRODUCTID_MIHO008               = 0x0?   #         Single light switch
+##PRODUCTID_MIHO008               = 0x0?   #         OOK: Single light switch white
 ##PRODUCTID_MIHO009 not used
 ##PRODUCTID_MIHO010 not used
 ##PRODUCTID_MIHO011 not used
@@ -44,16 +44,16 @@ PRODUCTID_MIHO013                = 0x03   #         eTRV
 ##PRODUCTID_MIHO021               = 0x0?   #         Double Wall Socket Nickel
 ##PRODUCTID_MIHO022               = 0x0?   #         Double Wall Socket Chrome
 ##PRODUCTID_MIHO023               = 0x0?   #         Double Wall Socket Brushed Steel
-##PRODUCTID_MIHO024               = 0x0?   #         Style Light Nickel
-##PRODUCTID_MIHO025               = 0x0?   #         Style Light Chrome
-##PRODUCTID_MIHO026               = 0x0?   #         Style Light Steel
+##PRODUCTID_MIHO024               = 0x0?   #         OOK:Style Light Nickel
+##PRODUCTID_MIHO025               = 0x0?   #         OOK:Style Light Chrome
+##PRODUCTID_MIHO026               = 0x0?   #         OOK:Style Light Steel
 ##PRODUCTID_MIHO027 starter pack bundle
 ##PRODUCTID_MIHO028 eco starter pack
 ##PRODUCTID_MIHO029 heating bundle
 ##PRODUCTID_MIHO030 not used
 ##PRODUCTID_MIHO031 not used
-##PRODUCTID_MIHO032 not used
-##PRODUCTID_MIHO033 not used
+PRODUCTID_MIHO032                 = 0x0C  # FSK motion sensor
+PRODUCTID_MIHO033                 = 0x0D    # FSK open sensor
 ##PRODUCTID_MIHO034 not used
 ##PRODUCTID_MIHO035 not used
 ##PRODUCTID_MIHO036 not used
@@ -74,7 +74,6 @@ BROADCAST_ID                     = 0xFFFFFF # Energenie broadcast
 
 
 #----- DEFINED MESSAGE TEMPLATES ----------------------------------------------
-
 
 SWITCH = {
     "header": {
@@ -498,6 +497,8 @@ class MiHomeDevice(EnergenieDevice):
             print("send_message(mock[%s %s %s]):%s" % (str(m), str(p), str(d), payload))
 
 
+#------------------------------------------------------------------------------
+
 class ENER002(LegacyDevice):
     """A green-button switch"""
     def __init__(self, device_id, air_interface=None):
@@ -539,10 +540,81 @@ class ENER002(LegacyDevice):
             self.turn_off()
 
 
+#------------------------------------------------------------------------------
+
+class MiHomeLight(LegacyDevice):
+    """Base for all MiHomeLight variants. Receive only OOK device"""
+    def __init__(self, device_id, air_interface=None):
+        LegacyDevice.__init__(self, device_id, air_interface)
+        self.config.tx_repeats = 75
+        self.capabilities.switch = True
+        self.capabilities.receive = True
+
+    def __repr__(self):
+        return "MiHomeLight(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
+
+    def turn_on(self):
+        #TODO: should this be here, or in LegacyDevice??
+        #addressing should probably be in LegacyDevice
+        #child devices might interpret the command differently
+        payload = {
+            "house_address":  self.device_id[0],
+            "device_index":   self.device_id[1],
+            "on":             True
+        }
+        #TODO: Need to pass forward the new radio config OUTER_TIMES=1 OUTER_DELAY=1 INNER_TIMES=75
+        #using self.config.tx_repeats
+        self.send_message(payload)
+
+    def turn_off(self):
+        #TODO: should this be here, or in LegacyDevice???
+        #addressing should probably be in LegacyDevice
+        #child devices might interpret the command differently
+        payload = {
+            "house_address":  self.device_id[0],
+            "device_index":   self.device_id[1],
+            "on":             False
+        }
+        #TODO: Need to pass forward the new radio config OUTER_TIMES=1 OUTER_DELAY=1 INNER_TIMES=75
+        #using self.config.tx_repeats
+        self.send_message(payload)
+
+    def set_switch(self, state):
+        if state:
+            self.turn_on()
+        else:
+            self.turn_off()
+
+
+class MIHO008(MiHomeLight):
+    """White finish"""
+    def __repr__(self):
+        return "MIHO008(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
+
+class MIHO024(MiHomeLight):
+    """Black Nickel Finish"""
+    def __repr__(self):
+        return "MIHO024(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
+
+class MIHO025(MiHomeLight):
+    """Chrome Finish"""
+    def __repr__(self):
+        return "MIHO025(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
+
+class MIHO026(MiHomeLight):
+    """Brushed Steel Finish"""
+    def __repr__(self):
+        return "MIHO026(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
+
+
+#------------------------------------------------------------------------------
+
 class MIHO004(MiHomeDevice):
     """Monitor only Adaptor"""
     pass #TODO
 
+
+#------------------------------------------------------------------------------
 
 class MIHO005(MiHomeDevice):
     """An Energenie MiHome Adaptor Plus"""
@@ -677,6 +749,8 @@ class MIHO005(MiHomeDevice):
         return self.readings.real_power
 
 
+#------------------------------------------------------------------------------
+
 class MIHO006(MiHomeDevice):
     """An Energenie MiHome Home Monitor"""
     def __init__(self, device_id, air_interface=None):
@@ -694,6 +768,8 @@ class MIHO006(MiHomeDevice):
     def get_current(self): # -> current:float
         return self.readings.current
 
+
+#------------------------------------------------------------------------------
 
 class MIHO013(MiHomeDevice):
     """An Energenie MiHome eTRV Radiator Valve"""
@@ -753,6 +829,62 @@ class MIHO013(MiHomeDevice):
         pass #TODO: i.e. valve is completely closed?
 
 
+#------------------------------------------------------------------------------
+
+class MIHO032(MiHomeDevice):
+    """An Energenie Motion Sensor"""
+    pass #TODO
+    ##def __init__(self, device_id, air_interface=None):
+    ##    MiHomeDevice.__init__(self, device_id, air_interface)
+    ##    ##self.product_id = PRODUCTID_MIHO006
+    ##    ##class Readings():
+    ##    ##    battery_voltage = None
+    ##    ##    current         = None
+    ##   ##self.readings = Readings()
+    ##    ##self.capabilities.send = True
+
+    ##def get_battery_voltage(self): # -> voltage:float
+    ##    return self.readings.battery_voltage
+
+    ##def get_current(self): # -> current:float
+    ##    return self.readings.current
+
+
+#------------------------------------------------------------------------------
+
+class MIHO033(MiHomeDevice):
+    """An Energenie Open Sensor"""
+    def __init__(self, device_id, air_interface=None):
+        MiHomeDevice.__init__(self, device_id, air_interface)
+        self.product_id = PRODUCTID_MIHO033
+        class Readings():
+            switch_state = None
+        self.readings = Readings()
+        self.capabilities.send = True
+
+    def handle_message(self, payload):
+        print("MIHO033 new data %s %s" % (self.device_id, payload))
+        for rec in payload["recs"]:
+            paramid = rec["paramid"]
+            #TODO: consider making this table driven and allowing our base class to fill our readings in for us
+            #TODO: consider using @OpenThings.parameter as a decorator to the receive function
+            #it will then register a handler for that message for itself as a handler
+            #we still need Readings() defined too as a cache. The decorator could add
+            #an entry into the cache too for us perhaps?
+            value = rec["value"]
+            if paramid == OpenThings.DOOR_SENSOR:
+                self.readings.switch_state = ((value == True) or (value != 0))
+            else:
+                try:
+                    param_name = OpenThings.param_info[paramid]['n'] # name
+                except:
+                    param_name = "UNKNOWN_%s" % str(hex(paramid))
+                print("unwanted paramid: %s" % param_name)
+
+    def get_switch_state(self): # -> switch:bool
+        return self.readings.switch_state
+
+
 #----- DEVICE FACTORY ---------------------------------------------------------
 
 # This is a singleton, but might not be in the future.
@@ -767,10 +899,11 @@ class DeviceFactory():
     # If you know the name of the device, use this table
     device_from_name = {
         # official name            friendly name
-        "ENER002":     ENER002,    "GreenButton": ENER002,
-        "MIHO005":     MIHO005,    "AdaptorPlus": MIHO005,
-        "MIHO006":     MIHO006,    "HomeMonitor": MIHO006,
-        "MIHO013":     MIHO013,    "eTRV":        MIHO013,
+        "ENER002":     ENER002,    "GreenButton":  ENER002,
+        "MIHO005":     MIHO005,    "AdaptorPlus":  MIHO005,
+        "MIHO006":     MIHO006,    "HomeMonitor":  MIHO006,
+        "MIHO013":     MIHO013,    "eTRV":         MIHO013,
+        "MIHO033":     MIHO033,    "OpenSensor":   MIHO033
     }
 
     #TODO: These are MiHome devices only, but might add in mfrid prefix too
@@ -779,7 +912,8 @@ class DeviceFactory():
         PRODUCTID_MIHO004: MIHO004,
         PRODUCTID_MIHO005: MIHO005,
         PRODUCTID_MIHO006: MIHO006,
-        PRODUCTID_MIHO013: MIHO013
+        PRODUCTID_MIHO013: MIHO013,
+        PRODUCTID_MIHO033: MIHO033
         #ENER product range does not have deviceid, as it does not transmit
     }
 
