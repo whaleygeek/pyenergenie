@@ -13,7 +13,7 @@
 # NOTE: This also might include intelligent power level selection based
 # on RSSI reports from different devices.
 
-##from lifecycle import *
+from lifecycle import *
 import time
 
 try:
@@ -37,10 +37,10 @@ class OpenThingsAirInterface():
             modulation    = radio.RADIO_MODULATION_FSK
 
         class TxDefaults(RadioDefaults):
-            power_level   = 0
-            inner_repeats = 4
+            ##power_level   = 0
+            inner_times   = 4
             outer_delay   = 0
-            outer_repeats = 0
+            outer_times   = 0
         self.tx_defaults = TxDefaults()
 
         class RxDefaults(RadioDefaults):
@@ -48,22 +48,22 @@ class OpenThingsAirInterface():
             timeout       = 1000 #ms
         self.rx_defaults = RxDefaults()
 
-    ##@log_method
-    def send(self, payload, radio_params=None):
+    @log_method
+    def send(self, payload, radio_config=None):
         #   payload is a pydict suitable for OpenThings
         #   radio_params is an overlay on top of radio tx defaults
-        pass #TODO
+        ##print("SEND payload %s config %s" % (payload, radio_config))
         p = OpenThings.encode(payload)
-        #TODO: merge radio_params with self.tx_defaults
-        #TODO: configure radio modulation based on merged params
+        #TODO: Override self.tx_defaults with any settings in radio_config, if provided
+        outer_times = 1
+        outer_delay = 0
+        inner_times = 4
         radio.transmitter(fsk=True)
-        #TODO: configure other radio parameters
-        #TODO: transmit payload
-        radio.transmit(p, outer_times=1, inner_times=4, outer_delay=0)
+        radio.transmit(p, outer_times=outer_times, inner_times=inner_times, outer_delay=outer_delay)
         # radio auto-returns to previous state after transmit completes
 
     ##@log_method
-    def receive(self, radio_params): # -> (radio_measurements, address or None, payload or None)
+    def receive(self, radio_config=None): # -> (radio_measurements, address or None, payload or None)
         #   radio_params is an overlay on top of radio rx defaults (e.g. poll rate, timeout, min payload, max payload)
         #   radio_measurements might include rssi reading, short payload report, etc
         pass # TODO
@@ -106,9 +106,9 @@ class TwoBitAirInterface():
 
         class TxDefaults(RadioDefaults):
             power_level   = 0
-            inner_repeats = 8
+            inner_times   = 8
             outer_delay   = 0
-            outer_repeats = 0
+            outer_times   = 0
         self.tx_defaults = TxDefaults()
 
         class RxDefaults(RadioDefaults):
@@ -116,10 +116,11 @@ class TwoBitAirInterface():
             timeout       = 1000 #ms
         self.rx_defaults = RxDefaults()
 
-    ##@log_method
-    def send(self, payload, radio_params=None):
+    @log_method
+    def send(self, payload, radio_config=None):
         #   payload is just a list of bytes, or a byte buffer
-        #   radio_params is an overlay on top of radio tx defaults
+        #   radio_config is an overlay on top of radio tx defaults
+        print("SEND payload %s config %s inner_times %s" % (payload, str(radio_config), radio_config.inner_times))
 
         house_address = payload["house_address"]
         device_index  = payload["device_index"]
@@ -128,14 +129,15 @@ class TwoBitAirInterface():
         radio.modulation(ook=True)
 
         #TODO: merge radio_params with self.tx_defaults
-        #TODO: configure radio modulation based on merged params
-        #TODO: transmit payload
+        outer_times = 1
+        outer_delay = 0
+        inner_times = 8
 
-        radio.transmit(bytes, outer_times=1, inner_times=8, outer_delay=0) #TODO: radio params
+        radio.transmit(bytes, outer_times=outer_times, inner_times=inner_times, outer_delay=outer_delay)
         # radio auto-pops to state before transmit
 
     ##@log_method
-    def receive(self, radio_params): # -> (radio_measurements, address or None, payload or None)
+    def receive(self, radio_config=None): # -> (radio_measurements, address or None, payload or None)
         #   radio_params is an overlay on top of radio rx defaults (e.g. poll rate, timeout, min payload, max payload)
         #   radio_measurements might include rssi reading, short payload report, etc
         #TODO: merge radio_params with self.tx_defaults

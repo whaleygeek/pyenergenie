@@ -11,10 +11,10 @@ There is presently no way to pass this forward from the device classes to the ra
 
 STEPS REQUIRED
 
-1. Devices.py/LegacyDevice/send_message()
+DONE 1. Devices.py/LegacyDevice/send_message()
    needs to read the radio config parameters from it's most concrete instance
 
-2. Use these to send to the air_interface
+DONE 2. Use these to send to the air_interface
    (which is actually ook_interface,
    which is a OnAir.TwoBitAirInterface instance).
 

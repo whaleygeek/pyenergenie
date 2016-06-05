@@ -390,10 +390,10 @@ class LegacyDevice(EnergenieDevice):
             device_id = (LegacyDevice.DEFAULT_HOUSE_ADDRESS, device_id[1])
 
         EnergenieDevice.__init__(self, device_id, ook_interface)
-        #TODO: These might now just be implied by the ook_interface adaptor
-        self.radio_config.frequency  = 433.92
-        self.radio_config.modulation = "OOK"
-        self.radio_config.codec      = "4bit"
+        #TODO: These are now just be implied by the ook_interface adaptor
+        ##self.radio_config.frequency  = 433.92
+        ##self.radio_config.modulation = "OOK"
+        ##self.radio_config.codec      = "4bit"
 
     def __repr__(self):
         return "LegacyDevice(%s)" % str(self.device_id)
@@ -407,18 +407,8 @@ class LegacyDevice(EnergenieDevice):
 
 
     def send_message(self, payload):
-        #TODO: interface with air_interface
-        # Encode the payload two bits per byte as per OOK spec
-        #TODO: should we just pass a payload (as a pydict or tuple) to the air_interface adaptor
-        #and let it encode it, to be consistent with the FSK MiHome devices?
-        #payload could be a 3-tuple of (house_address, device_address, state)
-        ##bytes = TwoBit.build_switch_msg(payload, house_address=self.device_id[0], device_address=self.device_id[1])
-
         if self.air_interface != None:
-            #TODO: might want to send the config, either as a send parameter,
-            #or by calling air_interface.configure() first?
-            #i.e. radio.modulation(MODULATION_OOK)
-            self.air_interface.send(payload) #TODO: or (ha, da, s)
+            self.air_interface.send(payload, radio_config=self.radio_config)
         else:
             d = self.device_id
             print("send_message(mock[%s]):%s" % (str(d), payload))
@@ -430,9 +420,10 @@ class MiHomeDevice(EnergenieDevice):
         if air_interface == None:
             air_interface = fsk_interface
         EnergenieDevice.__init__(self, device_id, air_interface)
-        self.radio_config.frequency  = 433.92
-        self.radio_config.modulation = "FSK"
-        self.radio_config.codec      = "OpenThings"
+        #TODO: These are now implied by the air_interface adaptor
+        ##self.radio_config.frequency  = 433.92
+        ##self.radio_config.modulation = "FSK"
+        ##self.radio_config.codec      = "OpenThings"
         self.manufacturer_id         = MFRID_ENERGENIE
         self.product_id              = None
 
@@ -503,7 +494,7 @@ class ENER002(LegacyDevice):
     """A green-button switch"""
     def __init__(self, device_id, air_interface=None):
         LegacyDevice.__init__(self, device_id, air_interface)
-        self.radio_config.tx_repeats = 8
+        self.radio_config.inner_times = 8
         self.capabilities.switch = True
         self.capabilities.receive = True
 
@@ -546,7 +537,7 @@ class MiHomeLight(LegacyDevice):
     """Base for all MiHomeLight variants. Receive only OOK device"""
     def __init__(self, device_id, air_interface=None):
         LegacyDevice.__init__(self, device_id, air_interface)
-        self.radio_config.tx_repeats = 75
+        self.radio_config.inner_times = 75
         self.capabilities.switch = True
         self.capabilities.receive = True
 
@@ -562,8 +553,6 @@ class MiHomeLight(LegacyDevice):
             "device_index":   self.device_id[1],
             "on":             True
         }
-        #TODO: Need to pass forward the new radio config OUTER_TIMES=1 OUTER_DELAY=1 INNER_TIMES=75
-        #using self.radio_config.tx_repeats
         self.send_message(payload)
 
     def turn_off(self):
@@ -575,8 +564,6 @@ class MiHomeLight(LegacyDevice):
             "device_index":   self.device_id[1],
             "on":             False
         }
-        #TODO: Need to pass forward the new radio config OUTER_TIMES=1 OUTER_DELAY=1 INNER_TIMES=75
-        #using self.radio_config.tx_repeats
         self.send_message(payload)
 
     def set_switch(self, state):
@@ -630,7 +617,7 @@ class MIHO005(MiHomeDevice):
             reactive_power = None
             real_power     = None
         self.readings = Readings()
-        self.radio_config.tx_repeats = 4
+        self.radio_config.inner_times = 4
         self.capabilities.send = True
         self.capabilities.receive = True
         self.capabilities.switch = True
@@ -783,7 +770,7 @@ class MIHO013(MiHomeDevice):
             setpoint_temperature = None
             valve_position       = None
         self.readings = Readings()
-        self.radio_config.tx_repeats = 10
+        self.radio_config.inner_times = 10
         self.capabilities.send = True
         self.capabilities.receive = True
 
@@ -924,29 +911,43 @@ class MIHO033(MiHomeDevice):
 # i.e. this might be the EnergenieDeviceFactory, there might be others
 # for other product ranges like wirefree doorbells
 
+
 class DeviceFactory():
     """A place to come to, to get instances of device classes"""
     # If you know the name of the device, use this table
     device_from_name = {
         # official name            friendly name
-        "ENER002":     ENER002,    "GreenButton":  ENER002,
-        "MIHO005":     MIHO005,    "AdaptorPlus":  MIHO005,
-        "MIHO006":     MIHO006,    "HomeMonitor":  MIHO006,
-        "MIHO013":     MIHO013,    "eTRV":         MIHO013,
-        "MIHO032":     MIHO032,    "MotionSensor": MIHO032,
-        "MIHO033":     MIHO033,    "OpenSensor":   MIHO033
+        "ENER002":     ENER002,    "GreenButton":       ENER002,
+
+        ##"MIHO002":   MIHO002,    "Controller":        MIHO002, # OOK
+        ##"MIHO004":   MIHO004,    "Monitor""           MIHO004, #TODO
+        "MIHO005":     MIHO005,    "AdaptorPlus":       MIHO005,
+        "MIHO006":     MIHO006,    "HomeMonitor":       MIHO006,
+        "MIHO008":     MIHO008,    "MiHomeLightWhite":  MIHO008, # OOK
+        "MIHO013":     MIHO013,    "eTRV":              MIHO013,
+        "MIHO024":     MIHO024,    "MiHomeLightBlack":  MIHO024, # OOK
+        "MIHO025":     MIHO025,    "MiHomeLightChrome": MIHO025, # OOK
+        "MIHO026":     MIHO026,    "MiHomeLightSteel":  MIHO026, # OOK
+        "MIHO032":     MIHO032,    "MotionSensor":      MIHO032,
+        "MIHO033":     MIHO033,    "OpenSensor":        MIHO033,
     }
 
     #TODO: These are MiHome devices only, but might add in mfrid prefix too
     # If you know the mfrid, productid of the device, use this table
     device_from_id = {
+        #MIHO002 control only switch is an OOK
+        #MIHO008 is an OOK
         PRODUCTID_MIHO004: MIHO004,
         PRODUCTID_MIHO005: MIHO005,
         PRODUCTID_MIHO006: MIHO006,
         PRODUCTID_MIHO013: MIHO013,
+        #MIHO024 is an OOK
+        #MIHO025 is an OOK
+        #MIHO026 is an OOK
         PRODUCTID_MIHO032: MIHO032,
         PRODUCTID_MIHO033: MIHO033
-        #ENER product range does not have deviceid, as it does not transmit
+        ##PRODUCTID_MIHO004 : MIHO004 #TODO
+        #ENER*** product range does not have deviceid, as it does not transmit
     }
 
     default_air_interface = None

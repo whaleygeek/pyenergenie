@@ -14,3 +14,7 @@ ADD PIR
 type=MIHO032
 device_id=4042
 
+ADD white_light
+type=MIHO008
+device_id=[0x6C6C6, 2]
+
