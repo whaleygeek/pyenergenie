@@ -110,7 +110,8 @@ def do_legacy_learn():
     # get device
     house_code = get_house_code()
     device_index = get_device_index()
-    device = energenie.Devices.ENER002((house_code, device_index))
+    # Use a MiHomeLight as it has the longest TX time
+    device = energenie.Devices.MIHO008((house_code, device_index))
 
     # in a loop until Ctrl-C
     print("Legacy learn broadcasting, Ctrl-C to stop")
