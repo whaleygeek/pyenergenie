@@ -1,0 +1,26 @@
+New devices to add:
+
+--------------------------------------------------------------------------------
+
+MiHome Light
+  MIHO008 OOK White
+  MIHO024 OOK Black Nickel
+  MIHO025 OOK Chrome
+  MIHO026 OOK Brushed Steel
+
+  RX ONLY
+  OOK, OUTER_TIMES=1, OUTER_DELAY=0, INNER_TIMES=75
+
+
+--------------------------------------------------------------------------------
+
+KNOCK ON TODOs
+- need to pass forward radio config parameters to get INNER_TIMES=75 for the MiHome Light.
+  - need to think about config.tx_repeats vs get_config() - these are different concepts
+
+
+--------------------------------------------------------------------------------
+
+
+
+

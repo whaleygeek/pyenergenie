@@ -147,6 +147,7 @@ def do_list_registry():
 
     print("REGISTRY:")
     show_registry()
+    energenie.registry.fsk_router.list()
 
 
 def do_switch_device():
