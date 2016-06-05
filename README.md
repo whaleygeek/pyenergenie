@@ -4,6 +4,35 @@ A python interface to the Energenie line of products
 https://energenie4u.co.uk/
 
 
+WHERE IS THE BEST PLACE TO GET THE CODE?
+----
+
+The most tested code is in the Energenie repo here:
+
+https://github.com/Energenie/pyenergenie
+
+i.e. Energenie test on devices before updating the public repo
+and linking external product pages to the code download. But, this might
+be quite a bit older than the current ongoing development work.
+
+
+
+The most leading-edge code is in whaleygeek's repo here:
+
+https://github.com/whaleygeek/pyenergenie
+
+i.e. This is whaleygeek's development area, master is reasonably
+well tested, and there may be multiple feature branches with ongoing
+development work that is still in progress. But, this might be
+the most up to date code with support for newer devices, and there
+may be experimental items in here that you would like to get early
+access to.
+
+
+
+WHAT IS THIS ALL ABOUT?
+----
+
 Energenie devices (both the green button devices, and the newer MiHome range)
 can be controlled and monitored by this Python library on a Raspberry Pi.
 With it you can turn sockets on and off, and monitor energy usage.
@@ -58,7 +87,7 @@ those combinations yet.
 2. Press the CLONE OR DOWNLOAD button to the right of this page, and choose the
 DOWNLOAD ZIP option.
 
-3. unzip the software (from a terminal prompt, e.g. LXTermina)
+3. unzip the software (from a terminal prompt, e.g. LXTerminal)
 
 ```
 unzip pyenergenie-master.zip
@@ -125,6 +154,7 @@ discover_mihome.py        a discovery example, there are 4 standard discovery be
 mihome_energy_monitor.py  a simple logger that logs all energy messages to energenie.csv
 ```
 
+
 8. Future work
 
 For details about future plans and work, please see the github issues log here:
@@ -136,4 +166,4 @@ David Whale
 
 @whaleygeek
 
-May 2016
+June 2016
