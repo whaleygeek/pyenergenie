@@ -222,8 +222,8 @@ class Device():
     def __init__(self, device_id=None, air_interface=None):
         self.air_interface = air_interface
         self.device_id = self.parse_device_id(device_id)
-        class Config(): pass
-        self.config = Config()
+        class RadioConfig(): pass
+        self.radio_config = RadioConfig()
         class Capabilities(): pass
         self.capabilities = Capabilities()
         self.updated_cb = None
@@ -295,7 +295,7 @@ class Device():
         return hasattr(self.capabilities, "receive")
 
     def get_radio_config(self):
-        return self.config
+        return self.radio_config
 
     def get_last_receive_time(self): # ->timestamp
         """The timestamp of the last time any message was received by this device"""
@@ -391,9 +391,9 @@ class LegacyDevice(EnergenieDevice):
 
         EnergenieDevice.__init__(self, device_id, ook_interface)
         #TODO: These might now just be implied by the ook_interface adaptor
-        self.config.frequency  = 433.92
-        self.config.modulation = "OOK"
-        self.config.codec      = "4bit"
+        self.radio_config.frequency  = 433.92
+        self.radio_config.modulation = "OOK"
+        self.radio_config.codec      = "4bit"
 
     def __repr__(self):
         return "LegacyDevice(%s)" % str(self.device_id)
@@ -430,11 +430,11 @@ class MiHomeDevice(EnergenieDevice):
         if air_interface == None:
             air_interface = fsk_interface
         EnergenieDevice.__init__(self, device_id, air_interface)
-        self.config.frequency  = 433.92
-        self.config.modulation = "FSK"
-        self.config.codec      = "OpenThings"
-        self.manufacturer_id   = MFRID_ENERGENIE
-        self.product_id        = None
+        self.radio_config.frequency  = 433.92
+        self.radio_config.modulation = "FSK"
+        self.radio_config.codec      = "OpenThings"
+        self.manufacturer_id         = MFRID_ENERGENIE
+        self.product_id              = None
 
         #Different devices might have different PIP's
         #if we are cycling codes on each message?
@@ -503,7 +503,7 @@ class ENER002(LegacyDevice):
     """A green-button switch"""
     def __init__(self, device_id, air_interface=None):
         LegacyDevice.__init__(self, device_id, air_interface)
-        self.config.tx_repeats = 8
+        self.radio_config.tx_repeats = 8
         self.capabilities.switch = True
         self.capabilities.receive = True
 
@@ -546,7 +546,7 @@ class MiHomeLight(LegacyDevice):
     """Base for all MiHomeLight variants. Receive only OOK device"""
     def __init__(self, device_id, air_interface=None):
         LegacyDevice.__init__(self, device_id, air_interface)
-        self.config.tx_repeats = 75
+        self.radio_config.tx_repeats = 75
         self.capabilities.switch = True
         self.capabilities.receive = True
 
@@ -563,7 +563,7 @@ class MiHomeLight(LegacyDevice):
             "on":             True
         }
         #TODO: Need to pass forward the new radio config OUTER_TIMES=1 OUTER_DELAY=1 INNER_TIMES=75
-        #using self.config.tx_repeats
+        #using self.radio_config.tx_repeats
         self.send_message(payload)
 
     def turn_off(self):
@@ -576,7 +576,7 @@ class MiHomeLight(LegacyDevice):
             "on":             False
         }
         #TODO: Need to pass forward the new radio config OUTER_TIMES=1 OUTER_DELAY=1 INNER_TIMES=75
-        #using self.config.tx_repeats
+        #using self.radio_config.tx_repeats
         self.send_message(payload)
 
     def set_switch(self, state):
@@ -630,7 +630,7 @@ class MIHO005(MiHomeDevice):
             reactive_power = None
             real_power     = None
         self.readings = Readings()
-        self.config.tx_repeats = 4
+        self.radio_config.tx_repeats = 4
         self.capabilities.send = True
         self.capabilities.receive = True
         self.capabilities.switch = True
@@ -783,7 +783,7 @@ class MIHO013(MiHomeDevice):
             setpoint_temperature = None
             valve_position       = None
         self.readings = Readings()
-        self.config.tx_repeats = 10
+        self.radio_config.tx_repeats = 10
         self.capabilities.send = True
         self.capabilities.receive = True
 
