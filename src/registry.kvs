@@ -14,9 +14,9 @@ ADD tv
 type=MIHO005
 device_id=1675
 
-IGN house
+ADD house
 type=MIHO006
-device_id=0000
+device_id=441
 
 ADD light_white
 type=MIHO008
