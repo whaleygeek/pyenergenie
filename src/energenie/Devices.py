@@ -22,7 +22,7 @@ MFRID_ENERGENIE                  = 0x04
 MFRID                            = MFRID_ENERGENIE
 
 ##PRODUCTID_MIHO001               =        #         Home Hub
-##PRODUCTID_MIHO002               =        #         Control only (Uses Legacy OOK protocol)
+##PRODUCTID_MIHO002               =        #         OOK Control only
 ##PRODUCTID_MIHO003               = 0x0?   #         Hand Controller
 PRODUCTID_MIHO004                = 0x01   #         Monitor only
 PRODUCTID_MIHO005                = 0x02   #         Adaptor Plus
@@ -537,6 +537,12 @@ class ENER002(OOKSwitch):
         return "ENER002(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
 
 
+class MIHO002(OOKSwitch):
+    """A purple button MiHome switch"""
+    def __repr__(self):
+        return "MIHO002(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
+
+
 class MIHO014(OOKSwitch):
     """Energenie 3kW switchable relay"""
     def __repr__(self):
@@ -609,8 +615,89 @@ class MIHO026(MiHomeLight):
 #------------------------------------------------------------------------------
 
 class MIHO004(MiHomeDevice):
-    """Monitor only Adaptor"""
-    pass #TODO
+    """Energenie Monitor-only Adaptor"""
+    def __init__(self, device_id, air_interface=None):
+        MiHomeDevice.__init__(self, device_id, air_interface)
+        self.product_id = PRODUCTID_MIHO004
+        class Readings():
+            voltage        = None
+            frequency      = None
+            current        = None
+            apparent_power = None
+            reactive_power = None
+            real_power     = None
+        self.readings = Readings()
+        self.radio_config.inner_times = 4
+        self.capabilities.send = True
+        self.capabilities.switch = True
+
+    def __repr__(self):
+        return "MIHO004(%s)" % str(hex(self.device_id))
+
+    @staticmethod
+    def get_join_req(deviceid):
+        """Get a synthetic join request from this device, for testing"""
+        return MiHomeDevice.get_join_req(MFRID_ENERGENIE, PRODUCTID_MIHO004, deviceid)
+
+    def handle_message(self, payload):
+        ##print("MIHO005 new data %s %s" % (self.device_id, payload))
+        for rec in payload["recs"]:
+            paramid = rec["paramid"]
+            #TODO: consider making this table driven and allowing our base class to fill our readings in for us
+            #  then just define the mapping table in __init__ (i.e. paramid->Readings field name)
+            value = rec["value"]
+            if paramid == OpenThings.PARAM_VOLTAGE:
+                self.readings.voltage = value
+            elif paramid == OpenThings.PARAM_CURRENT:
+                self.readings.current = value
+            elif paramid == OpenThings.PARAM_REAL_POWER:
+                self.readings.real_power = value
+            elif paramid == OpenThings.PARAM_APPARENT_POWER:
+                self.readings.apparent_power = value
+            elif paramid == OpenThings.PARAM_REACTIVE_POWER:
+                self.readings.reactive_power = value
+            elif paramid == OpenThings.PARAM_FREQUENCY:
+                self.readings.frequency = value
+            else:
+                try:
+                    param_name = OpenThings.param_info[paramid]['n'] # name
+                except:
+                    param_name = "UNKNOWN_%s" % str(hex(paramid))
+                print("unwanted paramid: %s" % param_name)
+
+    def get_readings(self): # -> readings:pydict
+        """A way to get all readings as a single consistent set"""
+        return self.readings
+
+    def get_voltage(self): # -> voltage:float
+        """Last stored state of voltage reading, None if unknown"""
+        if self.readings.voltage == None:
+            raise RuntimeError("No voltage reading received yet")
+        return self.readings.voltage
+
+    def get_frequency(self): # -> frequency:float
+        """Last stored state of frequency reading, None if unknown"""
+        if self.readings.frequency == None:
+            raise RuntimeError("No frequency reading received yet")
+        return self.readings.frequency
+
+    def get_apparent_power(self): # ->power:float
+        """Last stored state of apparent power reading, None if unknown"""
+        if self.readings.apparent_power == None:
+            raise RuntimeError("No apparent power reading received yet")
+        return self.readings.apparent_power
+
+    def get_reactive_power(self): # -> power:float
+        """Last stored state of reactive power reading, None if unknown"""
+        if self.readings.reactive_power == None:
+            raise RuntimeError("No reactive power reading received yet")
+        return self.readings.reactive_power
+
+    def get_real_power(self): #-> power:float
+        """Last stored state of real power reading, None if unknown"""
+        if self.readings.real_power == None:
+            raise RuntimeError("No real power reading received yet")
+        return self.readings.real_power
 
 
 #------------------------------------------------------------------------------
@@ -929,30 +1016,30 @@ class DeviceFactory():
     # If you know the name of the device, use this table
     device_from_name = {
         # official name            friendly name
-        "ENER002":     ENER002,    "GreenButton":       ENER002,
-
-        ##"MIHO002":   MIHO002,    "Controller":        MIHO002, # OOK
-        ##"MIHO004":   MIHO004,    "Monitor""           MIHO004, #TODO
-        "MIHO005":     MIHO005,    "AdaptorPlus":       MIHO005,
-        "MIHO006":     MIHO006,    "HomeMonitor":       MIHO006,
-        "MIHO008":     MIHO008,    "MiHomeLightWhite":  MIHO008, # OOK
-        "MIHO013":     MIHO013,    "eTRV":              MIHO013,
-        "MIHO014":     MIHO014,    "3kWRelay":          MIHO014, # OOK
-        "MIHO024":     MIHO024,    "MiHomeLightBlack":  MIHO024, # OOK
-        "MIHO025":     MIHO025,    "MiHomeLightChrome": MIHO025, # OOK
-        "MIHO026":     MIHO026,    "MiHomeLightSteel":  MIHO026, # OOK
-        "MIHO032":     MIHO032,    "MotionSensor":      MIHO032,
-        "MIHO033":     MIHO033,    "OpenSensor":        MIHO033,
+        "ENER002":     ENER002,    "GreenButton":       ENER002, # OOK(rx)
+        "MIHO002":     MIHO002,    "Controller":        MIHO002, # OOK(rx)
+        "MIHO004":     MIHO004,    "Monitor":           MIHO004, # FSK(rx)
+        "MIHO005":     MIHO005,    "AdaptorPlus":       MIHO005, # FSK(tx,rx)
+        "MIHO006":     MIHO006,    "HomeMonitor":       MIHO006, # FSK(tx)
+        "MIHO008":     MIHO008,    "MiHomeLightWhite":  MIHO008, # OOK(rx)
+        "MIHO013":     MIHO013,    "eTRV":              MIHO013, # FSK(tx,rx)
+        "MIHO014":     MIHO014,    "3kWRelay":          MIHO014, # OOK(rx)
+        "MIHO024":     MIHO024,    "MiHomeLightBlack":  MIHO024, # OOK(rx)
+        "MIHO025":     MIHO025,    "MiHomeLightChrome": MIHO025, # OOK(rx)
+        "MIHO026":     MIHO026,    "MiHomeLightSteel":  MIHO026, # OOK(rx)
+        "MIHO032":     MIHO032,    "MotionSensor":      MIHO032, # FSK(tx)
+        "MIHO033":     MIHO033,    "OpenSensor":        MIHO033, # FSK(tx)
     }
 
     #TODO: These are MiHome devices only, but might add in mfrid prefix too
     # If you know the mfrid, productid of the device, use this table
     device_from_id = {
+        #ENER002 is anOOK
         #MIHO002 control only switch is an OOK
-        #MIHO008 is an OOK
         PRODUCTID_MIHO004: MIHO004,
         PRODUCTID_MIHO005: MIHO005,
         PRODUCTID_MIHO006: MIHO006,
+        #MIHO008 is an OOK
         PRODUCTID_MIHO013: MIHO013,
         #MIHO014 is an OOK
         #MIHO024 is an OOK
@@ -960,8 +1047,6 @@ class DeviceFactory():
         #MIHO026 is an OOK
         PRODUCTID_MIHO032: MIHO032,
         PRODUCTID_MIHO033: MIHO033
-        ##PRODUCTID_MIHO004 : MIHO004 #TODO
-        #ENER*** product range does not have deviceid, as it does not transmit
     }
 
     default_air_interface = None
