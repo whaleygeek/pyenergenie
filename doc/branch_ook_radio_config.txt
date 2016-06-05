@@ -1,0 +1,28 @@
+The MiHome light requires a bit more of the transmit architecture to be fleshed out, so that it is possible for
+the device classes to pass radio parameters down the transmit pipeline.
+
+The MiHome light requires a longer transmit burst to guarantee that it sees the transmit message.
+Testing in the lab has show that parameters (OUTER_TIMES=1, OUTER_DELAY=0, INNER_TIMES=75) is a good parameter
+that leads to good reliability.
+
+It is not yet possible for the OOK transmit pipeline between the device class and the radio module to pass
+forward these parameters. Devices.py/LegacyDevice/send_message() needs to read the radio config parameters
+from it's most concrete instance, and use these to send to the air_interface (which is actually ook_interface,
+which is a OnAir.TwoBitAirInterface instance). OnAir.TwoBitAirInterface.send() then needs to read out these
+radio config parameters and override the defaults passed to radio.transmit() - defaults are presently outer_times=1,
+inner_times=8, outer_delay=0, modulation=ook. Also see the note in OnAir.TwoBitInterface.send() about having
+default radio parameters that are overriden by any radio parameters passed into it (so that if no parameters
+are provided, sensible defaults are used).
+
+This will then allow any device class to configure any of the lower level parameters of the radio to best suit
+that specific device classes radio receive performance characteristics.
+
+Note also that when radio transmit parameters are changed, this changes the amount of time that the radio is
+in transmit mode (and therefore alters the amount of time it is in receive mode, and ultimately how wide or
+narrow the receive window is). There will eventually need to be some way for the radio module to pass back up
+the chain how long a certain set of parameters will leave the receive window closed, so that a deterministic
+message scheduler can be written that schedules messages into known transmit and receive slots. No need to
+implement that yet, but we need to allow for it in the future.
+
+
+
