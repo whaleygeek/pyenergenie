@@ -57,6 +57,9 @@ def logMessage(msg):
         if   paramid == OpenThings.PARAM_SWITCH_STATE:
             switch = value
             flags[0] = 1
+        elif paramid == OpenThings.PARAM_DOOR_SENSOR:
+            switch = value
+            flags[0] = 1
         elif paramid == OpenThings.PARAM_VOLTAGE:
             flags[1] = 1
             voltage = value

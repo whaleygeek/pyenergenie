@@ -13,7 +13,7 @@
 # NOTE: This also might include intelligent power level selection based
 # on RSSI reports from different devices.
 
-##from lifecycle import *
+from lifecycle import *
 import time
 
 try:
@@ -37,10 +37,10 @@ class OpenThingsAirInterface():
             modulation    = radio.RADIO_MODULATION_FSK
 
         class TxDefaults(RadioDefaults):
-            power_level   = 0
-            inner_repeats = 4
+            ##power_level   = 0
+            inner_times   = 4
             outer_delay   = 0
-            outer_repeats = 0
+            outer_times   = 1
         self.tx_defaults = TxDefaults()
 
         class RxDefaults(RadioDefaults):
@@ -49,21 +49,35 @@ class OpenThingsAirInterface():
         self.rx_defaults = RxDefaults()
 
     ##@log_method
-    def send(self, payload, radio_params=None):
+    def send(self, payload, radio_config=None):
         #   payload is a pydict suitable for OpenThings
         #   radio_params is an overlay on top of radio tx defaults
-        pass #TODO
         p = OpenThings.encode(payload)
-        #TODO: merge radio_params with self.tx_defaults
-        #TODO: configure radio modulation based on merged params
+
+        # Set radio defaults, if no override
+        outer_times = self.tx_defaults.outer_times
+        outer_delay = self.tx_defaults.outer_delay
+        inner_times = self.tx_defaults.inner_times
+
+        # Merge any wanted radio params, if provided
+        if radio_config != None:
+            try:
+                outer_times = radio_config.outer_times
+            except AttributeError: pass
+            try:
+                outer_delay = radio_config.outer_delay
+            except AttributeError: pass
+            try:
+                inner_times = radio_config.inner_times
+            except AttributeError: pass
+
         radio.transmitter(fsk=True)
-        #TODO: configure other radio parameters
-        #TODO: transmit payload
-        radio.transmit(p, outer_times=1, inner_times=4, outer_delay=0)
+        ##print("inner times %s" % inner_times)
+        radio.transmit(p, outer_times=outer_times, inner_times=inner_times, outer_delay=outer_delay)
         # radio auto-returns to previous state after transmit completes
 
     ##@log_method
-    def receive(self, radio_params): # -> (radio_measurements, address or None, payload or None)
+    def receive(self, radio_config=None): # -> (radio_measurements, address or None, payload or None)
         #   radio_params is an overlay on top of radio rx defaults (e.g. poll rate, timeout, min payload, max payload)
         #   radio_measurements might include rssi reading, short payload report, etc
         pass # TODO
@@ -106,9 +120,9 @@ class TwoBitAirInterface():
 
         class TxDefaults(RadioDefaults):
             power_level   = 0
-            inner_repeats = 8
+            inner_times   = 8
             outer_delay   = 0
-            outer_repeats = 0
+            outer_times   = 1
         self.tx_defaults = TxDefaults()
 
         class RxDefaults(RadioDefaults):
@@ -117,9 +131,9 @@ class TwoBitAirInterface():
         self.rx_defaults = RxDefaults()
 
     ##@log_method
-    def send(self, payload, radio_params=None):
+    def send(self, payload, radio_config=None):
         #   payload is just a list of bytes, or a byte buffer
-        #   radio_params is an overlay on top of radio tx defaults
+        #   radio_config is an overlay on top of radio tx defaults
 
         house_address = payload["house_address"]
         device_index  = payload["device_index"]
@@ -127,15 +141,29 @@ class TwoBitAirInterface():
         bytes = TwoBit.encode_switch_message(state, device_index, house_address)
         radio.modulation(ook=True)
 
-        #TODO: merge radio_params with self.tx_defaults
-        #TODO: configure radio modulation based on merged params
-        #TODO: transmit payload
+        # Set radio defaults, if no override
+        outer_times = self.tx_defaults.outer_times
+        outer_delay = self.tx_defaults.outer_delay
+        inner_times = self.tx_defaults.inner_times
 
-        radio.transmit(bytes, outer_times=1, inner_times=8, outer_delay=0) #TODO: radio params
+        # Merge any wanted radio params, if provided
+        if radio_config != None:
+            try:
+                outer_times = radio_config.outer_times
+            except AttributeError: pass
+            try:
+                outer_delay = radio_config.outer_delay
+            except AttributeError: pass
+            try:
+                inner_times = radio_config.inner_times
+            except AttributeError: pass
+
+        ##print("inner times %s" % inner_times)
+        radio.transmit(bytes, outer_times=outer_times, inner_times=inner_times, outer_delay=outer_delay)
         # radio auto-pops to state before transmit
 
     ##@log_method
-    def receive(self, radio_params): # -> (radio_measurements, address or None, payload or None)
+    def receive(self, radio_config=None): # -> (radio_measurements, address or None, payload or None)
         #   radio_params is an overlay on top of radio rx defaults (e.g. poll rate, timeout, min payload, max payload)
         #   radio_measurements might include rssi reading, short payload report, etc
         #TODO: merge radio_params with self.tx_defaults
