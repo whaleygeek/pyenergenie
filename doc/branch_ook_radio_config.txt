@@ -18,16 +18,17 @@ DONE 2. Use these to send to the air_interface
    (which is actually ook_interface,
    which is a OnAir.TwoBitAirInterface instance).
 
-3. OnAir.TwoBitAirInterface.send()
+DONE 3. OnAir.TwoBitAirInterface.send()
    Needs to read out these radio config parameters
    and override the defaults passed to radio.transmit()
 
-4. defaults are presently outer_times=1, inner_times=8, outer_delay=0, modulation=ook.
+FINE 4. defaults are presently outer_times=1, inner_times=8, outer_delay=0, modulation=ook.
 
-5. OnAir.TwoBitInterface.send()
+DONE 5. OnAir.TwoBitInterface.send()
    Needs default radio parameters that are overriden by any radio parameters passed into it
    (so that if no parameters are provided, sensible defaults are used).
 
+6. Need to use the TxDefaults() structure to get good reuse across the class hierarcy
 
 FUTURE WORK
 

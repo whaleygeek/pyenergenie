@@ -48,7 +48,7 @@ class OpenThingsAirInterface():
             timeout       = 1000 #ms
         self.rx_defaults = RxDefaults()
 
-    @log_method
+    ##@log_method
     def send(self, payload, radio_config=None):
         #   payload is a pydict suitable for OpenThings
         #   radio_params is an overlay on top of radio tx defaults
@@ -116,11 +116,10 @@ class TwoBitAirInterface():
             timeout       = 1000 #ms
         self.rx_defaults = RxDefaults()
 
-    @log_method
+    ##@log_method
     def send(self, payload, radio_config=None):
         #   payload is just a list of bytes, or a byte buffer
         #   radio_config is an overlay on top of radio tx defaults
-        print("SEND payload %s config %s inner_times %s" % (payload, str(radio_config), radio_config.inner_times))
 
         house_address = payload["house_address"]
         device_index  = payload["device_index"]
@@ -128,11 +127,25 @@ class TwoBitAirInterface():
         bytes = TwoBit.encode_switch_message(state, device_index, house_address)
         radio.modulation(ook=True)
 
-        #TODO: merge radio_params with self.tx_defaults
+        # temporary hard-coded defaults
+        #TODO: Use self.tx_defaults instead
         outer_times = 1
         outer_delay = 0
         inner_times = 8
 
+        # Merge any wanted radio params, if provided
+        if radio_config != None:
+            try:
+                outer_times = radio_config.outer_times
+            except AttributeError: pass
+            try:
+                outer_delay = radio_config.outer_delay
+            except AttributeError: pass
+            try:
+                inner_times = radio_config.inner_times
+            except AttributeError: pass
+
+        print("Will use inner_times %s" % str(inner_times))
         radio.transmit(bytes, outer_times=outer_times, inner_times=inner_times, outer_delay=outer_delay)
         # radio auto-pops to state before transmit
 
