@@ -4,7 +4,14 @@
 
 from bottle import run, debug, template, get
 
+from energenie import Registry
+
+
 #===== URL HANDLERS ===========================================================
+
+#TODO: Session state, we need a session to store a registry object in,
+#that we can use between calls.
+
 
 # default session state brings user here
 @get('/')
@@ -12,17 +19,10 @@ def do_home():
     """Render the home page"""
     return template('home')
 
-    # buttons
-    #   list registry -> list
-    #   legacy learn -> legacy_learn
-    #   mihome discovery -> mihome_discovery
-    #   activity logger -> logger
-
 
 @get('/list')
 def do_list():
-    pass #TODO
-
+    return "TODO: list registry (fix session state first)"
     # list all items in registry
     # buttons for all devices
     #   rename -> rename_device
@@ -35,35 +35,35 @@ def do_list():
     #   button to deactivate (unroute the rx so not receiving any more) -> deactivate_device
 
 
-# session state could lock us here regardless of URL
-@get('legacy_learn')
+# session state could lock us here regardless of URL, it is a mode
+@get('/legacy_learn')
 def do_legacy_learn():
-    pass #TODO
+    return "TODO: legacy learning page"
     # collect house code and device index
     # start broadcasting (new page)
     #   button to stop broadcasting (but if come back to web site, this is page you get)
     # stop goes back to list page  (or initiating page in HTTP_REFERRER?)
 
 
-# session state could lock us here regardless of URL
-@get('mihome_discovery')
+# session state could lock us here regardless of URL, it is a mode
+@get('/mihome_discovery')
 def do_mihome_discovery():
-    pass #TODO
+    return "TODO: MiHome discovery page"""
     # start listening
     #   page refreshes every few seconds with any new details
     #   button to stop listening (but if come back to website, this is the page you get)
     # stop goes back to list page  (or initiating page in HTTP_REFERRER?)
 
 
-@get('logger') # session state could lock us here regardless of URL
+@get('/logger') # session state could lock us here regardless of URL, it is a mode
 def do_logger():
-    pass #TODO
+    return "TODO: Logger page"
     # start listening
     #   page refreshes every few seconds with any new details
     #   button to stop logging (but if come back to website, this is the page you get)
 
 
-@get('rename_device/<old_name>/<new_name>')
+@get('/rename_device/<old_name>/<new_name>')
 def do_rename_device(old_name, new_name):
     pass #TODO
     # page to get old name is from list, new_name is entered on a page
@@ -71,7 +71,7 @@ def do_rename_device(old_name, new_name):
     #   then refreshes back to the list page (or initiating page in HTTP_REFERRER?)
 
 
-@get('delete_device/<name>')
+@get('/delete_device/<name>')
 def do_delete_device(name):
     pass #TODO
     # name is passed in from the list page
@@ -79,7 +79,7 @@ def do_delete_device(name):
     # refresh back to the list page (or initiating page in HTTP_REFERRER?)
 
 
-@get('activate_device/<name>')
+@get('/activate_device/<name>')
 def do_activate_device(name):
     pass #TODO
     # action to get() the device (remember it is activated in registry??)
@@ -88,7 +88,7 @@ def do_activate_device(name):
     # refresh back to list page  (or initiating page in HTTP_REFERRER?)
 
 
-@get('deactivate_device/<name>')
+@get('/deactivate_device/<name>')
 def do_deactivate_device(name):
     pass #TODO
     # only allowed on devices that are already activated
@@ -97,7 +97,7 @@ def do_deactivate_device(name):
     # refresh back to list page  (or initiating page in HTTP_REFERRER?)
 
 
-@get('switch_device/<name>/<state>')
+@get('/switch_device/<name>/<state>')
 def do_switch_device(name, state):
     pass #TODO
     # name and on/off will be captured from list page
