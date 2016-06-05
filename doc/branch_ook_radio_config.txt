@@ -28,9 +28,17 @@ DONE 5. OnAir.TwoBitInterface.send()
    Needs default radio parameters that are overriden by any radio parameters passed into it
    (so that if no parameters are provided, sensible defaults are used).
 
-6. Need to use the TxDefaults() structure to get good reuse across the class hierarcy
+DONE 6. Need to use the TxDefaults() structure to get good reuse across the class hierarchy
+
+All tested in simulation and works.
+
+Just need to test on real devices, before merge back to master.
+
 
 FUTURE WORK
+
+Not part of this change, but we should note somewhere that this will need
+considering when the transmit scheduler is implemented.
 
 Note also that when radio transmit parameters are changed, this changes the amount of time that the radio is
 in transmit mode (and therefore alters the amount of time it is in receive mode, and ultimately how wide or

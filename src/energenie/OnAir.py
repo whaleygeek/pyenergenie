@@ -40,7 +40,7 @@ class OpenThingsAirInterface():
             ##power_level   = 0
             inner_times   = 4
             outer_delay   = 0
-            outer_times   = 0
+            outer_times   = 1
         self.tx_defaults = TxDefaults()
 
         class RxDefaults(RadioDefaults):
@@ -52,13 +52,27 @@ class OpenThingsAirInterface():
     def send(self, payload, radio_config=None):
         #   payload is a pydict suitable for OpenThings
         #   radio_params is an overlay on top of radio tx defaults
-        ##print("SEND payload %s config %s" % (payload, radio_config))
         p = OpenThings.encode(payload)
-        #TODO: Override self.tx_defaults with any settings in radio_config, if provided
-        outer_times = 1
-        outer_delay = 0
-        inner_times = 4
+
+        # Set radio defaults, if no override
+        outer_times = self.tx_defaults.outer_times
+        outer_delay = self.tx_defaults.outer_delay
+        inner_times = self.tx_defaults.inner_times
+
+        # Merge any wanted radio params, if provided
+        if radio_config != None:
+            try:
+                outer_times = radio_config.outer_times
+            except AttributeError: pass
+            try:
+                outer_delay = radio_config.outer_delay
+            except AttributeError: pass
+            try:
+                inner_times = radio_config.inner_times
+            except AttributeError: pass
+
         radio.transmitter(fsk=True)
+        ##print("inner times %s" % inner_times)
         radio.transmit(p, outer_times=outer_times, inner_times=inner_times, outer_delay=outer_delay)
         # radio auto-returns to previous state after transmit completes
 
@@ -108,7 +122,7 @@ class TwoBitAirInterface():
             power_level   = 0
             inner_times   = 8
             outer_delay   = 0
-            outer_times   = 0
+            outer_times   = 1
         self.tx_defaults = TxDefaults()
 
         class RxDefaults(RadioDefaults):
@@ -127,11 +141,10 @@ class TwoBitAirInterface():
         bytes = TwoBit.encode_switch_message(state, device_index, house_address)
         radio.modulation(ook=True)
 
-        # temporary hard-coded defaults
-        #TODO: Use self.tx_defaults instead
-        outer_times = 1
-        outer_delay = 0
-        inner_times = 8
+        # Set radio defaults, if no override
+        outer_times = self.tx_defaults.outer_times
+        outer_delay = self.tx_defaults.outer_delay
+        inner_times = self.tx_defaults.inner_times
 
         # Merge any wanted radio params, if provided
         if radio_config != None:
@@ -145,7 +158,7 @@ class TwoBitAirInterface():
                 inner_times = radio_config.inner_times
             except AttributeError: pass
 
-        print("Will use inner_times %s" % str(inner_times))
+        ##print("inner times %s" % inner_times)
         radio.transmit(bytes, outer_times=outer_times, inner_times=inner_times, outer_delay=outer_delay)
         # radio auto-pops to state before transmit
 
