@@ -34,7 +34,7 @@ PRODUCTID_MIHO006                = 0x05   #         House Monitor
 ##PRODUCTID_MIHO011 not used
 ##PRODUCTID_MIHO012 not used
 PRODUCTID_MIHO013                = 0x03   #         eTRV
-##PRODUCTID_MIHO014               = 0x0?   #         In-line Relay
+##PRODUCTID_MIHO014                       # OOK In-line Relay
 ##PRODUCTID_MIHO015 not used
 ##PRODUCTID_MIHO016 not used
 ##PRODUCTID_MIHO017
@@ -490,8 +490,8 @@ class MiHomeDevice(EnergenieDevice):
 
 #------------------------------------------------------------------------------
 
-class ENER002(LegacyDevice):
-    """A green-button switch"""
+class OOKSwitch(LegacyDevice):
+    """Any OOK controlled switch"""
     def __init__(self, device_id, air_interface=None):
         LegacyDevice.__init__(self, device_id, air_interface)
         self.radio_config.inner_times = 8
@@ -499,7 +499,7 @@ class ENER002(LegacyDevice):
         self.capabilities.receive = True
 
     def __repr__(self):
-        return "ENER002(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
+        return "OOKSwitch(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
 
 
     def turn_on(self):
@@ -529,6 +529,18 @@ class ENER002(LegacyDevice):
             self.turn_on()
         else:
             self.turn_off()
+
+
+class ENER002(OOKSwitch):
+    """A green button switch"""
+    def __repr__(self):
+        return "ENER002(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
+
+
+class MIHO014(OOKSwitch):
+    """Energenie 3kW switchable relay"""
+    def __repr__(self):
+        return "MIHO014(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
 
 
 #------------------------------------------------------------------------------
@@ -925,6 +937,7 @@ class DeviceFactory():
         "MIHO006":     MIHO006,    "HomeMonitor":       MIHO006,
         "MIHO008":     MIHO008,    "MiHomeLightWhite":  MIHO008, # OOK
         "MIHO013":     MIHO013,    "eTRV":              MIHO013,
+        "MIHO014":     MIHO014,    "3kWRelay":          MIHO014, # OOK
         "MIHO024":     MIHO024,    "MiHomeLightBlack":  MIHO024, # OOK
         "MIHO025":     MIHO025,    "MiHomeLightChrome": MIHO025, # OOK
         "MIHO026":     MIHO026,    "MiHomeLightSteel":  MIHO026, # OOK
@@ -941,6 +954,7 @@ class DeviceFactory():
         PRODUCTID_MIHO005: MIHO005,
         PRODUCTID_MIHO006: MIHO006,
         PRODUCTID_MIHO013: MIHO013,
+        #MIHO014 is an OOK
         #MIHO024 is an OOK
         #MIHO025 is an OOK
         #MIHO026 is an OOK

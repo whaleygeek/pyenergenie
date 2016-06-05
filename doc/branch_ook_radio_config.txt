@@ -30,9 +30,15 @@ DONE 5. OnAir.TwoBitInterface.send()
 
 DONE 6. Need to use the TxDefaults() structure to get good reuse across the class hierarchy
 
+DONE 7 Add MIHO014 3kw relay (It's just a legacy device, so only needs a wrapper class)
+
+
 All tested in simulation and works.
 
 Just need to test on real devices, before merge back to master.
+
+
+
 
 
 FUTURE WORK

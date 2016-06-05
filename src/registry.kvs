@@ -14,7 +14,24 @@ ADD PIR
 type=MIHO032
 device_id=4042
 
-ADD white_light
+ADD light_white
 type=MIHO008
+device_id=[0x6C6C6, 1]
+
+ADD light_black
+type=MIHO024
 device_id=[0x6C6C6, 2]
+
+ADD light_chrome
+type=MIHO025
+device_id=[0x6C6C6, 3]
+
+ADD light_steel
+type=MIHO026
+device_id=[0x6C6C6, 4]
+
+ADD relay
+type=MIHO014
+device_id=[0x6C6C6, 1]
+
 
