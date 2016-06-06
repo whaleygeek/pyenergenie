@@ -58,6 +58,11 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
         """Add a device class instance to the registry, with a friendly name"""
         self.store[name] = device
 
+    def peek(self, name): # -> Device
+        """Peek at the device class without wiring it into a route"""
+        #useful if you want to call it's c.can_send() or c.has_switch()
+        return self.store[name]
+
     def get(self, name): # -> Device
         """Get the description for a device class from the store, and construct a class instance"""
         c = self.store[name]
