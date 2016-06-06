@@ -4,16 +4,11 @@
 
 from bottle import run, debug, template, get
 
-#from energenie import Registry
-
+import energenie
 import session
 
 
 #===== URL HANDLERS ===========================================================
-
-#TODO: Session state, we need a session to store a registry object in,
-#that we can use between calls.
-
 
 # default session state brings user here
 @get('/')
@@ -25,7 +20,17 @@ def do_home():
 @get('/list')
 @session.needed
 def do_list(s):
-    return "TODO: list registry (fix session state first)"
+    try:
+        registry = s.get("registry")
+    except KeyError:
+        # Try to make this as safe as possible, only init on very first use
+        if energenie.registry == None:
+            energenie.init()
+        registry = energenie.registry
+        s.set("registry", registry)
+    return template("device_list", names=registry.names())
+
+
     # list all items in registry
     # buttons for all devices
     #   rename -> rename_device

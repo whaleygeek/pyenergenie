@@ -34,12 +34,18 @@ def get_id():
         return None
 
 
-def get_store_for(id):
+def get_store_for(id, create=False):
     # This might fail if session has expired or server reset occured
     try:
         return session_store[id]
     except KeyError:
-        return None
+        if create == False:
+            raise KeyError("No session store for id %s" % str(id))
+        else:
+            s = SessionStore(id)
+            session_store[id] = s
+            return s
+
 
 
 def get_store():
@@ -145,6 +151,8 @@ def required(method):
 
         # get the store associated with this id
         s = get_store_for(id)
+        if s == None:
+            raise RuntimeError("I expected a session store for id %s, there was none" % id)
 
         # Pass in session store as new first argument
         return method(s, *args, **kwargs)
@@ -158,14 +166,12 @@ def needed(method):
         ##print("SESSION CHECK")
         # try to get session id (get_id)
         id = get_id()
-
         if id != None:
-            s = get_store_for(id)
+            s = get_store_for(id, create=True)
         else:
             # There is no session/store, so create it first
             id = new_id()
-            set_id(id)
-            s = get_store_for(id)
+            s = set_id(id)
 
         return method(s, *args, **kwargs)
 
