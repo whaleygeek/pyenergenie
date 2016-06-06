@@ -28,7 +28,7 @@ device_id=0000
 
 ADD relay
 type=MIHO014
-device_id=[0x6C6C6, 1]
+device_id=[0x6C6C6, 4]
 
 ADD light_black
 type=MIHO024
