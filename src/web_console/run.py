@@ -28,38 +28,46 @@ def do_list(s):
             energenie.init()
         registry = energenie.registry
         s.set("registry", registry)
-    r = {"house": "(house readings here)"} #TODO: map of name to readings summary
-    return template("device_list", names=registry.names(), readings=r)
+
+    # Get readings for any device that can send
+    readings = {}
+    for name in registry.names():
+        c = energenie.registry.peek(name)
+        if c.can_send():
+            r = c.get_readings_summary()
+            readings[name] = r
+
+    return template("device_list", names=registry.names(), readings=readings)
 
 
-@get('/activate_device/<name>')
+@get('/watch_device/<name>')
 @session.required
-def do_activate_device(s, name):
-    return "TODO: Activate devices %s" % name
-    # action to get() the device (remember it is activated in registry??)
-    # i.e. when listing registry, need to be able to query if there is a route,
-    # and that will mean it is activated)
-    # refresh back to list page  (or initiating page in HTTP_REFERRER?)
+def do_watch_device(s, name):
+    c = energenie.registry.get(name)
+    # Store device class instance in session store, so we can easily get its readings
+    s.set("device.%s" % name, c)
+    return "Watch is now active for %s" % name
 
 
-@get('/deactivate_device/<name>')
+@get('/unwatch_device/<name>')
 @session.required
-def do_deactivate_device(s, name):
-    return "TODO: Deactivate device %s" % name
-    # only allowed on devices that are already activated
-    # error if not yet activated
-    # ask router to delete the route to the device
-    # refresh back to list page  (or initiating page in HTTP_REFERRER?)
+def do_unwatch_device(s, name):
+    s.delete("device.%s" % name)
+    energenie.registry.unget(name)
+    return "Watch is now inactive for %s" % name
 
 
 @get('/switch_device/<name>/<state>')
 @session.required
 def do_switch_device(s, name, state):
-    return "TODO: Switch device %s" % name
-    # name and on/off will be captured from list page
-    # both on and off offered in case of catchup, but actual state shown on list
-    # change the switch state
-    # refresh back to list page (or initiating page in HTTP_REFERRER?)
+    ci = energenie.registry.get(name)
+    state = state.upper()
+    if state in ['1','YES', 'Y', 'TRUE', 'T', 'ON']:
+        state = True
+    else:
+        state = False
+    ci.set_switch(state)
+    return "device %s switched to:%s" % (name, state)
 
 
 # session state could lock us here regardless of URL, it is a mode
@@ -105,12 +113,8 @@ def do_rename_device(s, old_name, new_name):
 @get('/delete_device/<name>')
 @session.required
 def do_delete_device(s, name):
-    return "TODO: delete device %s" % name
-    # name is passed in from the list page
-    # action to delete the item
-    # refresh back to the list page (or initiating page in HTTP_REFERRER?)
-
-
+    energenie.registry.delete(name)
+    return "deleted device %s" % name
 
 
 #----- APPLICATION STARTUP ----------------------------------------------------

@@ -75,6 +75,17 @@ class DeviceRegistry(): # this is actions, so is this the 'RegistRAR'??
                     self.fsk_router.add(address, c)
         return c
 
+    def unget(self, name):
+        """remove any receive watches on this device"""
+        c = self.store[name]
+
+        if self.fsk_router != None:
+            if c.can_send(): # if can transmit, we can receive from it
+                if isinstance(c, Devices.MiHomeDevice):
+                    print("Removing rx routes for transmit enabled device %s" % c)
+                    address = (c.manufacturer_id, c.product_id, c.device_id)
+                    self.fsk_router.remove(address)
+
     def rename(self, old_name, new_name):
         """Rename a device in the registry"""
         c = self.store[old_name] # get the class instance
@@ -188,6 +199,9 @@ class Router():
         # When a message comes in for this address, it will be routed to its handle_message() method
         # address might be a string, a number, a tuple, but probably always the same for any one router
         self.routes[address] = instance
+
+    def remove(self, address):
+        del self.routes[address]
 
     def list(self):
         print("ROUTES:")
