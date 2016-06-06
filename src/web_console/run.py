@@ -120,6 +120,6 @@ def do_delete_device(s, name):
 #----- APPLICATION STARTUP ----------------------------------------------------
 
 debug(True)
-run(port=8081)
+run(port=8081, host="0.0.0.0")
 
 # END
