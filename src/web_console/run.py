@@ -2,7 +2,7 @@
 #
 # Run the web_console
 
-from bottle import run, debug, template, get
+from bottle import run, debug, template, get, redirect
 
 import energenie
 import session
@@ -29,11 +29,6 @@ def do_list(s):
         registry = energenie.registry
         s.set("registry", registry)
 
-    # Pump receive loop
-    #TODO: This will perform really badly, need to probably have a thread doing this
-    #when in a web context
-    energenie.loop()
-    
     # Get readings for any device that can send
     readings = {}
     for name in registry.names():
@@ -43,6 +38,33 @@ def do_list(s):
             readings[name] = r
 
     return template("device_list", names=registry.names(), readings=readings)
+
+
+@get('/edit/<name>')
+@session.required
+def do_edit(s, name):
+    return template("edit", name=name)
+
+
+is_receiving = False
+
+@get('/receive_loop')
+def do_receive_loop():
+    """A cheat's way of pumping the receive loop, for testing"""
+    # This will probably be fetched by the javascript on a repeating timer
+
+    #TODO: Need to put a failing lock around this to prevent threading issues in web context
+    #web server is single threaded at the moment, so we won't hit this quite yet.
+
+    # Re-entrancy trap
+    global is_receiving
+    if not is_receiving:
+        is_receiving = True
+        energenie.loop()
+        is_receiving = False
+        redirect('/list')
+    else:
+        redirect('/list?busy')
 
 
 @get('/watch_device/<name>')
@@ -120,10 +142,8 @@ def do_logger(s):
 @get('/rename_device/<old_name>/<new_name>')
 @session.required
 def do_rename_device(s, old_name, new_name):
-    return "TODO: rename device from %s to %s" % (old_name, new_name)
-    # page to get old name is from list, new_name is entered on a page
-    #   then kicks an action page to actually do the rename
-    #   then refreshes back to the list page (or initiating page in HTTP_REFERRER?)
+    energenie.registry.rename(old_name, new_name)
+    return "renamed device %s as %s" % (old_name, new_name)
 
 
 @get('/delete_device/<name>')

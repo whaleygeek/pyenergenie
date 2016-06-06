@@ -52,3 +52,8 @@ device_id=2817
 
 
 
+
+ADD big_relay
+type=MIHO014
+device_id=[444102, 4]
+

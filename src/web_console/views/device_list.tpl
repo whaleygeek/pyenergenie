@@ -3,12 +3,24 @@
 <script type="text/javascript">
 function do_action(action)
 {
-  //alert(action)
   document.myform.action=action
+  //form seems to auto-get when you press any button anyway?
+}
+
+function poll()
+{
+  // fetch the receive_loop in 1 seconds time
+  // it will return a redirect back to here
+  function do_loop()
+  {
+    document.myform.action = '/receive_loop'
+    document.myform.submit()
+  }
+  t = setTimeout(do_loop, 1000)
 }
 </script>
 
-<body>
+<body onload="poll()">
 
 
 %import energenie
@@ -20,7 +32,8 @@ function do_action(action)
 %for name in names:
   %c = energenie.registry.peek(name)
 
-  <tr><td>{{name}}</td>
+  <tr>
+    <td><a href="/edit/{{name}}">{{name}}</td>
 
   %if c.can_send():
     <td>
@@ -47,15 +60,6 @@ function do_action(action)
   %else:
     <td>&nbsp;</td>
   %end
-
-  <td>
-    <button onclick="do_action('/rename_device/{{name}}/' + 'NEWNAME')">rename</button>
-    <input type="text">
-  </td>
-
-  <td>
-    <button onclick="do_action('/delete_device/{{name}}')">delete</button>
-  </td>
 
 %end
 </table>
