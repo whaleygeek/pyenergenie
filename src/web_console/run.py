@@ -4,7 +4,9 @@
 
 from bottle import run, debug, template, get
 
-from energenie import Registry
+#from energenie import Registry
+
+import session
 
 
 #===== URL HANDLERS ===========================================================
@@ -21,7 +23,8 @@ def do_home():
 
 
 @get('/list')
-def do_list():
+@session.needed
+def do_list(s):
     return "TODO: list registry (fix session state first)"
     # list all items in registry
     # buttons for all devices
@@ -37,7 +40,8 @@ def do_list():
 
 # session state could lock us here regardless of URL, it is a mode
 @get('/legacy_learn')
-def do_legacy_learn():
+@session.required
+def do_legacy_learn(s):
     return "TODO: legacy learning page"
     # collect house code and device index
     # start broadcasting (new page)
@@ -47,7 +51,8 @@ def do_legacy_learn():
 
 # session state could lock us here regardless of URL, it is a mode
 @get('/mihome_discovery')
-def do_mihome_discovery():
+@session.required
+def do_mihome_discovery(s):
     return "TODO: MiHome discovery page"""
     # start listening
     #   page refreshes every few seconds with any new details
@@ -56,7 +61,8 @@ def do_mihome_discovery():
 
 
 @get('/logger') # session state could lock us here regardless of URL, it is a mode
-def do_logger():
+@session.required
+def do_logger(s):
     return "TODO: Logger page"
     # start listening
     #   page refreshes every few seconds with any new details
@@ -64,7 +70,8 @@ def do_logger():
 
 
 @get('/rename_device/<old_name>/<new_name>')
-def do_rename_device(old_name, new_name):
+@session.required
+def do_rename_device(s, old_name, new_name):
     pass #TODO
     # page to get old name is from list, new_name is entered on a page
     #   then kicks an action page to actually do the rename
@@ -72,7 +79,8 @@ def do_rename_device(old_name, new_name):
 
 
 @get('/delete_device/<name>')
-def do_delete_device(name):
+@session.required
+def do_delete_device(s, name):
     pass #TODO
     # name is passed in from the list page
     # action to delete the item
@@ -80,7 +88,8 @@ def do_delete_device(name):
 
 
 @get('/activate_device/<name>')
-def do_activate_device(name):
+@session.required
+def do_activate_device(s, name):
     pass #TODO
     # action to get() the device (remember it is activated in registry??)
     # i.e. when listing registry, need to be able to query if there is a route,
@@ -89,7 +98,8 @@ def do_activate_device(name):
 
 
 @get('/deactivate_device/<name>')
-def do_deactivate_device(name):
+@session.required
+def do_deactivate_device(s, name):
     pass #TODO
     # only allowed on devices that are already activated
     # error if not yet activated
@@ -98,7 +108,8 @@ def do_deactivate_device(name):
 
 
 @get('/switch_device/<name>/<state>')
-def do_switch_device(name, state):
+@session.required
+def do_switch_device(s, name, state):
     pass #TODO
     # name and on/off will be captured from list page
     # both on and off offered in case of catchup, but actual state shown on list
