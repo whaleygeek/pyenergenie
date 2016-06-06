@@ -29,6 +29,11 @@ def do_list(s):
         registry = energenie.registry
         s.set("registry", registry)
 
+    # Pump receive loop
+    #TODO: This will perform really badly, need to probably have a thread doing this
+    #when in a web context
+    energenie.loop()
+    
     # Get readings for any device that can send
     readings = {}
     for name in registry.names():
@@ -44,6 +49,17 @@ def do_list(s):
 @session.required
 def do_watch_device(s, name):
     c = energenie.registry.get(name)
+    energenie.fsk_router.list() # to console
+    ##TESTING
+    ##dummy_payload = {
+    ##    "recs":[
+    ##        {
+    ##            "paramid": energenie.OpenThings.PARAM_DOOR_SENSOR,
+    ##            "value": 1
+    ##        }
+    ##    ]
+    ##}
+    ##c.handle_message(dummy_payload)
     # Store device class instance in session store, so we can easily get its readings
     s.set("device.%s" % name, c)
     return "Watch is now active for %s" % name
