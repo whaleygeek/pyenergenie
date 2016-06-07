@@ -6,51 +6,26 @@ DONE - zero install (probably python bottle)
 
   - monitoring interface (basically registry list)
     DONE perhaps a panel that shows all registered devices
-    NOT DOING picture of the raw energenie device
-    NOT DOING user assigned picture for what is plugged into it?
+    NOT DOING picture of the raw energenie device (leave to others to innovate)
+    NOT DOING user assigned picture for what is plugged into it? (leave to others to innovate)
     DONE control status (demands)  show switch status (demand only if rx only device)
     DONE click on a device switch to turn it on and off
     DONE monitor status (readings) show all readings as they arrive
 
   - other buttons
-    TODO legacy learn mode start/stop
-    TODO mihome discovery start/stop
+    DONE legacy learn mode start/stop
+    DONE mihome discovery start/stop
+    DONE logging mode start/stop
     DONE rename device
     DONE delete device
 
-    - logging mode
+    TODO legacy learn mode UI (house code and device code)
+    TODO legacy learn mode poll transmit
+
+    TODO mihome discovery mode back end poll receive
+
+
     TODO log all data to a scrollable window and file
+      (long poll, or tiny bit of ajax?)
     TODO download/clear the data file
-
-
-MODES
-
-We need a 'mode' concept, so that if you start the back-end logging and then navigate away,
-when you come back to any page, it redirects to the mode page, until you disable it.
-
-This will be session specific
-
-Decorators would be a good way to do this, as they could just send a redirect to the
-current active mode. Put a mode decorator on any service you want to redirect to the current
-mode, and it can send the redirect if a mode is active. That page then has to have a
-mode disable button.
-
-@mode
-def do_logging():
-
-@mode
-def do_home():
-
-something like...
-def mode(m):
-    get mode from session
-    if no mode, just call method
-    if mode, and this is not the right page
-        send redirect to the mode page
-
-setting the mode...
-    set mode variable in session to address of mode servicing page
-
-clearing the mode...
-    delete the mode variable in the session
 
