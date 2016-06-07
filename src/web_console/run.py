@@ -9,7 +9,7 @@ import session
 
 #===== DECORATORS =============================================================
 
-def mode(m):
+def enforce_mode(m):
     """Redirect to mode handler, if one is active in the session"""
     def inner(*args, **kwargs):
         # get any current mode
@@ -54,7 +54,7 @@ def do_home(s):
 
 @get('/list')
 @session.needed
-@mode
+@enforce_mode
 def do_list(s):
     try:
         registry = s.get("registry")
@@ -78,6 +78,7 @@ def do_list(s):
 
 @get('/edit/<name>')
 @session.required
+@enforce_mode
 def do_edit(s, name):
     return template("edit", name=name)
 
@@ -147,19 +148,31 @@ def do_switch_device(s, name, state):
 # session state could lock us here regardless of URL, it is a mode
 @get('/legacy_learn')
 @session.required
+@enforce_mode
 def do_legacy_learn(s):
     set_mode(s) # sets it to here
-    return "Should now be locked into legacy_learn_mode"
-    #NOTE: Only the /list URL redirects at moment while testing
+    return """
+    Should now be locked into legacy_learn_mode
+    <a href='/legacy_learn/-'>FINISH</a>
+    """
+
     # collect house code and device index
     # start broadcasting (new page)
     #   button to stop broadcasting (but if come back to web site, this is page you get)
     # stop goes back to list page  (or initiating page in HTTP_REFERRER?)
 
 
+@get('/legacy_learn/-')
+@session.required
+def do_legacy_learn_finish(s):
+    clear_mode(s)
+    return "legacy learn mode finished"
+
+
 # session state could lock us here regardless of URL, it is a mode
 @get('/mihome_discovery')
 @session.required
+@enforce_mode
 def do_mihome_discovery(s):
     return "TODO: MiHome discovery page - this enters a sticky MODE"""
     # start listening
@@ -170,6 +183,7 @@ def do_mihome_discovery(s):
 
 @get('/logger') # session state could lock us here regardless of URL, it is a mode
 @session.required
+@enforce_mode
 def do_logger(s):
     return "TODO: Logger page - this enters a sticky MODE"
     # start listening
