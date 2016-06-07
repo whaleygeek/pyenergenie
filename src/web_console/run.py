@@ -7,7 +7,12 @@ from bottle import run, debug, template, get, redirect, request
 import energenie
 import session
 
+
 #===== DECORATORS =============================================================
+#
+# A 'mode' locks users into a specific mode, until they finish it.
+# If they try to go to any other mode locked page, they get redirected back
+# to the current active mode URL. The URL is stored in a 'mode' session variable.
 
 def enforce_mode(m):
     """Redirect to mode handler, if one is active in the session"""
@@ -42,7 +47,16 @@ def clear_mode(s):
     s.delete("mode")
 
 
+@get('/mode/-')
+@session.required
+def do_mode_finished(s):
+    clear_mode(s)
+    return "mode finished"
+
+
 #===== URL HANDLERS ===========================================================
+
+#----- USER FACING HANDLERS ---------------------------------------------------
 
 # default session state brings user here
 @get('/')
@@ -82,6 +96,8 @@ def do_list(s):
 def do_edit(s, name):
     return template("edit", name=name)
 
+
+#----- NON USER FACING HANDLERS -----------------------------------------------
 
 is_receiving = False
 
@@ -145,52 +161,6 @@ def do_switch_device(s, name, state):
     return "device %s switched to:%s" % (name, state)
 
 
-# session state could lock us here regardless of URL, it is a mode
-@get('/legacy_learn')
-@session.required
-@enforce_mode
-def do_legacy_learn(s):
-    set_mode(s) # sets it to here
-    return """
-    Should now be locked into legacy_learn_mode
-    <a href='/legacy_learn/-'>FINISH</a>
-    """
-
-    # collect house code and device index
-    # start broadcasting (new page)
-    #   button to stop broadcasting (but if come back to web site, this is page you get)
-    # stop goes back to list page  (or initiating page in HTTP_REFERRER?)
-
-
-@get('/legacy_learn/-')
-@session.required
-def do_legacy_learn_finish(s):
-    clear_mode(s)
-    return "legacy learn mode finished"
-
-
-# session state could lock us here regardless of URL, it is a mode
-@get('/mihome_discovery')
-@session.required
-@enforce_mode
-def do_mihome_discovery(s):
-    return "TODO: MiHome discovery page - this enters a sticky MODE"""
-    # start listening
-    #   page refreshes every few seconds with any new details
-    #   button to stop listening (but if come back to website, this is the page you get)
-    # stop goes back to list page  (or initiating page in HTTP_REFERRER?)
-
-
-@get('/logger') # session state could lock us here regardless of URL, it is a mode
-@session.required
-@enforce_mode
-def do_logger(s):
-    return "TODO: Logger page - this enters a sticky MODE"
-    # start listening
-    #   page refreshes every few seconds with any new details
-    #   button to stop logging (but if come back to website, this is the page you get)
-
-
 @get('/rename_device/<old_name>/<new_name>')
 @session.required
 def do_rename_device(s, old_name, new_name):
@@ -203,6 +173,56 @@ def do_rename_device(s, old_name, new_name):
 def do_delete_device(s, name):
     energenie.registry.delete(name)
     return "deleted device %s" % name
+
+
+#----- MODES ------------------------------------------------------------------
+#
+# A 'mode' is something you can lock the user into
+# trying to go to any other mode locked page, will redirect back here
+
+@get('/legacy_learn')
+@session.required
+@enforce_mode
+def do_legacy_learn(s):
+    set_mode(s) # sets it to here
+    return """
+    Should now be locked into legacy_learn_mode
+    <a href='/mode/-'>FINISH</a>
+    """
+
+    # collect house code and device index
+    # start broadcasting (new page)
+    #   button to stop broadcasting (but if come back to web site, this is page you get)
+    # stop goes back to list page  (or initiating page in HTTP_REFERRER?)
+
+
+@get('/mihome_discovery')
+@session.required
+@enforce_mode
+def do_mihome_discovery(s):
+    set_mode(s) # sets it to here
+    return """
+    Should now be locked into mihome discovery mode
+    <a href='/mode/-'>FINISH</a>
+    """
+    # start listening
+    #   page refreshes every few seconds with any new details
+    #   button to stop listening (but if come back to website, this is the page you get)
+    # stop goes back to list page  (or initiating page in HTTP_REFERRER?)
+
+
+@get('/logger')
+@session.required
+@enforce_mode
+def do_logger(s):
+    set_mode(s) # sets it to here
+    return """
+    Should now be locked into logger mode
+    <a href='/mode/-'>FINISH</a>
+    """
+    # start listening
+    #   page refreshes every few seconds with any new details
+    #   button to stop logging (but if come back to website, this is the page you get)
 
 
 #----- APPLICATION STARTUP ----------------------------------------------------
