@@ -46,13 +46,15 @@ def clear_mode(s):
 
 # default session state brings user here
 @get('/')
-def do_home():
+@session.needed
+def do_home(s):
     """Render the home page"""
     return template('home')
 
 
 @get('/list')
 @session.needed
+@mode
 def do_list(s):
     try:
         registry = s.get("registry")
@@ -146,7 +148,9 @@ def do_switch_device(s, name, state):
 @get('/legacy_learn')
 @session.required
 def do_legacy_learn(s):
-    return "TODO: legacy learning page - this enters a sticky MODE"
+    set_mode(s) # sets it to here
+    return "Should now be locked into legacy_learn_mode"
+    #NOTE: Only the /list URL redirects at moment while testing
     # collect house code and device index
     # start broadcasting (new page)
     #   button to stop broadcasting (but if come back to web site, this is page you get)
