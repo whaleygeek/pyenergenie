@@ -5,19 +5,53 @@ DONE - zero install (probably python bottle)
 - surface all the setup_tool features in a web context
 
   - monitoring interface (basically registry list)
-    perhaps a panel that shows all registered devices
-    picture of the raw energenie device
-    user assigned picture for what is plugged into it?
-    control status (demands)  show switch status (demand only if rx only device)
-    - click on a device switch to turn it on and off
-    monitor status (readings) show all readings as they arrive
+    DONE perhaps a panel that shows all registered devices
+    NOT DOING picture of the raw energenie device
+    NOT DOING user assigned picture for what is plugged into it?
+    DONE control status (demands)  show switch status (demand only if rx only device)
+    DONE click on a device switch to turn it on and off
+    DONE monitor status (readings) show all readings as they arrive
 
   - other buttons
-    - legacy learn mode start/stop
-    - mihome discovery start/stop
-    - rename device
-    - delete device
+    TODO legacy learn mode start/stop
+    TODO mihome discovery start/stop
+    DONE rename device
+    DONE delete device
 
     - logging mode
-    (log all data to a scrollable window and file)
-    (download/clear the data file)
+    TODO log all data to a scrollable window and file
+    TODO download/clear the data file
+
+
+MODES
+
+We need a 'mode' concept, so that if you start the back-end logging and then navigate away,
+when you come back to any page, it redirects to the mode page, until you disable it.
+
+This will be session specific
+
+Decorators would be a good way to do this, as they could just send a redirect to the
+current active mode. Put a mode decorator on any service you want to redirect to the current
+mode, and it can send the redirect if a mode is active. That page then has to have a
+mode disable button.
+
+@mode
+def do_logging():
+
+@mode
+def do_home():
+
+something like...
+def mode(m):
+    get mode from session
+    if no mode, just call method
+    if mode, and this is not the right page
+        send redirect to the mode page
+
+setting the mode...
+    set mode variable in session to address of mode servicing page
+
+clearing the mode...
+    delete the mode variable in the session
+
+    
