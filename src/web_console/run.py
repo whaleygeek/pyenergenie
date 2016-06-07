@@ -2,10 +2,44 @@
 #
 # Run the web_console
 
-from bottle import run, debug, template, get, redirect
+from bottle import run, debug, template, get, redirect, request
 
 import energenie
 import session
+
+#===== DECORATORS =============================================================
+
+def mode(m):
+    """Redirect to mode handler, if one is active in the session"""
+    def inner(*args, **kwargs):
+        # get any current mode
+        s = session.get_store()
+        try:
+            mode = s.get("mode")
+        except KeyError:
+            # mode is not defined
+            return m(*args, **kwargs) # just call method unmodified
+
+        # mode is defined
+        if request.url == mode:
+            # already at the right place
+            return m(*args, **kwargs) # just call the method unmodified
+        # if not in the right place, send redirect to the mode handler URL
+        redirect(mode)
+
+    return inner
+
+
+def set_mode(s, url=None):
+    """Set a mode URL to use for redirects"""
+    if url == None:
+        url = request.url # assume we are in the handler for the mode already
+    s.set("mode", url)
+
+
+def clear_mode(s):
+    """Clear any mode URL to prevent mode redirects"""
+    s.delete("mode")
 
 
 #===== URL HANDLERS ===========================================================
