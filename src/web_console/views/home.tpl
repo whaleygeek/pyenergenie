@@ -4,5 +4,3 @@
 
 <a href="/legacy_learn">Legacy Learning</a><BR>
 
-<a href="/logger">[TODO:Logging]</a><BR>
-

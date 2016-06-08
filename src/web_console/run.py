@@ -2,10 +2,11 @@
 #
 # Run the web_console
 
-from bottle import run, debug, template, get, redirect, request
+from bottle import run, debug, template, get, redirect, request, response, static_file
 
-import energenie
+import energenie # requires a symlink
 import session
+import Logger # requires a symlink
 
 
 #===== DECORATORS =============================================================
@@ -14,7 +15,7 @@ import session
 # If they try to go to any other mode locked page, they get redirected back
 # to the current active mode URL. The URL is stored in a 'mode' session variable.
 
-#TODO: Might put this in session module and push upstream to our bottle cms project
+#TODO: Put this in session module and push upstream to our bottle cms project
 
 def enforce_mode(m):
     """Redirect to mode handler, if one is active in the session"""
@@ -60,15 +61,18 @@ def do_mode_finished(s):
 
 #----- USER FACING HANDLERS ---------------------------------------------------
 
+
 # default session state brings user here
 @get('/')
 @session.needed
 def do_home(s):
     """Render the home page"""
+
     return template('home')
 
 
 is_receiving = False
+last_messages = []
 
 @get('/list')
 @session.needed
@@ -91,6 +95,17 @@ def do_list(s):
         # Try to make this as safe as possible, only init on very first use
         if energenie.registry == None:
             energenie.init()
+            # start the logger logging all messages to a file
+            # provide a default incoming message handler for all fsk messages
+            def incoming(address, message):
+                print("\nIncoming from %s" % str(address))
+                print(message)
+                Logger.logMessage(message)
+                last_messages.append(message)
+
+            energenie.fsk_router.when_incoming(incoming)
+            Logger.logMessage(energenie.Devices.MIHO005_REPORT) #testing
+
         registry = energenie.registry
         s.set("registry", registry)
 
@@ -110,7 +125,10 @@ def do_list(s):
                 r = c.get_readings_summary()
                 readings[name] = r
 
-    return template("device_list", names=registry.names(), readings=readings)
+    global last_messages
+    copy_last_messages = last_messages
+    last_messages = []
+    return template("device_list", names=registry.names(), readings=readings, messages=copy_last_messages)
 
 
 @get('/edit/<name>')
@@ -164,6 +182,19 @@ def do_delete_device(s, name):
     return "deleted device %s" % name
 
 
+@get('/log/download')
+def do_log_download():
+    response.set_header("content-type", "text/csv")
+    return static_file(Logger.get_file_path(), root=".")
+
+
+@get('/log/clear')
+@session.required
+def do_log_clear(s):
+    Logger.clear_file()
+    return "Log file cleared"
+
+
 #----- LEGACY LEARN -----------------------------------------------------------
 
 # A much simpler legacy_learn, not a mode, but just driven by the user
@@ -192,37 +223,6 @@ def legacy_learn_off(s, house_code, device_index):
     device = energenie.Devices.MIHO008((house_code, device_index))
     device.turn_off()
     return template('legacy_learn', house_code=house_code, device_index=device_index, state='OFF')
-
-
-#===== MODES ==================================================================
-#
-# A 'mode' is something you can lock the user into
-# trying to go to any other mode locked page, will redirect back here
-
-#TODO: Always log to csv file, give user a download option
-#TODO: Might pass new messages since last poll in /list update
-#if logging is turned on. Will mean that only those messages received
-#in last poll will be rendered, but that might be good enough to avoid
-#using any ajax or jquery and keep this MVP a really simple building
-#block for others to improve on.
-
-
-#----- LOGGER MODE ------------------------------------------------------------
-
-# NOT DONE YET
-
-@get('/logger')
-@session.required
-@enforce_mode
-def do_logger(s):
-    set_mode(s) # sets it to here
-    return """
-    Should now be locked into logger mode
-    <a href='/mode/-'>FINISH</a>
-    """
-    # start listening
-    #   page refreshes every few seconds with any new details
-    #   button to stop logging (but if come back to website, this is the page you get)
 
 
 #----- APPLICATION STARTUP ----------------------------------------------------

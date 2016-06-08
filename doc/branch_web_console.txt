@@ -26,11 +26,16 @@ DONE - zero install (probably python bottle)
       what appears on the UI as devices report data??
 
     - logging (naive)
-    TODO always log data to the csv file
-    TODO give user an option to download the file
-    TODO give user an option to delete the file
-    TODO from the /list screen, send back any messages received this poll period
+    DONE always log data to the csv file
+    DONE give user an option to download the file
+    DONE give user an option to delete the file
+    DONE from the /list screen, send back any messages received this poll period
       when rendering template
+
+TODO: decide how to handle symlinks to energenie folder, we want zero install
+  (perhaps energenie.init creates them on first run if not there??)
+
+TODO: Need some instructions on how to run and use the web_console
 
 
 NOT DOING (leave to others to innovate)

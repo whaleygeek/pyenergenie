@@ -10,14 +10,39 @@ LOG_FILENAME = "energenie.csv"
 HEADINGS = 'timestamp,mfrid,prodid,sensorid,flags,switch,voltage,freq,reactive,real,apparent,current,temperature'
 
 
+# create file or append start record when log module first imported
+
+f = open(LOG_FILENAME, 'a')
+f.write("Log started\n")
+f.close()
+
+
 log_file = None
 
 def trace(msg):
     print(str(msg))
 
 
+def get_file_path():
+    return LOG_FILENAME
+
+
+def clear_file():
+    import os
+    try:
+        os.unlink(LOG_FILENAME)
+    except:
+        pass # ignore if can't delete it
+
+    f = open(LOG_FILENAME, 'a')
+    f.write("Log started\n")
+    f.close()
+
+
 def logMessage(msg):
     global log_file
+
+    #TODO: use with open() for better error handling
 
     if log_file == None:
         if not os.path.isfile(LOG_FILENAME):

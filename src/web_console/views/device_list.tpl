@@ -62,6 +62,19 @@ function poll()
   %end
 %end
 </table>
+<BR>
+
+<button type='button' onclick="do_action('/log/download')">download log</button>
+<button type='button' onclick="do_action('/log/clear')">clear log</button>
+<BR><BR>
+
+Recent messages:<BR>
+<textarea rows=4 cols=80>
+%for msg in messages:
+    {{msg}}
+%end
+</textarea>
 </form>
+
 
 </body></html>
