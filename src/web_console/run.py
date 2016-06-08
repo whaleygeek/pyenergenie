@@ -14,6 +14,8 @@ import session
 # If they try to go to any other mode locked page, they get redirected back
 # to the current active mode URL. The URL is stored in a 'mode' session variable.
 
+#TODO: Might put this in session module and push upstream to our bottle cms project
+
 def enforce_mode(m):
     """Redirect to mode handler, if one is active in the session"""
     def inner(*args, **kwargs):
@@ -135,45 +137,6 @@ def do_discovery(s, type):
 
 #----- NON USER FACING HANDLERS -----------------------------------------------
 
-##is_receiving = False
-##
-##@get('/receive_loop')
-##def do_receive_loop():
-##    """A cheat's way of pumping the receive loop, for testing"""
-##    # This will probably be fetched by the javascript on a repeating timer
-##
-##    #TODO: Need to put a failing lock around this to prevent threading issues in web context
-##    #web server is single threaded at the moment, so we won't hit this quite yet.
-##
-##    # Re-entrancy trap
-##    global is_receiving
-##    if not is_receiving:
-##        is_receiving = True
-##        energenie.loop()
-##        is_receiving = False
-##        redirect('/list')
-##    else:
-##        redirect('/list?busy')
-
-
-##@get('/watch_device/<name>')
-##@session.required
-##def do_watch_device(s, name):
-##    c = energenie.registry.get(name)
-##    energenie.fsk_router.list() # to console
-##    # Store device class instance in session store, so we can easily get its readings
-##    s.set("device.%s" % name, c)
-##    return "Watch is now active for %s" % name
-
-
-##@get('/unwatch_device/<name>')
-##@session.required
-##def do_unwatch_device(s, name):
-##    s.delete("device.%s" % name)
-##    energenie.registry.unget(name)
-##    return "Watch is now inactive for %s" % name
-
-
 @get('/switch_device/<name>/<state>')
 @session.required
 def do_switch_device(s, name, state):
@@ -236,24 +199,12 @@ def legacy_learn_off(s, house_code, device_index):
 # A 'mode' is something you can lock the user into
 # trying to go to any other mode locked page, will redirect back here
 
-
-#----- MIHOME DISCOVERY MODE --------------------------------------------------
-
-# NOT DONE YET
-
-@get('/mihome_discovery')
-@session.required
-@enforce_mode
-def do_mihome_discovery(s):
-    set_mode(s) # sets it to here
-    return """
-    Should now be locked into mihome discovery mode
-    <a href='/mode/-'>FINISH</a>
-    """
-    # start listening
-    #   page refreshes every few seconds with any new details
-    #   button to stop listening (but if come back to website, this is the page you get)
-    # stop goes back to list page  (or initiating page in HTTP_REFERRER?)
+#TODO: Always log to csv file, give user a download option
+#TODO: Might pass new messages since last poll in /list update
+#if logging is turned on. Will mean that only those messages received
+#in last poll will be rendered, but that might be good enough to avoid
+#using any ajax or jquery and keep this MVP a really simple building
+#block for others to improve on.
 
 
 #----- LOGGER MODE ------------------------------------------------------------
