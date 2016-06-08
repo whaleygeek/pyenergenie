@@ -6,8 +6,6 @@ DONE - zero install (probably python bottle)
 
   - monitoring interface (basically registry list)
     DONE perhaps a panel that shows all registered devices
-    NOT DOING picture of the raw energenie device (leave to others to innovate)
-    NOT DOING user assigned picture for what is plugged into it? (leave to others to innovate)
     DONE control status (demands)  show switch status (demand only if rx only device)
     DONE click on a device switch to turn it on and off
     DONE monitor status (readings) show all readings as they arrive
@@ -18,14 +16,29 @@ DONE - zero install (probably python bottle)
     DONE logging mode start/stop
     DONE rename device
     DONE delete device
+    DONE legacy learn mode UI (house code and device code)
+    DONE legacy learn mode poll transmit
 
-    TODO legacy learn mode UI (house code and device code)
-    TODO legacy learn mode poll transmit
+
+MORE DESIGN THINKING REQUIRED HERE...
 
     TODO mihome discovery mode back end poll receive
-
+    TODO mihome discovery mode
+      just use auto join accept?
+      might be quite hard to get user to answer a question in web flow?
+      what appears on the UI as devices report data??
 
     TODO log all data to a scrollable window and file
-      (long poll, or tiny bit of ajax?)
-    TODO download/clear the data file
+      how does data get back to webui and get appended to log window?
+      long poll, or tiny bit of ajax?
+      template for the ajax so we don't have to keep writing it all the time?
 
+    TODO download/clear the data file?
+      if also log data to energenie.csv on server
+      button could just download that file
+      another button could just delete that file and clear window at same time?
+
+
+NOT DOING (leave to others to innovate)
+    picture of the raw energenie device (leave to others to innovate)
+    user assigned picture for what is plugged into it? (leave to others to innovate)

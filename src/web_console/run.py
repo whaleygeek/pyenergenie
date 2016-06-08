@@ -172,24 +172,27 @@ def do_delete_device(s, name):
 @get('/legacy_learn')
 @session.required
 def legacy_learn(s):
-    return "legacy learn house code [] device index [] [ON] [OFF]"
-    # put house_code and device_index as parameters
+    return template('legacy_learn')
 
 
-@get('legacy_learn/on/<house_code>/<device_index>')
+@get('/legacy_learn/on/<house_code>/<device_index>')
 @session.required
 def legacy_learn_on(s, house_code, device_index):
-    pass #TODO
-    # send housecode,deviceindex,on (2secs)
-    # redirect to /legacy_learn
+    ##print("legacy(%s %s ON)" % (house_code, device_index))
+    house_code = int(house_code, 16)
+    device = energenie.Devices.MIHO008((house_code, device_index))
+    device.turn_on()
+    return template('legacy_learn', house_code=house_code, device_index=device_index, state='ON')
 
 
-@get('legacy_learn/off/<house_code>/<device_index>')
+@get('/legacy_learn/off/<house_code>/<device_index>')
 @session.required
 def legacy_learn_off(s, house_code, device_index):
-    pass #TODO
-    # send housecode,deviceindex,off (2secs)
-    # redirect to /legacy_learn
+    ##print("legacy(%s %s OFF)" % (house_code, device_index))
+    house_code = int(house_code, 16)
+    device = energenie.Devices.MIHO008((house_code, device_index))
+    device.turn_off()
+    return template('legacy_learn', house_code=house_code, device_index=device_index, state='OFF')
 
 
 #===== MODES ==================================================================
