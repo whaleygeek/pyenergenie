@@ -175,26 +175,73 @@ def do_delete_device(s, name):
     return "deleted device %s" % name
 
 
-#----- MODES ------------------------------------------------------------------
+#===== MODES ==================================================================
 #
 # A 'mode' is something you can lock the user into
 # trying to go to any other mode locked page, will redirect back here
+
+
+#----- LEGACY LEARN MODE ------------------------------------------------------
+# This is a naive client-managed implementation. It pokes the server every few
+# seconds to get it to toggle the switch.
+# A better implementation would be to start a server thread transmitting
+# and provide user with a way to stop that thread via the UI.
+
+#TODO: would this just be better as a non repeating GUI that has
+# house code
+# device index
+# ON OFF buttons??
 
 @get('/legacy_learn')
 @session.required
 @enforce_mode
 def do_legacy_learn(s):
-    set_mode(s) # sets it to here
-    return """
-    Should now be locked into legacy_learn_mode
-    <a href='/mode/-'>FINISH</a>
+    # show UI
+    return """"
+    legacy learn mode UI goes here...<BR>
+    house code [] device index []<BR>
+    <a href="/legacy_learn/run">RUN</a>
     """
-
     # collect house code and device index
     # start broadcasting (new page)
     #   button to stop broadcasting (but if come back to web site, this is page you get)
     # stop goes back to list page  (or initiating page in HTTP_REFERRER?)
 
+
+@get('/legacy_learn/run/<house_code>/<device_index>')
+@session.required
+@enforce_mode
+def do_legacy_learn_run(s, house_code, device_index):
+    set_mode(s) # sets it to here
+    # store house_code and device_index in session 's'
+    return """
+    Should now be locked into legacy_learn_mode
+    <a href='/mode/-'>FINISH</a>
+    """
+    #TODO: turn on
+    #TODO: redirect in 1 sec to turn off
+
+
+@get('/legacy_learn/run/on')
+@session.required
+@enforce_mode
+def do_legacy_learn_run(s):
+    return "should now be ON" #TODO: refresh after 1 sec to OFF
+    #TODO: include FINISH link
+
+
+@get('/legacy_learn/off')
+@session.required
+@enforce_mode
+def do_legacy_learn_run(s):
+    # run the monitor - poke the transmitter with toggle ON/OFF with each refresh
+    return "Should now be OFF" #TODO: refresh after 1 sec to ON
+    #TODO: include FINISH link
+
+
+#----- MIHOME DISCOVERY MODE --------------------------------------------------
+
+# NOT DONE YET
 
 @get('/mihome_discovery')
 @session.required
@@ -210,6 +257,10 @@ def do_mihome_discovery(s):
     #   button to stop listening (but if come back to website, this is the page you get)
     # stop goes back to list page  (or initiating page in HTTP_REFERRER?)
 
+
+#----- LOGGER MODE ------------------------------------------------------------
+
+# NOT DONE YET
 
 @get('/logger')
 @session.required
