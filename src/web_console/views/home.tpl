@@ -4,7 +4,5 @@
 
 <a href="/legacy_learn">Legacy Learning</a><BR>
 
-<a href="/mihome_discovery">MiHome Discovery</a><BR>
-
-<a href="/logger">Logging</a><BR>
+<a href="/logger">[TODO:Logging]</a><BR>
 

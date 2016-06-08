@@ -28,6 +28,17 @@ MORE DESIGN THINKING REQUIRED HERE...
       might be quite hard to get user to answer a question in web flow?
       what appears on the UI as devices report data??
 
+The simplest way to do this, might be to do mihome discovery on the list page,
+as an option that is ON or OFF. It already does a poll_receive, all we need
+to do is to turn the discovery mechanism into auto join. When a new device
+appears, it will just appear in the listing, and the user can delete it if
+they don't want it.
+
+
+
+
+
+
     TODO log all data to a scrollable window and file
       how does data get back to webui and get appended to log window?
       long poll, or tiny bit of ajax?

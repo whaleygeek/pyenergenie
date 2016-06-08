@@ -4,7 +4,7 @@
 function do_action(action)
 {
   document.myform.action=action
-  //form seems to auto-get when you press any button anyway?
+  document.myform.submit()
 }
 
 function poll()
@@ -13,7 +13,7 @@ function poll()
   // it will return a redirect back to here
   function do_loop()
   {
-    document.myform.action = '/receive_loop'
+    // leave action unchanged, just refreshes the page as is
     document.myform.submit()
   }
   t = setTimeout(do_loop, 1000)
@@ -27,6 +27,11 @@ function poll()
 
 <H1>Registered devices</H1>
 
+<button type='button' onclick='do_action("/discovery/none")'>no discovery</button>
+<button type='button' onclick='do_action("/discovery/auto")'>auto discovery</button>
+<button type='button' onclick='do_action("/discovery/autojoin")'>autojoin discovery</button>
+<BR><BR>
+
 <form name="myform" method=get>
 <table border=1 cellspacing=1 cellpadding=5>
 %for name in names:
@@ -35,11 +40,16 @@ function poll()
   <tr>
     <td><a href="/edit/{{name}}">{{name}}</td>
 
-  %if c.can_send():
+  %if c.has_switch():
     <td>
-       <button onclick='do_action("/watch_device/{{name}}")'>watch</button>
-       <button onclick='do_action("/unwatch_device/{{name}}")'>unwatch</button>
+      <button type='button' onclick="do_action('/switch_device/{{name}}/ON')">on</button>
+      <button type='button' onclick="do_action('/switch_device/{{name}}/OFF')">off</button>
     </td>
+  %else:
+    <td>&nbsp;</td>
+  %end
+
+  %if c.can_send():
     <td>
     %if name in readings:
       {{readings[name]}}
@@ -49,18 +59,7 @@ function poll()
     </td>
   %else:
     <td>&nbsp;</td>
-    <td>&nbsp;</td>
   %end
-
-  %if c.has_switch():
-    <td>
-      <button onclick="do_action('/switch_device/{{name}}/ON')">on</button>
-      <button onclick="do_action('/switch_device/{{name}}/OFF')">off</button>
-    </td>
-  %else:
-    <td>&nbsp;</td>
-  %end
-
 %end
 </table>
 </form>

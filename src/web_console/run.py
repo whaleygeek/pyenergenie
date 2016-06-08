@@ -66,10 +66,23 @@ def do_home(s):
     return template('home')
 
 
+is_receiving = False
+
 @get('/list')
 @session.needed
 @enforce_mode
 def do_list(s):
+
+    # first do a receive poll, to process any data that might have come in.
+    # This means all the client has to do is refresh the page to get new data.
+    # Re-entrancy trap, although web server is single threaded at moment
+    global is_receiving
+    if not is_receiving:
+        is_receiving = True
+        energenie.loop() # allow any messages to arrive
+        is_receiving = False
+
+    # Now read out and render the registry
     try:
         registry = s.get("registry")
     except KeyError:
@@ -80,12 +93,20 @@ def do_list(s):
         s.set("registry", registry)
 
     # Get readings for any device that can send
+    # If we are not watching it yet, turn watch on (by using registry.get())
     readings = {}
     for name in registry.names():
-        c = energenie.registry.peek(name)
-        if c.can_send():
-            r = c.get_readings_summary()
-            readings[name] = r
+        # are we watching the device?
+        if not s.has_key("device.%s" % name):
+            # no, so put a watch on it
+            d = registry.get(name)
+            s.set("device.%s" % name, d)
+        else:
+            # yes, see if it has any readings
+            c = energenie.registry.peek(name)
+            if c.can_send():
+                r = c.get_readings_summary()
+                readings[name] = r
 
     return template("device_list", names=registry.names(), readings=readings)
 
@@ -97,45 +118,60 @@ def do_edit(s, name):
     return template("edit", name=name)
 
 
+@get('/discovery/<type>')
+@session.required
+def do_discovery(s, type):
+
+    if type == "auto":
+        energenie.discovery_auto()
+    elif type == "autojoin":
+        energenie.discovery_autojoin()
+    else:
+        energenie.discovery_none()
+        type = "none"
+
+    return "Discovery changed to %s" % type
+
+
 #----- NON USER FACING HANDLERS -----------------------------------------------
 
-is_receiving = False
-
-@get('/receive_loop')
-def do_receive_loop():
-    """A cheat's way of pumping the receive loop, for testing"""
-    # This will probably be fetched by the javascript on a repeating timer
-
-    #TODO: Need to put a failing lock around this to prevent threading issues in web context
-    #web server is single threaded at the moment, so we won't hit this quite yet.
-
-    # Re-entrancy trap
-    global is_receiving
-    if not is_receiving:
-        is_receiving = True
-        energenie.loop()
-        is_receiving = False
-        redirect('/list')
-    else:
-        redirect('/list?busy')
-
-
-@get('/watch_device/<name>')
-@session.required
-def do_watch_device(s, name):
-    c = energenie.registry.get(name)
-    energenie.fsk_router.list() # to console
-    # Store device class instance in session store, so we can easily get its readings
-    s.set("device.%s" % name, c)
-    return "Watch is now active for %s" % name
+##is_receiving = False
+##
+##@get('/receive_loop')
+##def do_receive_loop():
+##    """A cheat's way of pumping the receive loop, for testing"""
+##    # This will probably be fetched by the javascript on a repeating timer
+##
+##    #TODO: Need to put a failing lock around this to prevent threading issues in web context
+##    #web server is single threaded at the moment, so we won't hit this quite yet.
+##
+##    # Re-entrancy trap
+##    global is_receiving
+##    if not is_receiving:
+##        is_receiving = True
+##        energenie.loop()
+##        is_receiving = False
+##        redirect('/list')
+##    else:
+##        redirect('/list?busy')
 
 
-@get('/unwatch_device/<name>')
-@session.required
-def do_unwatch_device(s, name):
-    s.delete("device.%s" % name)
-    energenie.registry.unget(name)
-    return "Watch is now inactive for %s" % name
+##@get('/watch_device/<name>')
+##@session.required
+##def do_watch_device(s, name):
+##    c = energenie.registry.get(name)
+##    energenie.fsk_router.list() # to console
+##    # Store device class instance in session store, so we can easily get its readings
+##    s.set("device.%s" % name, c)
+##    return "Watch is now active for %s" % name
+
+
+##@get('/unwatch_device/<name>')
+##@session.required
+##def do_unwatch_device(s, name):
+##    s.delete("device.%s" % name)
+##    energenie.registry.unget(name)
+##    return "Watch is now inactive for %s" % name
 
 
 @get('/switch_device/<name>/<state>')
