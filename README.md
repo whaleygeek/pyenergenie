@@ -154,7 +154,8 @@ discover_mihome.py        a discovery example, there are 4 standard discovery be
 mihome_energy_monitor.py  a simple logger that logs all energy messages to energenie.csv
 ```
 
-8) Gotcha's
+Gotcha's
+====
 
 Please note that there are two different radio standards in use in this library. 
 There is an OOK (On Off Keying) based system that is used by the original legacy green-button sockets.
@@ -170,7 +171,8 @@ with that.
 As a general rule, if a device is receive-only, it uses the OOK legacy protocol.
 If a device has any transmit features, it uses the MiHome FSK protocol.
 
-9) Future work
+Future work
+====
 
 For details about future plans and work, please see the github issues log here:
 
