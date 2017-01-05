@@ -171,6 +171,9 @@ with that.
 As a general rule, if a device is receive-only, it uses the OOK legacy protocol.
 If a device has any transmit features, it uses the MiHome FSK protocol.
 
+There is a full list of devices in the energenie/devices.py file along with their 
+OOK or FSK mode. OOK means Legacy Learn, FSK means MiHome Discovery.
+
 Future work
 ====
 
