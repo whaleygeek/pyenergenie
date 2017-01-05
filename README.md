@@ -154,8 +154,23 @@ discover_mihome.py        a discovery example, there are 4 standard discovery be
 mihome_energy_monitor.py  a simple logger that logs all energy messages to energenie.csv
 ```
 
+8. Gotcha's
 
-8. Future work
+Please note that there are two different radio standards in use in this library. 
+There is an OOK (On Off Keying) based system that is used by the original legacy green-button sockets.
+There is also an FSK (Frequency Shift Keying) based system used by the MiHome range.
+
+This library supports both. However, please note that some Energenie products are
+branded as the MiHome range, but are internally a legacy device. This means that you will
+need to use the Legacy Learn feature with those, instead of the MiHome discovery.
+
+The MIHO002 for example is an OOK device, so you need to use the legacy learn mode
+with that. 
+
+As a general rule, if a device is receive-only, it uses the OOK legacy protocol.
+If a device has any transmit features, it uses the MiHome FSK protocol.
+
+9. Future work
 
 For details about future plans and work, please see the github issues log here:
 
