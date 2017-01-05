@@ -79,15 +79,15 @@ and control).
 Getting Going
 ====
 
-1. Plug in your ENER314-RT-VER01 board from Energenie onto the 26 pin or 40 pin connector of
+1) Plug in your ENER314-RT-VER01 board from Energenie onto the 26 pin or 40 pin connector of
 your Raspberry Pi. This is tested on Raspberry Pi B, B+ B2 and 2B, 3 and PiZero. There is
 no reason why it should not work on the A and A+ but it hasn't been specially tested on
 those combinations yet.
 
-2. Press the CLONE OR DOWNLOAD button to the right of this page, and choose the
+2) Press the CLONE OR DOWNLOAD button to the right of this page, and choose the
 DOWNLOAD ZIP option.
 
-3. unzip the software (from a terminal prompt, e.g. LXTerminal)
+3) unzip the software (from a terminal prompt, e.g. LXTerminal)
 
 ```
 unzip pyenergenie-master.zip
@@ -95,7 +95,7 @@ cd pyenergenie-master
 cd src
 ```
 
-4. If you have legacy green button devices, run the setup_tool to learn those devices
+4) If you have legacy green button devices, run the setup_tool to learn those devices
 to your code
 
 
@@ -119,7 +119,7 @@ a learn mode for RF hand remotes in a later release, you can't learn their codes
 having special diagnostics equipment to hand).
 
 
-5. If you have a MiHome device, run the setup_tool to learn those devices
+5) If you have a MiHome device, run the setup_tool to learn those devices
 
 
 ```
@@ -132,7 +132,7 @@ when it says 'remember device' - the device is now in the registry.kvs file
 and can be used in all other demo programs easily.
 
 
-6. Try the other demo programs, the simplest one to start using and modifying
+6) Try the other demo programs, the simplest one to start using and modifying
 is control_any_auto.py as it shows how to refer to devices in your registry
 by a simple variable name, and you can switch them on and off in a device
 agnostic way (all switchable devices have a turn_on and turn_off function).
@@ -141,7 +141,7 @@ into the registry (or hand coding them in there) and then just referring to them
 by name in your python program.
 
 
-7. Try the other demo programs
+7) Try the other demo programs
 
 These other python programs show off some other features of the Energenie Python
 library:
@@ -154,7 +154,7 @@ discover_mihome.py        a discovery example, there are 4 standard discovery be
 mihome_energy_monitor.py  a simple logger that logs all energy messages to energenie.csv
 ```
 
-8. Gotcha's
+8) Gotcha's
 
 Please note that there are two different radio standards in use in this library. 
 There is an OOK (On Off Keying) based system that is used by the original legacy green-button sockets.
@@ -170,7 +170,7 @@ with that.
 As a general rule, if a device is receive-only, it uses the OOK legacy protocol.
 If a device has any transmit features, it uses the MiHome FSK protocol.
 
-9. Future work
+9) Future work
 
 For details about future plans and work, please see the github issues log here:
 
@@ -181,4 +181,4 @@ David Whale
 
 @whaleygeek
 
-June 2016
+January 2017
