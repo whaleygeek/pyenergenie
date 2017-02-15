@@ -73,11 +73,14 @@ void gpio_init()
    gpio_base = peri_base + GPIO_BASE_OFFSET;
 
 
-   /* open /dev/mem */
-   if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) 
+   /* open /dev/gpiomem (preferably) or /dev/mem */
+   if ((mem_fd = open("/dev/gpiomem", O_RDWR|O_SYNC) ) < 0)
    {
-      printf("can't open /dev/mem \n");
-      exit(-1); //TODO return a result code
+      if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0)
+      {
+         printf("can't open /dev/gpiomem or /dev/mem \n");
+         exit(-1); //TODO return a result code
+      }
    }
 
    /* mmap GPIO */
