@@ -62,6 +62,7 @@ PRODUCTID_MIHO033                 = 0x0D    # FSK open sensor
 ##PRODUCTID_MIHO039 2-gang socket Bundle black nickel
 ##PRODUCTID_MIHO040 2-gang socket Bundle chrome
 ##PRODUCTID_MIHO041 2-gang socket Bundle stainless steel
+##PRODUCTID_MIHO069 Wall thermostat
 
 # Default keys for OpenThings encryption and decryption
 CRYPT_PID                        = 242
