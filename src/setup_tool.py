@@ -338,13 +338,19 @@ def setup_tool():
             handle_choice(MAIN_MENU, choice)
 
 
-if __name__ == "__main__":
+def main():
+    """Main entry point"""
 
     energenie.init()
     try:
         setup_tool()
     finally:
         energenie.finished()
+
+
+if __name__ == "__main__":
+
+    main()
 
 
 # END
