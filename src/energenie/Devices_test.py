@@ -25,16 +25,19 @@ class TestDevices(unittest.TestCase):
         tv   = Devices.DeviceFactory.get_device_from_name("GreenButton", device_id=(0xC8C8C, 1))
         fan  = Devices.DeviceFactory.get_device_from_name("AdaptorPlus", device_id=0x68b)
         xbox = Devices.DeviceFactory.get_device_from_id(Devices.PRODUCTID_MIHO005, device_id=10)
+        digoo = Devices.DeviceFactory.get_device_from_name("Digoo", device_id=(0xC8C8C))
 
         print("ON")
         tv.turn_on()
         fan.turn_off()
         xbox.turn_off()
+        digoo.turn_off()
 
         print("OFF")
         tv.turn_off()
         fan.turn_on()
         xbox.turn_on()
+        digoo.turn_on()
 
     @test_1
     def test_rx_seq(self):
