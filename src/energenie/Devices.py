@@ -16,7 +16,7 @@ except ImportError:
 # This level of indirection allows easy mocking for testing
 ook_interface = OnAir.TwoBitAirInterface()
 fsk_interface = OnAir.OpenThingsAirInterface()
-
+ev1527_interface = OnAir.EV1527Interface()
 
 MFRID_ENERGENIE                  = 0x04
 MFRID                            = MFRID_ENERGENIE
@@ -488,6 +488,85 @@ class MiHomeDevice(EnergenieDevice):
             d = self.device_id
             print("send_message(mock[%s %s %s]):%s" % (str(m), str(p), str(d), payload))
 
+class GenericRemote(Device):
+    DEFAULT_HOUSE_ADDRESS = 0x6CC9D0
+
+    def __init__(self, device_id=None, air_interface=None):
+        if air_interface == None:
+            air_interface == ev1527_interface
+        if device_id == None:
+            device_id = (GenericRemote.DEFAULT_HOUSE_ADDRESS, 1)
+        elif type(device_id) == int:
+            device_id = (GenericRemote.DEFAULT_HOUSE_ADDRESS, device_id, device_id)
+        elif type(device_id) == tuple and device_id[0] ==  None:
+            device_id = (GenericRemote.DEFAULT_HOUSE_ADDRESS, device_id[1], device_id[2])
+
+        EnergenieDevice.__init__(self, device_id, ev1527_interface)
+
+    def get_device_id(self): # -> id:int
+        return self.device_id
+
+    def __repr__(self):
+        return "GenericRemote(%s)" % str(self.device_id)
+
+    def get_config(self):
+        """Get the persistable config, enough to reconstruct this class from a factory"""
+        return {
+            "type":            self.__class__.__name__,
+            "device_id":       self.device_id
+        }
+
+    def send_message(self, payload):
+        if self.air_interface != None:
+            self.air_interface.send(payload, radio_config=self.radio_config)
+        else:
+            d = self.device_id
+            print("send_message(mock[%s]):%s" % (str(d), payload))
+
+class GenericRemoteSwitch(GenericRemote):
+    def __init__(self, device_id=None, air_interface=None):
+       GenericRemote.__init__(self, device_id, air_interface);
+       self.capabilities.switch = True
+
+    def __repr__(self):
+        return "GenericRemoteSwitch(%s)" % str(self.device_id)
+
+    def turn_on(self):
+        #TODO: should this be here, or in LegacyDevice??
+        #addressing should probably be in LegacyDevice
+        #child devices might interpret the command differently
+        payload = {
+            "house_address":  self.device_id[0],
+            "cmd":   self.device_id[1],
+        }
+        self.send_message(payload)
+
+    def turn_off(self):
+        #TODO: should this be here, or in LegacyDevice???
+        #addressing should probably be in LegacyDevice
+        #child devices might interpret the command differently
+        payload = {
+            "house_address":  self.device_id[0],
+            "cmd":   self.device_id[2],
+        }
+        self.send_message(payload)
+
+class DigooDevice(GenericRemoteSwitch):
+
+    DEFAULT_HOUSE_ADDRESS = 0x6CC9D0
+
+    def __init__(self, device_id=None, air_interface=None):
+        if device_id == None:
+            device_id = (DigooDevice.DEFAULT_HOUSE_ADDRESS, 1, 2)
+        elif type(device_id) == int:
+            device_id = (DigooDevice.DEFAULT_HOUSE_ADDRESS, 1, 2)
+        elif type(device_id) == tuple and device_id[0] ==  None:
+            device_id = (DigooDevice.DEFAULT_HOUSE_ADDRESS, device_id[1], device_id[2])
+
+        GenericRemoteSwitch.__init__(self, device_id, air_interface)
+
+    def __repr__(self):
+        return "DigooDevice(%s)" % str(self.device_id)
 
 #------------------------------------------------------------------------------
 
@@ -1062,6 +1141,7 @@ class DeviceFactory():
         "MIHO026":     MIHO026,    "MiHomeLightSteel":  MIHO026, # OOK(rx)
         "MIHO032":     MIHO032,    "MotionSensor":      MIHO032, # FSK(tx)
         "MIHO033":     MIHO033,    "OpenSensor":        MIHO033, # FSK(tx)
+        "Digoo":      DigooRemote, "DigooRemote":       DigooDevice,
     }
 
     #TODO: These are MiHome devices only, but might add in mfrid prefix too
