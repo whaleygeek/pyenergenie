@@ -553,13 +553,20 @@ class GenericRemoteSwitch(GenericRemote):
 
 class DigooDevice(GenericRemoteSwitch):
 
+    # Button 1: 0x01
+    # Button 2: 0x02
+    # Button 3: 0x04
+    # Button 4: 0x08
+
     DEFAULT_HOUSE_ADDRESS = 0x6CC9D0
+    ARM = 0x01
+    DISARM = 0x02
 
     def __init__(self, device_id=None, air_interface=None):
         if device_id == None:
-            device_id = (DigooDevice.DEFAULT_HOUSE_ADDRESS, 1, 2)
+            device_id = (DigooDevice.DEFAULT_HOUSE_ADDRESS, ARM, DISARM)
         elif type(device_id) == int:
-            device_id = (DigooDevice.DEFAULT_HOUSE_ADDRESS, 1, 2)
+            device_id = (DigooDevice.DEFAULT_HOUSE_ADDRESS, ARM, DISARM)
         elif type(device_id) == tuple and device_id[0] ==  None:
             device_id = (DigooDevice.DEFAULT_HOUSE_ADDRESS, device_id[1], device_id[2])
 
