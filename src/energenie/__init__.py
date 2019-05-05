@@ -8,6 +8,7 @@
 
 import time
 import os
+import sys
 
 try:
     # Python 2
