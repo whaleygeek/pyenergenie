@@ -3,4 +3,4 @@ build/
 dist/
 pyenergenie.egg-info/
 venv/
-
+*.pyc

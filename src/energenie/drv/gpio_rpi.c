@@ -1,4 +1,6 @@
 /* gpio.c  D.J.Whale  8/07/2014
+ *
+ * gpiomem fix Achronite, Jan 2019
  * 
  * A very simple interface to the GPIO port on the Raspberry Pi.
  */
@@ -74,10 +76,14 @@ void gpio_init()
 
 
    /* open /dev/mem */
-   if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) 
+   /* PTG: changed to use gpiomem first to avoid root */
+   if ((mem_fd = open("/dev/gpiomem", O_RDWR|O_SYNC) ) < 0) 
    {
-      printf("can't open /dev/mem \n");
-      exit(-1); //TODO return a result code
+      if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) 
+      {
+         printf("can't open /dev/gpiomem or /dev/mem\n");
+         exit(-1); //TODO return a result code
+      }
    }
 
    /* mmap GPIO */

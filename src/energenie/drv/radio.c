@@ -105,9 +105,11 @@ TODO: Harden up the payload receiver
 #define SCLK      11
 #define MOSI      10
 #define MISO      9
+#define TSETTLE (1)     /* us settle */
+#define THOLD   (1)     /* us hold */
+#define TFREQ   (1)     /* us half clock */
 
-SPI_CONFIG radioConfig = {CS, SCLK, MOSI, MISO, SPI_SPOL0, SPI_CPOL0, SPI_CPHA0};
-                          //TSETTLE, THOLD, TFREQ};
+SPI_CONFIG radioConfig = {CS, SCLK, MOSI, MISO, SPI_SPOL0, SPI_CPOL0, SPI_CPHA0, TSETTLE, THOLD, TFREQ};
 
 
 /***** LOCAL FUNCTION PROTOTYPES *****/
@@ -269,9 +271,11 @@ void radio_init(void)
     gpio_setout(RESET);
     gpio_low(RESET);
     gpio_setout(LED_RED);
-    gpio_low(LED_RED);
     gpio_setout(LED_GREEN);
-    gpio_low(LED_GREEN);
+
+    // flash both LEDs to show initialise working
+    gpio_high(LED_GREEN);
+    gpio_high(LED_RED);
 
     TRACE_OUTS("reset...\n");
     radio_reset();
@@ -291,6 +295,10 @@ void radio_init(void)
     }
 
     radio_standby();
+
+    // switch off both LEDs
+    gpio_low(LED_GREEN);
+    gpio_low(LED_RED);
 }
 
 
@@ -518,6 +526,7 @@ void radio_finished(void)
 {
     TRACE_OUTS("radio_finished\n");
     //spi_finished();
+    radio_standby();
     gpio_finished();
 }
 

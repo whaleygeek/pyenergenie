@@ -8,6 +8,7 @@
 
 import time
 import os
+import sys
 
 try:
     # Python 2
@@ -46,8 +47,9 @@ def init():
     registry.set_fsk_router(fsk_router)
     ##registry.set_ook_router(ook_router
 
-    if os.path.isfile(registry.DEFAULT_FILENAME):
-        registry.load_from(registry.DEFAULT_FILENAME)
+    path = os.path.join(sys.path[0], registry.DEFAULT_FILENAME)
+    if os.path.isfile(path):
+        registry.load_from(path)
         print("loaded registry from file")
         registry.list()
         fsk_router.list()
