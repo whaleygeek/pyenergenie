@@ -24,7 +24,10 @@ setup(
         'Programming Language :: Python :: 3.6'
     ],
     packages=['pyenergenie', 'pyenergenie.energenie'],
-    package_dir={'pyenergenie': 'src/', 'energenie': 'src/energenie/'},
+    package_dir={
+        'pyenergenie': 'src/', 
+        'pyenergenie.energenie': 'src/energenie/'
+    },
     install_requires=requirements,
     package_data={
         'pyenergenie': [
