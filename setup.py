@@ -1,17 +1,16 @@
-try: 
-    # for pip >= 10
-    from pip._internal.req import parse_requirements
-except ImportError: 
-    # for pip <= 9.0.3
-    from pip.req import parse_requirements
+import os
+
 from setuptools import setup
 
+here = lambda *a: os.path.join(os.path.dirname(__file__), *a)
+
 # read the long description
-with open('README.md', 'r') as readme_file:
+with open(here('README.md'), 'r') as readme_file:
     long_description = readme_file.read()
 
 # read the requirements.txt
-requirements = [str(r.req) for r in parse_requirements('requirements.txt', session='hack')]
+with open(here('requirements.txt'), 'r') as requirements_file:
+    requirements = [x.strip() for x in requirements_file.readlines()]
 
 setup(
     name='pyenergenie',
