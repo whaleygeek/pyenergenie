@@ -6,9 +6,17 @@
 # Any device that has a switch, it toggles it every 2 seconds.
 # Any device that offers a power reading, it displays it.
 
-import energenie
-import Logger
 import time
+
+try:
+    # Python 3
+    from . import energenie
+    from . import Logger
+except ImportError:
+    # Python 2
+    import energenie
+    import Logger
+
 
 APP_DELAY    = 2
 switch_state = False

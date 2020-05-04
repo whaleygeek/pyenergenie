@@ -4,7 +4,12 @@
 # However, this is an example of how to do your own discovery using
 # one of the built in discovery design patterns.
 
-import energenie
+try:
+    # Python 3
+    from . import energenie
+except ImportError:
+    # Python 2
+    import energenie
 
 # You could also use the standard energenie.ask callback instead if you want
 # as that does exactly the same thing

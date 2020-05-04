@@ -4,7 +4,14 @@
 # Shows how to address sockets directly without using the registry.
 
 import time
-import energenie
+
+try:
+    # Python 3
+    from . import energenie
+except ImportError:
+    # Python 2
+    import energenie
+
 
 APP_DELAY = 1
 

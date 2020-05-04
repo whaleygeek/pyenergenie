@@ -2,9 +2,15 @@
 #
 # A simple logger - logs to file.
 
-
-from energenie import OpenThings
 import os, time
+
+try:
+    # Python 3
+    from .energenie import OpenThings
+except ImportError:
+    # Python 2
+    from energenie import OpenThings
+
 
 LOG_FILENAME = "energenie.csv"
 HEADINGS = 'timestamp,mfrid,prodid,sensorid,flags,switch,voltage,freq,reactive,real,apparent,current,temperature'

@@ -1,15 +1,4 @@
 try:
-    # Python 2
-    import energenie
-    import cleanup_GPIO
-    import control_any_auto
-    import control_any_noreg
-    import discover_miihome
-    import Logger
-    import miihome_energy_monitor
-    import setup_tool
-    import Timer
-except ImportError:
     # Python 3
     from . import energenie
     from . import cleanup_GPIO
@@ -20,3 +9,14 @@ except ImportError:
     from . import mihome_energy_monitor
     from . import setup_tool
     from . import Timer
+except ImportError:
+    # Python 2
+    import energenie
+    import cleanup_GPIO
+    import control_any_auto
+    import control_any_noreg
+    import discover_miihome
+    import Logger
+    import miihome_energy_monitor
+    import setup_tool
+    import Timer

@@ -9,8 +9,13 @@
 
 
 import time
-import energenie
-##from energenie.lifecycle import *
+
+try:
+    # Python 3
+    from . import energenie
+except ImportError:
+    # Python 2
+    import energenie
 
 
 #===== GLOBALS =====
