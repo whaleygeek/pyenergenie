@@ -1,9 +1,9 @@
 import energenie
 import time
 
-BURST_SIZE = 5  # inner times * .027s (about 27ms per burst)
-BURST_COUNT = 5  # outer times
-
+BURST_SIZE = 25  # inner times * .027s (about 27ms per burst)
+BURST_COUNT = 1  # outer times
+HOLDOFF = 2.5
 
 class MYDEV(energenie.Devices.ENER002):
     def __init__(self, device_id, air_interface=None):
@@ -47,7 +47,7 @@ print("done")
 
 try:
     while True:
-        cycle(4)
+        cycle(HOLDOFF)
 
 finally:
     print("cleanup...")
