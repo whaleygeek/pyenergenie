@@ -7,6 +7,9 @@
 #   and the demo apps can just refer to object variables names
 #   from an assumed auto_create registry, that is built using this setup tool.
 
+import sys
+if sys.hexversion < 0x03000000:
+    exit("Use python3")
 
 import time
 import energenie
@@ -340,7 +343,12 @@ def setup_tool():
 
 if __name__ == "__main__":
 
+    print("PYENERGENIE setup tool")
+    print("If hangs here, please disable hardware SPI in PREFERENCES/CONFIGURATION")
+
     energenie.init()
+    print("Great, it didn't hang!")
+
     try:
         setup_tool()
     finally:
