@@ -345,6 +345,7 @@ if __name__ == "__main__":
 
     print("PYENERGENIE setup tool")
     print("If hangs here, please disable hardware SPI in PREFERENCES/CONFIGURATION")
+    print("If you get a permissions error, run as: sudo python3 setup_tool.py")
 
     energenie.init()
     print("Great, it didn't hang!")
