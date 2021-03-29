@@ -51,6 +51,11 @@ try:
 
 finally:
     print("cleanup...")
-    energenie.finished()
-    print("done")
+    try:
+        energenie.finished()
+    finally:
+        try:
+            energenie.cleanup()  # forceably clean up GPIO lines
+        finally:
+            print("done")
 

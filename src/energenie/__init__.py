@@ -95,6 +95,25 @@ def finished():
     """Cleanly close the Energenie system when finished"""
     radio.finished()
 
+def cleanup():
+    """Cleanup the GPIO pin states in case the library crashed"""
+    # Note, we don't do this as part of finished() but this is a utility
+    # you can call to cleanup the pins as part of an exception or finally.
+    import RPi.GPIO as GPIO
+
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
+
+    GPIO.setup(27, GPIO.IN)  # Green LED
+    GPIO.setup(22, GPIO.IN)  # Red LED
+    GPIO.setup(7, GPIO.IN)  # CS
+    GPIO.setup(8, GPIO.IN)  # CS
+    GPIO.setup(11, GPIO.IN)  # SCLK
+    GPIO.setup(10, GPIO.IN)  # MOSI
+    GPIO.setup(9, GPIO.IN)  # MISO
+    GPIO.setup(25, GPIO.IN)  # RESET
+
+    GPIO.cleanup()
 
 
 def discovery_none():
