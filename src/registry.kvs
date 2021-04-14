@@ -30,6 +30,10 @@ IGN light_white
 type=MIHO008
 device_id=[0x6C6C6, 1]
 
+ADD dimmer
+type=MIHO010
+device_id=[0x6C6C6, 0]
+
 IGN radiator
 type=MIHO013
 device_id=0000
