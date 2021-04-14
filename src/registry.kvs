@@ -1,9 +1,9 @@
 ADD 2gleft
-type=ENER002
+type=MIHO009
 device_id=[0x123456, 1]
 
 ADD 2gright
-type=ENER002
+type=MIHO009
 device_id=[0x123456, 2]
 
 IGN fan

@@ -535,17 +535,29 @@ class OOKSwitch(LegacyDevice):
         else:
             self.turn_off()
 
-
 class ENER002(OOKSwitch):
     """A green button switch"""
     def __repr__(self):
         return "ENER002(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
 
-
 class MIHO002(OOKSwitch):
     """A purple button MiHome switch"""
     def __repr__(self):
         return "MIHO002(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
+
+class MIHO009(OOKSwitch):
+    """Half of a Double Light Switch"""
+    BURST_SIZE = 22  # inter times * 27ms per burst
+    BURST_COUNT = 2  # outer times
+    HOLDOFF = 3  # seconds
+
+    def __init__(self, device_id, air_interface=None):
+        OOKSwitch.__init__(self, device_id, air_interface)
+        self.radio_config.inner_times = self.BURST_SIZE
+        self.radio_config.outer_times = self.BURST_COUNT
+
+    def __repr__(self):
+        return "MIHO009(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
 
 class MIHO014(OOKSwitch):
     """Energenie 3kW switchable relay"""
@@ -1161,6 +1173,7 @@ class DeviceFactory():
         "MIHO005":     MIHO005,    "AdaptorPlus":                      MIHO005, # FSK(tx,rx)
         "MIHO006":     MIHO006,    "HomeMonitor":                      MIHO006, # FSK(tx)
         "MIHO008":     MIHO008,    "MiHomeLightWhite":                 MIHO008, # OOK(rx)
+        "MIHO009":     MIHO009,    "MiHomeDoubleLightSwitch":          MIHO009, # OOK(rx)
         "MIHO010":     MIHO010,    "MiHomeLightWhiteDimmer":           MIHO010, # OOK(rx)
         "MIHO013":     MIHO013,    "eTRV":                             MIHO013, # FSK(tx,rx)
         "MIHO014":     MIHO014,    "3kWRelay":                         MIHO014, # OOK(rx)
