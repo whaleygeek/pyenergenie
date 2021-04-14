@@ -2,7 +2,6 @@
 #
 # Information about specific Energenie devices
 # This table is mostly reverse-engineered from various websites and web catalogues.
-from __builtin__ import True
 
 ##from lifecycle import *
 try:
