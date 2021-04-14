@@ -378,25 +378,31 @@ def setup_tool():
             print("\n")
             handle_choice(MAIN_MENU, choice)
 
-
-if __name__ == "__main__":
-
+def main():
     print("PYENERGENIE setup tool")
-    print("If hangs here:")
-    print("1. please disable hardware SPI in PREFERENCES/CONFIGURATION")
-    print("2. sudo python cleanup_GPIO.py (and try again)")
-    print("")
-    print("If you get a permissions error, run as: sudo python3 setup_tool.py")
+    print("If it hangs here,")
+    print("please disable hardware SPI in PREFERENCES/CONFIGURATION")
     print()
 
+    print("init...")
     energenie.init()
-    print("Great, it didn't hang!")
+    print("done")
 
     try:
         setup_tool()
+    
     finally:
-        energenie.finished()
+        print("cleanup...")
+        try:
+            energenie.finished()
+        finally:
+            try:
+                energenie.cleanup()  # forceably clean up GPIO lines
+            finally:
+                print("done")
 
+if __name__ == "__main__":
+    main()
 
 # END
 

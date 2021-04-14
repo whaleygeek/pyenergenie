@@ -68,13 +68,16 @@ def cycle(delay):
     rnd_delay()
 
 def test_loop():
+    while True:
+        cycle(HOLDOFF)
+
+def main():
     print("init...")
     energenie.init()
     print("done")
 
     try:
-        while True:
-            cycle(HOLDOFF)
+        test_loop()
 
     finally:
         print("cleanup...")
@@ -87,6 +90,6 @@ def test_loop():
                 print("done")
 
 if __name__ == "__main__":
-    test_loop()
+    main()
 
 
