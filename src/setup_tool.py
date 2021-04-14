@@ -169,11 +169,49 @@ def do_switch_device():
     def off():
         print("Turning off")
         device.turn_off()
+    
+    def brightness_20():
+        print("Brightness 20%")
+        device.brightness(20)
 
-    MENU = [
-        ("on",  on),
-        ("off", off)
-    ]
+    def brightness_30():
+        print("Brightness 30%")
+        device.brightness(30)
+
+    def brightness_40():
+        print("Brightness 40%")
+        device.brightness(40)
+
+    def brightness_60():
+        print("Brightness 60%")
+        device.brightness(60)
+
+    def brightness_80():
+        print("Brightness 80%")
+        device.brightness(80)
+
+    def brightness_100():
+        print("Brightness 100%")
+        device.brightness(100)
+
+    # Tested For MIH0010
+    dimmerDevices = ["MIHO010", "MIHO075", "MIHO076", "MIHO77", "MIHO87"]
+    if str(device).startswith(tuple(dimmerDevices)):
+        MENU = [
+            ("on (will remember last brightness setting)", on),
+            ("off", off),
+            ("20% Brightness", brightness_20),
+            ("30% Brightness", brightness_30),
+            ("40% Brightness", brightness_40),
+            ("60% Brightness", brightness_60),
+            ("80% Brightness", brightness_80),
+            ("100% Brightness", brightness_100)
+        ]
+    else:
+        MENU = [
+            ("on",  on),
+            ("off", off)
+        ]
 
     try:
         while not quit:
