@@ -116,7 +116,7 @@ having special diagnostics equipment to hand).
 5) If you have a MiHome device, run the setup_tool to learn those devices
 
 ```
-sudo python setup_tool.py
+./setup_tool
 option 2. mihome discovery mode
 ```
 
