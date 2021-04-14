@@ -24,6 +24,9 @@ RIGHT = energenie.Devices.MIHO009((0x123456, 2))
 RIGHT.radio_config.inner_times = BURST_SIZE
 RIGHT.radio_config.outer_times = BURST_COUNT
 
+# Another device, to test inter-device interference (intentionaly same preamble)
+OTHER = energenie.Devices.ENER002((0x123456, 4))
+
 def do_left(f):
     """Put left side into a specific state"""
     print("LEFT:%d" % f)
@@ -51,20 +54,35 @@ def rnd_delay():
     print("rnd_delay:%f" % d)
     time.sleep(d)
 
+interferer_on = False
+def interfere(delay):
+    global interferer_on
+    do_until = time.time() + delay
+    time.sleep(0.5) # gap to allow OTHER to work
+    while time.time() < do_until:
+        if not interferer_on:
+            print("OTHER on")
+            OTHER.turn_on()
+        else:
+            print("OTHER off")
+            OTHER.turn_off()
+    interferer_on = not interferer_on
+
+
 def cycle(delay):
     """"Do one cycle test of on/off of both switch sides"""
     do_left(1)
-    time.sleep(delay)
+    interfere(delay)
     rnd_delay()
     do_right(1)
-    time.sleep(delay)
+    interfere(delay)
     rnd_delay()
 
     do_left(0)
-    time.sleep(delay)
+    interfere(delay)
     rnd_delay()
     do_right(0)
-    time.sleep(delay)
+    interfere(delay)
     rnd_delay()
 
 def test_loop():
