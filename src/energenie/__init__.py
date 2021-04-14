@@ -147,7 +147,7 @@ def ask(address, message):
             print(message)
         y = raw_input(MSG)
 
-    except AttributeError:
+    except NameError:
         y = input(MSG)
 
     if y == "": return True
