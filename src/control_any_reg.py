@@ -7,7 +7,14 @@
 # You should first run setup_tool.py and join some sockets
 
 import time
-import energenie
+
+try:
+    # Python 3
+    from . import energenie
+except ImportError:
+    # Python 2
+    import energenie
+
 
 APP_DELAY = 2 # number of seconds to toggle the socket switches
 

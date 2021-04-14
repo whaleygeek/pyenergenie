@@ -12,8 +12,13 @@ if sys.hexversion < 0x03000000:
     exit("Use python3")
 
 import time
-import energenie
-##from energenie.lifecycle import *
+
+try:
+    # Python 3
+    from . import energenie
+except ImportError:
+    # Python 2
+    import energenie
 
 
 #===== GLOBALS =====
@@ -379,6 +384,7 @@ def setup_tool():
             handle_choice(MAIN_MENU, choice)
 
 def main():
+    """Main entry point"""
     print("PYENERGENIE setup tool")
     print("If it hangs here,")
     print("please disable hardware SPI in PREFERENCES/CONFIGURATION")
