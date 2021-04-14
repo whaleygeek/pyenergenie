@@ -170,6 +170,13 @@ For support for EV1527 remote from Digoo (DG-HAMA/HOSA) there is support
 for a generic EV1527 based switch here:
 [EV1527](https://github.com/steadramon/pyenergenie)
 
+There is a NodeRed package, which was based on this work and kindly provided by 
+another user. The package is well written and well maintained, and is a thorough
+and representative implementation of all the features you would get from this
+Python library.
+[node-red-contrib-energenie-ener314rt](https://flows.nodered.org/node/node-red-contrib-energenie-ener314rt)
+
+
 ## Current focus
 
 I am currently supporting more devices gradually, some of these are by contributions
