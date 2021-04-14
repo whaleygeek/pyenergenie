@@ -3,7 +3,9 @@
 # Put all used Raspberry Pi GPIO pins into an input state. Useful to recover from a crash
 
 import RPi.GPIO as GPIO
+
 GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
 
 GPIO.setup(27, GPIO.IN) # Green LED
 GPIO.setup(22, GPIO.IN) # Red LED

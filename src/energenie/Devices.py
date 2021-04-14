@@ -30,7 +30,7 @@ PRODUCTID_MIHO006                = 0x05   #         House Monitor
 ##PRODUCTID_MIHO007               = 0x0?   #         Double Wall Socket White
 ##PRODUCTID_MIHO008               = 0x0?   #         OOK: Single light switch white
 ##PRODUCTID_MIHO009 not used
-##PRODUCTID_MIHO010 not used
+##PRODUCTID_MIHO010              = 0x0?    #        OOK: Single light dimmer switch white
 ##PRODUCTID_MIHO011 not used
 ##PRODUCTID_MIHO012 not used
 PRODUCTID_MIHO013                = 0x03   #         eTRV
@@ -63,6 +63,10 @@ PRODUCTID_MIHO033                 = 0x0D    # FSK open sensor
 ##PRODUCTID_MIHO040 2-gang socket Bundle chrome
 ##PRODUCTID_MIHO041 2-gang socket Bundle stainless steel
 ##PRODUCTID_MIHO069 Wall thermostat
+##PRODUCTID MIHO075 OOK: Single Gang Light Dimmer in Brushed Nikel 
+##PRODUCTID MIHO076 OOK: Single Gang Light Dimmer in Polished Chrome
+##PRODUCTID MIHO077 OOK: Single Gang Light Dimmer in Brushed Steel
+##PRODUCTID MIHO087 OOK: Single Gang Light Dimmer in Brushed Graphite
 
 # Default keys for OpenThings encryption and decryption
 CRYPT_PID                        = 242
@@ -543,7 +547,6 @@ class MIHO002(OOKSwitch):
     def __repr__(self):
         return "MIHO002(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
 
-
 class MIHO014(OOKSwitch):
     """Energenie 3kW switchable relay"""
     def __repr__(self):
@@ -591,11 +594,95 @@ class MiHomeLight(LegacyDevice):
         else:
             self.turn_off()
 
+class MiHomeLightDimmable(LegacyDevice):
+    """Base for all MiHomeLight Dimmable variants. Receive only OOK device"""
+    def __init__(self, device_id, air_interface=None):
+        LegacyDevice.__init__(self, device_id, air_interface)
+        self.radio_config.inner_times = 75
+        self.capabilities.switch = True
+        self.capabilities.receive = True
+        
+    def __repr__(self):
+        return "OOKSwitch(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
+    
+    def turn_on(self):
+        payload = {
+            "house_address":  self.device_id[0],
+            "device_index":   1,
+            "on":             True
+        }
+        self.send_message(payload)
+
+    def turn_off(self):
+        payload = {
+            "house_address":  self.device_id[0],
+            "device_index":   1,
+            "on":             False
+        }
+        self.send_message(payload)
+    
+    def brightness(self, brightness):
+        if brightness == 20:
+            payload = {
+                "house_address":    self.device_id[0],
+                "device_index":     2,
+                "on":               True
+            }
+        elif brightness == 30: 
+            payload = {
+                "house_address":    self.device_id[0],
+                "device_index":     3,
+                "on":               True
+            }
+        elif brightness == 40:
+            payload = {
+                "house_address":    self.device_id[0],
+                "device_index":     4,
+                "on":               True
+            }
+        elif brightness == 60:
+            payload = {
+                "house_address":    self.device_id[0],
+                "device_index":     2,
+                "on":               False
+            }
+        elif brightness == 80:
+            payload = {
+                "house_address":    self.device_id[0],
+                "device_index":     3,
+                "on":               False
+            }
+        elif brightness == 100:
+            payload = {
+                "house_address":    self.device_id[0],
+                "device_index":     4,
+                "on":               False
+            }
+        else:
+            payload = {
+                "house_address":  self.device_id[0],
+                "device_index":   1,
+                "on":             False
+            }
+        
+        self.send_message(payload)
+    
+    def set_switch(self, state):
+        if state:
+            self.turn_on()
+        else:
+            self.turn_off()
+
 
 class MIHO008(MiHomeLight):
     """White finish"""
     def __repr__(self):
         return "MIHO008(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
+
+class MIHO010(MiHomeLightDimmable):
+    """White Dimmer Single Gang switch"""
+    def __repr__(self):
+        return "MIHO010(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
 
 class MIHO024(MiHomeLight):
     """Black Nickel Finish"""
@@ -612,6 +699,25 @@ class MIHO026(MiHomeLight):
     def __repr__(self):
         return "MIHO026(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
 
+class MIHO075(MiHomeLightDimmable):
+    """Black Nickel Dimmer Single Gang switch"""
+    def __repr__(self):
+        return "MIHO075(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
+
+class MIHO076(MiHomeLightDimmable):
+    """Polished Chrome Dimmer Single Gang switch"""
+    def __repr__(self):
+        return "MIHO076(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
+   
+class MIHO077(MiHomeLightDimmable):
+    """Brushed Steel Dimmer Single Gang switch"""
+    def __repr__(self):
+        return "MIHO077(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
+    
+class MIHO087(MiHomeLightDimmable):
+    """Brushed Graphite Dimmer Single Gang switch"""
+    def __repr__(self):
+        return "MIHO087(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
 
 #------------------------------------------------------------------------------
 
@@ -1049,19 +1155,24 @@ class DeviceFactory():
     # If you know the name of the device, use this table
     device_from_name = {
         # official name            friendly name
-        "ENER002":     ENER002,    "GreenButton":       ENER002, # OOK(rx)
-        "MIHO002":     MIHO002,    "Controller":        MIHO002, # OOK(rx)
-        "MIHO004":     MIHO004,    "Monitor":           MIHO004, # FSK(rx)
-        "MIHO005":     MIHO005,    "AdaptorPlus":       MIHO005, # FSK(tx,rx)
-        "MIHO006":     MIHO006,    "HomeMonitor":       MIHO006, # FSK(tx)
-        "MIHO008":     MIHO008,    "MiHomeLightWhite":  MIHO008, # OOK(rx)
-        "MIHO013":     MIHO013,    "eTRV":              MIHO013, # FSK(tx,rx)
-        "MIHO014":     MIHO014,    "3kWRelay":          MIHO014, # OOK(rx)
-        "MIHO024":     MIHO024,    "MiHomeLightBlack":  MIHO024, # OOK(rx)
-        "MIHO025":     MIHO025,    "MiHomeLightChrome": MIHO025, # OOK(rx)
-        "MIHO026":     MIHO026,    "MiHomeLightSteel":  MIHO026, # OOK(rx)
-        "MIHO032":     MIHO032,    "MotionSensor":      MIHO032, # FSK(tx)
-        "MIHO033":     MIHO033,    "OpenSensor":        MIHO033, # FSK(tx)
+        "ENER002":     ENER002,    "GreenButton":                      ENER002, # OOK(rx)
+        "MIHO002":     MIHO002,    "Controller":                       MIHO002, # OOK(rx)
+        "MIHO004":     MIHO004,    "Monitor":                          MIHO004, # FSK(rx)
+        "MIHO005":     MIHO005,    "AdaptorPlus":                      MIHO005, # FSK(tx,rx)
+        "MIHO006":     MIHO006,    "HomeMonitor":                      MIHO006, # FSK(tx)
+        "MIHO008":     MIHO008,    "MiHomeLightWhite":                 MIHO008, # OOK(rx)
+        "MIHO010":     MIHO010,    "MiHomeLightWhiteDimmer":           MIHO010, # OOK(rx)
+        "MIHO013":     MIHO013,    "eTRV":                             MIHO013, # FSK(tx,rx)
+        "MIHO014":     MIHO014,    "3kWRelay":                         MIHO014, # OOK(rx)
+        "MIHO024":     MIHO024,    "MiHomeLightBlack":                 MIHO024, # OOK(rx)
+        "MIHO025":     MIHO025,    "MiHomeLightChrome":                MIHO025, # OOK(rx)
+        "MIHO026":     MIHO026,    "MiHomeLightSteel":                 MIHO026, # OOK(rx)
+        "MIHO032":     MIHO032,    "MotionSensor":                     MIHO032, # FSK(tx)
+        "MIHO033":     MIHO033,    "OpenSensor":                       MIHO033, # FSK(tx)
+        "MIHO075":     MIHO075,    "MiHomeLightBlackNickelDimmer":     MIHO075, # OOK(rx)
+        "MIHO076":     MIHO076,    "MiHomeLightPolishedChromeDimmer":  MIHO076, # OOK(rx)
+        "MIHO077":     MIHO077,    "MiHomeLightBrushedSteelDimmer":    MIHO077, # OOK(rx)
+        "MIHO087":     MIHO087,    "MiHomeLightBrushedGraphiteDimmer": MIHO087, # OOK(rx)
     }
 
     #TODO: These are MiHome devices only, but might add in mfrid prefix too

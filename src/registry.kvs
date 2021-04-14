@@ -1,4 +1,12 @@
-ADD fan
+ADD 2gleft
+type=ENER002
+device_id=[0x123456, 1]
+
+ADD 2gright
+type=ENER002
+device_id=[0x123456, 2]
+
+IGN fan
 type=ENER002
 device_id=[0x6C6C6, 1]
 
@@ -10,15 +18,15 @@ IGN monitor
 type=MIHO004
 device_id=0000
 
-ADD tv
+IGN tv
 type=MIHO005
 device_id=1675
 
-ADD house
+IGN house
 type=MIHO006
 device_id=441
 
-ADD light_white
+IGN light_white
 type=MIHO008
 device_id=[0x6C6C6, 1]
 
@@ -26,27 +34,27 @@ IGN radiator
 type=MIHO013
 device_id=0000
 
-ADD relay
+IGN relay
 type=MIHO014
 device_id=[0x6C6C6, 4]
 
-ADD light_black
+IGN light_black
 type=MIHO024
 device_id=[0x6C6C6, 2]
 
-ADD light_chrome
+IGN light_chrome
 type=MIHO025
 device_id=[0x6C6C6, 3]
 
-ADD light_steel
+IGN light_steel
 type=MIHO026
 device_id=[0x6C6C6, 4]
 
-ADD motion
+IGN motion
 type=MIHO032
 device_id=4042
 
-ADD door
+IGN door
 type=MIHO033
 device_id=2817
 
