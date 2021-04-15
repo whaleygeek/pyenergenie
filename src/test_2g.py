@@ -28,8 +28,8 @@ RIGHT.radio_config.outer_times = BURST_COUNT
 OOKDevice = energenie.Devices.ENER002((0x123456, 4))
 FSKDevice = energenie.Devices.MIHO005(0x373)
 
-#OTHER = OOKDevice
-OTHER = FSKDevice
+OTHER = OOKDevice
+#OTHER = FSKDevice
 
 
 def do_left(f):

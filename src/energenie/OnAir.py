@@ -77,6 +77,8 @@ class OpenThingsAirInterface():
         radio.transmit(p, outer_times=outer_times, inner_times=inner_times, outer_delay=outer_delay)
         # radio auto-returns to previous state after transmit completes
 
+        return 0  # tx_silence remaining
+
     ##@log_method
     def receive(self, radio_config=None): # -> (radio_measurements, address or None, payload or None)
         #   radio_params is an overlay on top of radio rx defaults (e.g. poll rate, timeout, min payload, max payload)
@@ -162,6 +164,8 @@ class TwoBitAirInterface():
         ##print("inner times %s" % inner_times)
         radio.transmit(bytes, outer_times=outer_times, inner_times=inner_times, outer_delay=outer_delay)
         # radio auto-pops to state before transmit
+
+        return 0  # tx_silence remaining
 
     ##@log_method
     def receive(self, radio_config=None): # -> (radio_measurements, address or None, payload or None)

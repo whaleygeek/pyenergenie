@@ -358,6 +358,7 @@ class Device():
     def send_message(self, payload):
         print("send_message %s" % payload)
         # A raw device has no knowledge of how to send, the sub class provides that.
+        return 0  # no tx_silence left
 
     def when_updated(self, callback):
         """Provide a callback handler to be called when a new message arrives"""
@@ -410,14 +411,14 @@ class LegacyDevice(EnergenieDevice):
             "device_id":       self.device_id
         }
 
-
     def send_message(self, payload):
+        # returns: tx_silence remaining, 0 if transmitted ok.
         if self.air_interface != None:
-            self.air_interface.send(payload, radio_config=self.radio_config)
+            return self.air_interface.send(payload, radio_config=self.radio_config)
         else:
             d = self.device_id
             print("send_message(mock[%s]):%s" % (str(d), payload))
-
+            return 0  # no tx_silence left
 
 class MiHomeDevice(EnergenieDevice):
     """An abstraction for Energenie new style MiHome FSK devices"""
@@ -468,12 +469,13 @@ class MiHomeDevice(EnergenieDevice):
         """Send a join-ack to the real device"""
         msg = OpenThings.Message(header_mfrid=MFRID_ENERGENIE, header_productid=self.product_id, header_sensorid=self.device_id)
         msg[OpenThings.PARAM_JOIN] = {"wr":False, "typeid":OpenThings.Value.UINT, "length":0}
-        self.send_message(msg)
+        return self.send_message(msg)  # tx_silence remaining
 
     ##def handle_message(self, payload):
     #override for any specific handling
 
     def send_message(self, payload):
+        # returns: tx_silence remaining, or 0 if transmitted.
         #TODO: interface with air_interface
         #is payload a pydict with header at this point, and we have to call OpenThings.encode?
         #should the encode be done here, or in the air_interface adaptor?
@@ -485,13 +487,13 @@ class MiHomeDevice(EnergenieDevice):
         if self.air_interface != None:
             #TODO: might want to send the config, either as a send parameter,
             #or by calling air_interface.configure() first?
-            self.air_interface.send(payload)
+            return self.air_interface.send(payload)  # tx_silence remaining
         else:
             m = self.manufacturer_id
             p = self.product_id
             d = self.device_id
             print("send_message(mock[%s %s %s]):%s" % (str(m), str(p), str(d), payload))
-
+            return 0  # no tx_silence remaining
 
 #------------------------------------------------------------------------------
 
@@ -516,7 +518,7 @@ class OOKSwitch(LegacyDevice):
             "device_index":   self.device_id[1],
             "on":             True
         }
-        self.send_message(payload)
+        return self.send_message(payload)  # tx_silence remaining
 
     def turn_off(self):
         #TODO: should this be here, or in LegacyDevice???
@@ -527,7 +529,7 @@ class OOKSwitch(LegacyDevice):
             "device_index":   self.device_id[1],
             "on":             False
         }
-        self.send_message(payload)
+        return self.send_message(payload)  # tx_silence remaining
 
     def set_switch(self, state):
         if state:
@@ -587,7 +589,7 @@ class MiHomeLight(LegacyDevice):
             "device_index":   self.device_id[1],
             "on":             True
         }
-        self.send_message(payload)
+        return self.send_message(payload)  # tx_silence remaining
 
     def turn_off(self):
         #TODO: should this be here, or in LegacyDevice???
@@ -598,7 +600,7 @@ class MiHomeLight(LegacyDevice):
             "device_index":   self.device_id[1],
             "on":             False
         }
-        self.send_message(payload)
+        return self.send_message(payload)  # tx_silence remaining
 
     def set_switch(self, state):
         if state:
@@ -623,7 +625,7 @@ class MiHomeLightDimmable(LegacyDevice):
             "device_index":   1,
             "on":             True
         }
-        self.send_message(payload)
+        return self.send_message(payload)  # tx_silence remaining
 
     def turn_off(self):
         payload = {
@@ -631,7 +633,7 @@ class MiHomeLightDimmable(LegacyDevice):
             "device_index":   1,
             "on":             False
         }
-        self.send_message(payload)
+        return self.send_message(payload)  # tx_silence remaining
     
     def brightness(self, brightness):
         if brightness == 20:
@@ -677,7 +679,7 @@ class MiHomeLightDimmable(LegacyDevice):
                 "on":             False
             }
         
-        self.send_message(payload)
+        return self.send_message(payload)  # tx_silence remaining
     
     def set_switch(self, state):
         if state:
@@ -886,7 +888,7 @@ class MIHO005(MiHomeDevice):
         payload.set(header_productid=self.product_id,
                     header_sensorid=self.device_id,
                     recs_SWITCH_STATE_value=True)
-        self.send_message(payload)
+        return self.send_message(payload)  # tx_silence remaining
 
     def turn_off(self):
         #TODO: header construction should be in MiHomeDevice as it is shared?
@@ -894,7 +896,7 @@ class MIHO005(MiHomeDevice):
         payload.set(header_productid=self.product_id,
                     header_sensorid=self.device_id,
                     recs_SWITCH_STATE_value=False)
-        self.send_message(payload)
+        return self.send_message(payload)  # tx_silence remaining
 
     def set_switch(self, state):
         if state:
@@ -1037,14 +1039,14 @@ class MIHO013(MiHomeDevice):
         return self.readings.setpoint_temperature
 
     def set_setpoint_temperature(self, temperature):
-        self.send_message("set setpoint temp") #TODO: command
+        return self.send_message("set setpoint temp") #TODO: command
 
     def get_valve_position(self): # -> position:int?
         pass #TODO: is this possible?
 
     def set_valve_position(self, position):
         pass #TODO: command, is this possible?
-        self.send_message("set valve pos") #TODO
+        return self.send_message("set valve pos") #TODO, # tx_silence remaining
 
     #TODO: difference between 'is on and 'is requested on'
     #TODO: difference between 'is off' and 'is requested off'
@@ -1053,11 +1055,11 @@ class MIHO013(MiHomeDevice):
 
     def turn_on(self): # command
         pass #TODO: command i.e. valve position?
-        self.send_message("turn on") #TODO
+        return self.send_message("turn on") #TODO, # tx_silence remaining
 
     def turn_off(self): # command
         pass #TODO: command i.e. valve position?
-        self.send_message("turn off") #TODO
+        return self.send_message("turn off") #TODO,  # tx_silence remaining
 
     def is_on(self): # query last known reported state (unknown if changing?)
         pass #TODO: i.e valve is not completely closed?
