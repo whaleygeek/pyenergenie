@@ -1002,7 +1002,7 @@ class MIHO006(MiHomeDevice):
         return self.readings.current
 
     def get_apparent_power(self): # -> power:float
-        return self.reading.apparent_power
+        return self.readings.apparent_power
 
 
 
