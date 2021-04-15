@@ -563,6 +563,7 @@ class MIHO009(OOKSwitch):
         OOKSwitch.__init__(self, device_id, air_interface)
         self.radio_config.inner_times = self.BURST_SIZE
         self.radio_config.outer_times = self.BURST_COUNT
+        self.radio_config.tx_silence  = self.HOLDOFF
 
     def __repr__(self):
         return "MIHO009(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))

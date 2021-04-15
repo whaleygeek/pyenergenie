@@ -10,26 +10,26 @@ import time
 import random
 
 # Configuration parameters for performance tuning
-BURST_SIZE = 22     # (default 22)  inner times * .027s (about 27ms per burst)
-BURST_COUNT = 2     # (default 2)   outer times
-HOLDOFF = 3         # 3 seconds between messages
+#BURST_SIZE = 22     # (default 22)  inner times * .027s (about 27ms per burst)
+#BURST_COUNT = 2     # (default 2)   outer times
+#HOLDOFF = 3         # 3 seconds between messages (now in MIHO009)
 RND_WINDOW_MS = 100 # 0..100ms randomised timing
 
 # Devices under test (2 sides of the same MiHO009 2gang light switch)
 LEFT = energenie.Devices.MIHO009((0x123456, 1))
-LEFT.radio_config.inner_times = BURST_SIZE
-LEFT.radio_config.outer_times = BURST_COUNT
+#LEFT.radio_config.inner_times = BURST_SIZE
+#LEFT.radio_config.outer_times = BURST_COUNT
 
 RIGHT = energenie.Devices.MIHO009((0x123456, 2))
-RIGHT.radio_config.inner_times = BURST_SIZE
-RIGHT.radio_config.outer_times = BURST_COUNT
+#RIGHT.radio_config.inner_times = BURST_SIZE
+#RIGHT.radio_config.outer_times = BURST_COUNT
 
 # Another device, to test inter-device interference (intentionaly same preamble)
 OOKDevice = energenie.Devices.ENER002((0x123456, 4))
 FSKDevice = energenie.Devices.MIHO005(0x373)
 
-OTHER = energenie.Devices.MockSwitch("Mock")
-#OTHER = OOKDevice
+#OTHER = energenie.Devices.MockSwitch("Mock")
+OTHER = OOKDevice
 #OTHER = FSKDevice
 
 def do_switch(name, device, state):
@@ -72,25 +72,25 @@ def interfere(state, delay):
             print("OTHER off")
             OTHER.turn_off()
 
-def cycle(delay):
+def cycle():
     """Do one cycle test of on/off of both switch sides"""
     do_left(True)
-    interfere(True, delay)
+    interfere(True, 2)
     rnd_delay()
     do_right(True)
-    interfere(False, delay)
+    interfere(False, 2)
     rnd_delay()
 
     do_left(False)
-    interfere(True, delay)
+    interfere(True, 2)
     rnd_delay()
     do_right(False)
-    interfere(False, delay)
+    interfere(False, 2)
     rnd_delay()
 
 def test_loop():
     while True:
-        cycle(HOLDOFF)
+        cycle()
 
 def main():
     print("init...")
