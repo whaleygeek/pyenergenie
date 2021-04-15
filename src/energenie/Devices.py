@@ -13,6 +13,8 @@ except ImportError:
     from . import OnAir
     from . import OpenThings
 
+import time
+
 # This level of indirection allows easy mocking for testing
 ook_interface = OnAir.TwoBitAirInterface()
 fsk_interface = OnAir.OpenThingsAirInterface()
@@ -289,7 +291,6 @@ class Device():
         else:
             raise ValueError("device_id unsupported type or format, got: %s %s" % (type(device_id), str(device_id)))
 
-
     def has_switch(self):
         return hasattr(self.capabilities, "switch")
 
@@ -396,10 +397,6 @@ class LegacyDevice(EnergenieDevice):
             device_id = (LegacyDevice.DEFAULT_HOUSE_ADDRESS, device_id[1])
 
         EnergenieDevice.__init__(self, device_id, ook_interface)
-        #TODO: These are now just be implied by the ook_interface adaptor
-        ##self.radio_config.frequency  = 433.92
-        ##self.radio_config.modulation = "OOK"
-        ##self.radio_config.codec      = "4bit"
 
     def __repr__(self):
         return "LegacyDevice(%s)" % str(self.device_id)
@@ -426,24 +423,13 @@ class MiHomeDevice(EnergenieDevice):
         if air_interface == None:
             air_interface = fsk_interface
         EnergenieDevice.__init__(self, device_id, air_interface)
-        #TODO: These are now implied by the air_interface adaptor
-        ##self.radio_config.frequency  = 433.92
-        ##self.radio_config.modulation = "FSK"
-        ##self.radio_config.codec      = "OpenThings"
         self.manufacturer_id         = MFRID_ENERGENIE
         self.product_id              = None
-
-        #Different devices might have different PIP's
-        #if we are cycling codes on each message?
-        ##self.config.encryptPID = CRYPT_PID
-        ##self.config.encryptPIP = CRYPT_PIP
 
     def get_config(self):
         """Get the persistable config, enough to reconstruct this class from a factory"""
         return {
             "type":            self.__class__.__name__,
-            ##"manufacturer_id": self.manufacturer_id, # not needed, known by class
-            ##"product_id":      self.product_id, # not needed, known by class
             "device_id":       self.device_id
         }
 
@@ -496,6 +482,26 @@ class MiHomeDevice(EnergenieDevice):
             return 0  # no tx_silence remaining
 
 #------------------------------------------------------------------------------
+
+class MockSwitch(Device):
+    def __init__(self, device_id, *args, **kwargs):
+        class Capabilities():pass
+        self.capabilities = Capabilities()
+        self.capabilities.switch = True
+        self.device_id = device_id
+
+    def __repr__(self):
+        return "MockSwitch(%s)" % str(self.device_id)
+
+    def turn_on(self):
+        print("MockSwitch(%s).turn_on" % str(self.device_id))
+        time.sleep(0.5)
+        return 0  # no tx_silence remaining
+
+    def turn_off(self):
+        print("MockSwitch(%s).turn_off" % str(self.device_id))
+        time.sleep(0.5)
+        return 0  # no tx_silence remaining
 
 class OOKSwitch(LegacyDevice):
     """Any OOK controlled switch"""
@@ -1188,6 +1194,7 @@ class DeviceFactory():
         "MIHO076":     MIHO076,    "MiHomeLightPolishedChromeDimmer":  MIHO076, # OOK(rx)
         "MIHO077":     MIHO077,    "MiHomeLightBrushedSteelDimmer":    MIHO077, # OOK(rx)
         "MIHO087":     MIHO087,    "MiHomeLightBrushedGraphiteDimmer": MIHO087, # OOK(rx)
+        "MockSwitch":  MockSwitch,
     }
 
     #TODO: These are MiHome devices only, but might add in mfrid prefix too

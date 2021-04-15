@@ -1,3 +1,7 @@
+ADD mock
+type=MockSwitch
+device_id=0000
+
 ADD 2gleft
 type=MIHO009
 device_id=[0x123456, 1]

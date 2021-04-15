@@ -28,27 +28,28 @@ RIGHT.radio_config.outer_times = BURST_COUNT
 OOKDevice = energenie.Devices.ENER002((0x123456, 4))
 FSKDevice = energenie.Devices.MIHO005(0x373)
 
-OTHER = OOKDevice
+OTHER = energenie.Devices.MockSwitch("Mock")
+#OTHER = OOKDevice
 #OTHER = FSKDevice
 
-
-def do_left(f):
-    """Put left side into a specific state"""
-    print("LEFT:%d" % f)
+def do_switch(name, device, state):
+    """Put any switch into a specific state"""
+    print("%s:%d" % (name, state))
     st = time.time()
-    if f: LEFT.turn_on()
-    else: LEFT.turn_off()
+    if state:
+        while device.turn_on():
+            pass
+    else:
+        while device.turn_off():
+            pass
     et = time.time()
     print("burst time:%f" % (et-st))
 
-def do_right(f):
-    """Put right side into a specific state"""
-    print("RIGHT:%d" % f)
-    st = time.time()
-    if f: RIGHT.turn_on()
-    else: RIGHT.turn_off()
-    et = time.time()
-    print("burst time:%f" % (et-st))
+def do_left(state):
+    do_switch("LEFT", LEFT, state)
+
+def do_right(state):
+    do_switch("RIGHT", RIGHT, state)
 
 def rnd_delay():
     """delay between 0 and N milliseconds randomly"""
@@ -59,35 +60,32 @@ def rnd_delay():
     print("rnd_delay:%f" % d)
     time.sleep(d)
 
-interferer_on = False
-def interfere(delay):
-    global interferer_on
+def interfere(state, delay):
+    """Send interference messages on another device, for a time"""
     do_until = time.time() + delay
-    time.sleep(0.5) # gap to allow OTHER to work
+    time.sleep(0.5)  # gap to allow OTHER to work
     while time.time() < do_until:
-        if not interferer_on:
+        if state:
             print("OTHER on")
             OTHER.turn_on()
         else:
             print("OTHER off")
             OTHER.turn_off()
-    interferer_on = not interferer_on
-
 
 def cycle(delay):
-    """"Do one cycle test of on/off of both switch sides"""
-    do_left(1)
-    interfere(delay)
+    """Do one cycle test of on/off of both switch sides"""
+    do_left(True)
+    interfere(True, delay)
     rnd_delay()
-    do_right(1)
-    interfere(delay)
+    do_right(True)
+    interfere(False, delay)
     rnd_delay()
 
-    do_left(0)
-    interfere(delay)
+    do_left(False)
+    interfere(True, delay)
     rnd_delay()
-    do_right(0)
-    interfere(delay)
+    do_right(False)
+    interfere(False, delay)
     rnd_delay()
 
 def test_loop():
