@@ -116,8 +116,8 @@ class OpenThingsAirInterface():
 class TwoBitAirInterface():
     def __init__(self):
         self.radio = radio # aids mocking later
-        self._next_tx_allowed = None
-        self._holdoff_blocking = None
+        self._last_tx_time = None
+        self._blocking_max = None
         class RadioDefaults():
             frequency     = 433.92
             modulation    = radio.RADIO_MODULATION_OOK
@@ -136,38 +136,27 @@ class TwoBitAirInterface():
 
     def send(self, payload, radio_config=None):
         """Decide if it is safe to send a payload, wait, send or return"""
-        # The tx_silence may have been mandated by another device
-        if self._next_tx_allowed is not None:
-            # work out if it is safe to send yet or not
-            print("<<<TwoBit.possible wait")
-            now = time.time()
-            if now < self._next_tx_allowed:
-                # Not safe, wait here or return?
-                rem = self._next_tx_allowed - now
-                if self._holdoff_blocking is not None:
-                    if rem > self._holdoff_blocking:
-                        print("<<<TwoBit.notready for: %s" % str(rem))
-                        return rem  # too long, let app deal with it
-                # block here as it is not long to wait
-                print("<<<TwoBit.blocking for: %s" % str(rem))
-                time.sleep(rem)
+        # if there is a time restriction, process it
+        if self._last_tx_time is not None:
+            if radio_config is not None and hasattr(radio_config, "tx_pre_silence"):
+                next_tx = self._last_tx_time + radio_config.tx_pre_silence
+                now = time.time()
+                if now < next_tx:
+                    # wait or defer
+                    print("<<<TwoBit.NOTYET")
+                    rem = next_tx - now
+                    if self._blocking_max is not None:
+                        if rem >= self._blocking_max:
+                            print("<<<TwoBit.DEFER(%f)" % rem)
+                            return rem  # defer for rem seconds
+                    # wait
+                    print("<<<TwoBit.WAIT(%f)" % rem)
+                    time.sleep(rem)
 
         # actually send the device payload to this device
-        print("<<<TwoBit.sending")
+        print("<<<TwoBit.SEND")
         self._send2(payload, radio_config)
-
-        # Does this device mandate strict tx_silence requirements?
-        if radio_config is None or not hasattr(radio_config, "tx_silence"):
-            print("<<<TwoBit.no silence required")
-            self._next_tx_allowed = None
-        else:
-            # work out when it is next safe to tx again on this air interface
-            # (might affect any future device)
-            tx_silence = radio_config.tx_silence
-            now = time.time()
-            self._next_tx_allowed = now + tx_silence
-            print("<<<TwoBit.silence required for:%s" % str(tx_silence))
-
+        self._last_tx_time = time.time()
         return 0  # We did actually transmit this time round
 
     def _send2(self, payload, radio_config=None):

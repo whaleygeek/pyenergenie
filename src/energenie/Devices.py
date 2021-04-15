@@ -508,12 +508,12 @@ class OOKSwitch(LegacyDevice):
     def __init__(self, device_id, air_interface=None):
         LegacyDevice.__init__(self, device_id, air_interface)
         self.radio_config.inner_times = 8
+        self.radio_config.tx_pre_silence = 0.1
         self.capabilities.switch = True
         self.capabilities.receive = True
 
     def __repr__(self):
         return "OOKSwitch(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
-
 
     def turn_on(self):
         #TODO: should this be here, or in LegacyDevice??
@@ -557,13 +557,13 @@ class MIHO009(OOKSwitch):
     """Half of a Double Light Switch"""
     BURST_SIZE = 22  # inter times * 27ms per burst
     BURST_COUNT = 2  # outer times
-    HOLDOFF = 3  # seconds
+    PRE_SILENCE = 3  # seconds
 
     def __init__(self, device_id, air_interface=None):
         OOKSwitch.__init__(self, device_id, air_interface)
-        self.radio_config.inner_times = self.BURST_SIZE
-        self.radio_config.outer_times = self.BURST_COUNT
-        self.radio_config.tx_silence  = self.HOLDOFF
+        self.radio_config.inner_times    = self.BURST_SIZE
+        self.radio_config.outer_times    = self.BURST_COUNT
+        self.radio_config.tx_pre_silence = self.PRE_SILENCE
 
     def __repr__(self):
         return "MIHO009(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
