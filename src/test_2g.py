@@ -25,7 +25,12 @@ RIGHT.radio_config.inner_times = BURST_SIZE
 RIGHT.radio_config.outer_times = BURST_COUNT
 
 # Another device, to test inter-device interference (intentionaly same preamble)
-OTHER = energenie.Devices.ENER002((0x123456, 4))
+OOKDevice = energenie.Devices.ENER002((0x123456, 4))
+FSKDevice = energenie.Devices.MIHO005(0x373)
+
+#OTHER = OOKDevice
+OTHER = FSKDevice
+
 
 def do_left(f):
     """Put left side into a specific state"""

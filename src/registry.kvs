@@ -18,9 +18,9 @@ IGN monitor
 type=MIHO004
 device_id=0000
 
-IGN tv
+ADD plus
 type=MIHO005
-device_id=1675
+device_id=0x373
 
 IGN house
 type=MIHO006

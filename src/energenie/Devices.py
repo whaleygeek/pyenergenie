@@ -1156,7 +1156,7 @@ class MIHO033(MiHomeDevice):
 
 # This is a singleton, but might not be in the future.
 # i.e. we might have device factories for lots of different devices.
-# and a DeviceFactory could auto configure it's set of devices
+# and a DeviceFactory could auto configure its set of devices
 # with a specific air_interface for us.
 # i.e. this might be the EnergenieDeviceFactory, there might be others
 # for other product ranges like wirefree doorbells
