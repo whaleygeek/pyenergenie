@@ -12,7 +12,7 @@ import random
 # Configuration parameters for performance tuning
 #BURST_SIZE = 22     # (default 22)  inner times * .027s (about 27ms per burst)
 #BURST_COUNT = 2     # (default 2)   outer times
-PRE_SILENCE = 2      # seconds between messages (now in MIHO009)
+PRE_SILENCE = 3      # seconds between messages (now in MIHO009)
 RND_WINDOW_MS = 100  # 0..100ms randomised timing
 
 # Devices under test (2 sides of the same MiHO009 2gang light switch)
