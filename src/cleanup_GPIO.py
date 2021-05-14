@@ -4,16 +4,22 @@
 
 import RPi.GPIO as GPIO
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
+def cleanup():
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
 
-GPIO.setup(27, GPIO.IN) # Green LED
-GPIO.setup(22, GPIO.IN) # Red LED
-GPIO.setup(7, GPIO.IN)  # CS
-GPIO.setup(8, GPIO.IN)  # CS
-GPIO.setup(11, GPIO.IN) # SCLK
-GPIO.setup(10, GPIO.IN) # MOSI
-GPIO.setup(9, GPIO.IN)  # MISO
-GPIO.setup(25, GPIO.IN) # RESET
+    GPIO.setup(27, GPIO.IN) # Green LED
+    GPIO.setup(22, GPIO.IN) # Red LED
+    GPIO.setup(7, GPIO.IN)  # CS
+    GPIO.setup(8, GPIO.IN)  # CS
+    GPIO.setup(11, GPIO.IN) # SCLK
+    GPIO.setup(10, GPIO.IN) # MOSI
+    GPIO.setup(9, GPIO.IN)  # MISO
+    GPIO.setup(25, GPIO.IN) # RESET
 
-GPIO.cleanup()
+    GPIO.cleanup()
+
+if __name__ == "__main__":
+    cleanup()
+
+
