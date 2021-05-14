@@ -13,11 +13,13 @@ import random
 import cleanup_GPIO
 
 # Configuration parameters for performance tuning
-BURST_SIZE = 80      # (default 22)  inner times * .027s (about 27ms per burst)
-BURST_COUNT = 1      # (default 2)   outer times
-PRE_SILENCE = 0          # seconds between messages (now in MIHO009)
-##RND_WINDOW_MS = 0        # 0..100ms randomised timing
-RECHARGE_DELAY_SEC = 1.0 # amount of delay after transmitting, to recharge
+BURST_SIZE = 23            # (default 22)  inner times * .027s (about 27ms per burst)
+BURST_COUNT = 1            # (default 2)   outer times
+PRE_SILENCE = 0            # seconds between messages (now in MIHO009)
+RECHARGE_SEC = 0.800       # amount of delay after transmitting, to recharge
+REPEATS    = 5             # number of cycles of tx/silence
+POST_SILENCE_SEC = 3.0     # silence after a complete switch cycle
+RND_WINDOW_MS = 100        # 0..100ms randomised timing
 
 # Devices under test (2 sides of the same MiHO009 2gang light switch)
 LEFT = energenie.Devices.MIHO009((0x123456, 1))
@@ -40,15 +42,26 @@ OTHER = OOKDevice
 
 def do_switch(name, device, state):
     """Put any switch into a specific state"""
-    print("%s:%d" % (name, state))
-    st = time.time()
-    if state: device.turn_on()
-    else:     device.turn_off()
-    et = time.time()
-    print("burst time:%f" % (et-st))
+    print("%s: ->%d" % (name, state))
+    st_tot = time.time()
+    for i in range(REPEATS):
+        print("tx burst no:%d" % (i+1))
+        st = time.time()
+        if state: device.turn_on()
+        else:     device.turn_off()
+        et = time.time()
+        print("burst time:%f" % (et-st))
+
+        print("recharge delay:%f" % RECHARGE_SEC)
+        time.sleep(RECHARGE_SEC)
+
+    print("post tx silence:%f" % POST_SILENCE_SEC)
+    time.sleep(POST_SILENCE_SEC)
+    et_tot = time.time()
+    print("total switch time:%f" % (et_tot - st_tot))
 
 def do_left(state):
-    do_switch("LEFT", LEFT, state)
+   do_switch("LEFT", LEFT, state)
 
 def do_right(state):
     do_switch("RIGHT", RIGHT, state)
@@ -63,22 +76,18 @@ def rnd_delay():
     print("rnd_delay:%f" % d)
     time.sleep(d)
 
-def cycle():
-    do_left(True)  # any transmit
-    print("recharging for %f sec..." % RECHARGE_DELAY_SEC)
-    time.sleep(RECHARGE_DELAY_SEC)
-
 def test_loop():
     # get the switch into a known challenging state
-    print("Initialising switch state")
-    do_left(True)
-    time.sleep(3.0)
-    do_right(True)
-    time.sleep(3.0)
+    print("set initial state on front panel switches")
+
+    times = int(input("How many cycles?"))
 
     print("cycle testing...")
-    while True:
-        cycle()
+    for i in range(times):
+        do_switch("left", RIGHT, False)
+        rnd_delay()
+        do_switch("left", RIGHT, True)
+        rnd_delay()
 
 def main():
     print("init...")
