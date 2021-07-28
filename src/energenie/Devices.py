@@ -292,13 +292,16 @@ class Device():
             raise ValueError("device_id unsupported type or format, got: %s %s" % (type(device_id), str(device_id)))
 
     def has_switch(self):
-        return hasattr(self.capabilities, "switch")
+        return hasattr(self.capabilities, "switch") and \
+            self.capabilities.switch
 
     def can_send(self):
-        return hasattr(self.capabilities, "send")
+        return hasattr(self.capabilities, "send") and \
+            self.capabilities.send
 
     def can_receive(self):
-        return hasattr(self.capabilities, "receive")
+        return hasattr(self.capabilities, "receive") and \
+            self.capabilities.receive
 
     def get_radio_config(self):
         return self.radio_config
@@ -483,7 +486,14 @@ class MiHomeDevice(EnergenieDevice):
 
 #------------------------------------------------------------------------------
 
-class MockSwitch(Device):
+class Switch():
+    def set_switch(self, state):
+        if state:
+            self.turn_on()
+        else:
+            self.turn_off()
+
+class MockSwitch(Device, Switch):
     def __init__(self, device_id, *args, **kwargs):
         class Capabilities():pass
         self.capabilities = Capabilities()
@@ -503,7 +513,7 @@ class MockSwitch(Device):
         time.sleep(0.5)
         return 0  # no tx_silence remaining
 
-class OOKSwitch(LegacyDevice):
+class OOKSwitch(LegacyDevice, Switch):
     """Any OOK controlled switch"""
     def __init__(self, device_id, air_interface=None):
         LegacyDevice.__init__(self, device_id, air_interface)
@@ -536,12 +546,6 @@ class OOKSwitch(LegacyDevice):
             "on":             False
         }
         return self.send_message(payload)  # tx_silence remaining
-
-    def set_switch(self, state):
-        if state:
-            self.turn_on()
-        else:
-            self.turn_off()
 
 class ENER002(OOKSwitch):
     """A green button switch"""
@@ -576,7 +580,7 @@ class MIHO014(OOKSwitch):
 
 #------------------------------------------------------------------------------
 
-class MiHomeLight(LegacyDevice):
+class MiHomeLight(LegacyDevice, Switch):
     """Base for all MiHomeLight variants. Receive only OOK device"""
     def __init__(self, device_id, air_interface=None):
         LegacyDevice.__init__(self, device_id, air_interface)
@@ -609,23 +613,17 @@ class MiHomeLight(LegacyDevice):
         }
         return self.send_message(payload)  # tx_silence remaining
 
-    def set_switch(self, state):
-        if state:
-            self.turn_on()
-        else:
-            self.turn_off()
-
-class MiHomeLightDimmable(LegacyDevice):
+class MiHomeLightDimmable(LegacyDevice, Switch):
     """Base for all MiHomeLight Dimmable variants. Receive only OOK device"""
     def __init__(self, device_id, air_interface=None):
         LegacyDevice.__init__(self, device_id, air_interface)
         self.radio_config.inner_times = 75
         self.capabilities.switch = True
         self.capabilities.receive = True
-        
+
     def __repr__(self):
         return "OOKSwitch(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
-    
+
     def turn_on(self):
         payload = {
             "house_address":  self.device_id[0],
@@ -641,7 +639,7 @@ class MiHomeLightDimmable(LegacyDevice):
             "on":             False
         }
         return self.send_message(payload)  # tx_silence remaining
-    
+
     def brightness(self, brightness):
         if brightness == 20:
             payload = {
@@ -649,7 +647,7 @@ class MiHomeLightDimmable(LegacyDevice):
                 "device_index":     2,
                 "on":               True
             }
-        elif brightness == 30: 
+        elif brightness == 30:
             payload = {
                 "house_address":    self.device_id[0],
                 "device_index":     3,
@@ -685,14 +683,8 @@ class MiHomeLightDimmable(LegacyDevice):
                 "device_index":   1,
                 "on":             False
             }
-        
+
         return self.send_message(payload)  # tx_silence remaining
-    
-    def set_switch(self, state):
-        if state:
-            self.turn_on()
-        else:
-            self.turn_off()
 
 
 class MIHO008(MiHomeLight):
@@ -729,12 +721,12 @@ class MIHO076(MiHomeLightDimmable):
     """Polished Chrome Dimmer Single Gang switch"""
     def __repr__(self):
         return "MIHO076(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
-   
+
 class MIHO077(MiHomeLightDimmable):
     """Brushed Steel Dimmer Single Gang switch"""
     def __repr__(self):
         return "MIHO077(%s,%s)" % (str(hex(self.device_id[0])), str(hex(self.device_id[1])))
-    
+
 class MIHO087(MiHomeLightDimmable):
     """Brushed Graphite Dimmer Single Gang switch"""
     def __repr__(self):
@@ -757,7 +749,6 @@ class MIHO004(MiHomeDevice):
         self.readings = Readings()
         self.radio_config.inner_times = 4
         self.capabilities.send = True
-        self.capabilities.switch = True
 
     def __repr__(self):
         return "MIHO004(%s)" % str(hex(self.device_id))
@@ -768,7 +759,7 @@ class MIHO004(MiHomeDevice):
         return MiHomeDevice.get_join_req(MFRID_ENERGENIE, PRODUCTID_MIHO004, deviceid)
 
     def handle_message(self, payload):
-        ##print("MIHO005 new data %s %s" % (self.device_id, payload))
+        ##print("MIHO004 new data %s %s" % (self.device_id, payload))
         for rec in payload["recs"]:
             paramid = rec["paramid"]
             #TODO: consider making this table driven and allowing our base class to fill our readings in for us
@@ -830,7 +821,7 @@ class MIHO004(MiHomeDevice):
 
 #------------------------------------------------------------------------------
 
-class MIHO005(MiHomeDevice):
+class MIHO005(MiHomeDevice, Switch):
     """An Energenie MiHome Adaptor Plus"""
     def __init__(self, device_id, air_interface=None):
         MiHomeDevice.__init__(self, device_id, air_interface)
@@ -904,12 +895,6 @@ class MIHO005(MiHomeDevice):
                     header_sensorid=self.device_id,
                     recs_SWITCH_STATE_value=False)
         return self.send_message(payload)  # tx_silence remaining
-
-    def set_switch(self, state):
-        if state:
-            self.turn_on()
-        else:
-            self.turn_off()
 
     #TODO: difference between 'is on and 'is requested on'
     #TODO: difference between 'is off' and 'is requested off'
@@ -1017,7 +1002,7 @@ class MIHO006(MiHomeDevice):
 
 #------------------------------------------------------------------------------
 
-class MIHO013(MiHomeDevice):
+class MIHO013(MiHomeDevice, Switch):
     """An Energenie MiHome eTRV Radiator Valve"""
     def __init__(self, device_id, air_interface=None):
         MiHomeDevice.__init__(self, device_id, air_interface)
@@ -1032,6 +1017,7 @@ class MIHO013(MiHomeDevice):
         self.radio_config.inner_times = 10
         self.capabilities.send = True
         self.capabilities.receive = True
+        self.capabilities.switch = True
 
     def get_battery_voltage(self): # ->voltage:float
         return self.readings.battery_voltage

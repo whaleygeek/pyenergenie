@@ -1,12 +1,12 @@
-ADD mock
+IGN mock
 type=MockSwitch
 device_id=0000
 
-ADD 2gleft
+IGN 2gleft
 type=MIHO009
 device_id=[0x123456, 1]
 
-ADD 2gright
+IGN 2gright
 type=MIHO009
 device_id=[0x123456, 2]
 
@@ -18,11 +18,11 @@ IGN controller
 type=MIHO002
 device_id=0000
 
-IGN monitor
+ADD monitor
 type=MIHO004
-device_id=0000
+device_id=0x1E2
 
-ADD plus
+IGN plus
 type=MIHO005
 device_id=0x373
 
@@ -34,7 +34,7 @@ IGN light_white
 type=MIHO008
 device_id=[0x6C6C6, 1]
 
-ADD dimmer
+IGN dimmer
 type=MIHO010
 device_id=[0x6C6C6, 0]
 

@@ -33,16 +33,11 @@ def energy_monitor_loop():
             d.set_switch(switch_state)
     switch_state = not switch_state
 
-    # For all devices in the registry, if they have a get_power(), call it
+    # For all devices in the registry, print any readings
     print("Checking device status")
     for d in energenie.registry.devices():
-        print(d)
-        try:
-            p = d.get_power()
-            print("Power: %s" % str(p))
-        except:
-            pass # Ignore it if can't provide a power
-
+        readings = d.get_readings_summary()
+        print("%s %s" % (str(d), readings))
     time.sleep(APP_DELAY)
 
 
