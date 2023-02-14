@@ -3,30 +3,11 @@ A python interface to the Energenie line of products
 
 https://energenie4u.co.uk/
 
+NEWSFLASH!
 
-## Where is the best place to get the code?
+New Raspberry Pi Pico version here:
 
-The most tested code is in the Energenie repo here:
-
-[Energenie Repo](https://github.com/Energenie/pyenergenie)
-
-i.e. Energenie test on devices before updating the public repo
-and linking external product pages to the code download. But, this might
-be quite a bit older than the current ongoing development work.
-
-
-
-The most leading-edge code is in whaleygeek's repo here:
-
-[Whaleygeek repo](https://github.com/whaleygeek/pyenergenie)
-
-i.e. This is whaleygeek's development area, master is reasonably
-well tested, and there may be multiple feature branches with ongoing
-development work that is still in progress. But, this might be
-the most up to date code with support for newer devices, and there
-may be experimental items in here that you would like to get early
-access to.
-
+(pico-energenie)[https://github.com/thinking-binaries/pico-energenie]
 
 ## What is this all about?
 
