@@ -7,7 +7,7 @@ NEWSFLASH!
 
 New Raspberry Pi Pico version here:
 
-(pico-energenie)[https://github.com/thinking-binaries/pico-energenie]
+[pico-energenie](https://github.com/thinking-binaries/pico-energenie)
 
 ## What is this all about?
 
